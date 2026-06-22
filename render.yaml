@@ -1,0 +1,9 @@
+# Blueprint de Render: conecta el repo en render.com/blueprints y crea el servicio solo.
+services:
+  - type: web
+    name: inventario-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeploy: true

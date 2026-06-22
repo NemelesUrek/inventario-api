@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API de Control de Inventario — Demo · Nemeles</title>
+  <style>
+    :root { --bg:#0b0f17; --bg2:#10151f; --panel:#161c28; --border:#222c3c;
+            --text:#f2f5fa; --muted:#9aa7bd; --dim:#5c6880; --acc:#ff7a1a; --ok:#3dd68c; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:'Segoe UI',system-ui,sans-serif; color:var(--text);
+           background:linear-gradient(160deg,var(--bg),var(--bg2)); min-height:100vh; }
+    .wrap { max-width:820px; margin:0 auto; padding:64px 24px; }
+    .kicker { font-family:Consolas,monospace; color:var(--dim); letter-spacing:2px; font-size:13px; }
+    h1 { font-size:40px; line-height:1.1; margin:14px 0 6px; }
+    .bar { width:80px; height:6px; background:var(--acc); border-radius:3px; margin:14px 0 22px; }
+    p.lead { color:var(--muted); font-size:18px; line-height:1.55; max-width:620px; }
+    .btns { margin:28px 0 8px; display:flex; gap:14px; flex-wrap:wrap; }
+    a.btn { display:inline-block; padding:14px 22px; border-radius:10px; font-weight:600;
+            text-decoration:none; }
+    a.primary { background:var(--acc); color:#1a1208; }
+    a.ghost { border:1px solid var(--border); color:var(--text); background:var(--panel); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin:34px 0; }
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px; }
+    .card h3 { margin:0 0 6px; font-size:15px; }
+    .card p { margin:0; color:var(--muted); font-size:14px; line-height:1.5; }
+    pre { background:#0c1119; border:1px solid var(--border); border-radius:12px; padding:16px;
+          overflow:auto; color:#d6deea; font-family:Consolas,monospace; font-size:13px; line-height:1.55; }
+    .tag { color:var(--ok); }
+    code.k { color:#5aa0e0; }
+    footer { color:var(--dim); font-family:Consolas,monospace; font-size:12px; margin-top:40px;
+             border-top:1px solid var(--border); padding-top:18px; }
+    a { color:var(--acc); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="kicker">// NEMELES — BACKEND ENGINEER · JAVA · SPRING BOOT</div>
+    <h1>API de Control de Inventario</h1>
+    <div class="bar"></div>
+    <p class="lead">Demo en vivo de una API REST en <b>Java 17 + Spring Boot</b>: productos, control de
+      stock con <b>auditoría de cada movimiento</b> y alertas de reposición. El dinero se maneja en
+      centavos (sin errores de redondeo). Pruébala ahora mismo en el navegador.</p>
+
+    <div class="btns">
+      <a class="btn primary" href="/swagger-ui.html">▶ Probar la API (Swagger UI)</a>
+      <a class="btn ghost" href="/v3/api-docs">Especificación OpenAPI (JSON)</a>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>REST limpia</h3><p>CRUD + entradas/salidas de stock, paginación, búsqueda y códigos HTTP correctos (201, 404, 409).</p></div>
+      <div class="card"><h3>Datos seguros</h3><p>Operaciones transaccionales con JPA/SQL y registro de auditoría append-only de cada movimiento.</p></div>
+      <div class="card"><h3>Probada + CI</h3><p>Pruebas automatizadas con JUnit 5 y pipeline de integración continua en GitHub Actions.</p></div>
+    </div>
+
+    <h3>Pruébala desde la terminal</h3>
+    <pre><span class="tag"># Listar productos</span>
+curl -s <span class="k">$BASE</span>/api/productos
+
+<span class="tag"># Crear un producto</span>
+curl -s -X POST <span class="k">$BASE</span>/api/productos \
+  -H "Content-Type: application/json" \
+  -d '{"sku":"LAP-900","nombre":"Laptop 14\"","precioCentavos":1299900,"stockInicial":5,"stockMinimo":2}'
+
+<span class="tag"># Registrar una salida (rechaza si no hay stock: HTTP 409)</span>
+curl -s -X POST <span class="k">$BASE</span>/api/productos/1/salida \
+  -H "Content-Type: application/json" -d '{"cantidad":3,"motivo":"Venta"}'
+
+<span class="tag"># Alertas de reposición</span>
+curl -s <span class="k">$BASE</span>/api/productos/bajo-stock</pre>
+
+    <footer>Código fuente en GitHub: busca el usuario <b>NemelesUrek</b>. · Hecho con Java · Spring Boot · JPA · H2 · springdoc-openapi.</footer>
+  </div>
+</body>
+</html>
