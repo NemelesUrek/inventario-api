@@ -6,8 +6,8 @@
 
 API REST para gestionar productos y stock, con **auditoría de cada movimiento** y **alertas de reposición**. Backend en **Java + Spring Boot**, probado y desplegable.
 
-> **▶ Demo en vivo:** `https://TU-APP.onrender.com/swagger-ui.html`
-> *(pruébala en el navegador — sin instalar nada — con el botón **Try it out**)*
+> **▶ Demo en vivo:** **https://inventario-api-h6b3.onrender.com/swagger-ui/index.html**
+> *(pruébala en el navegador — sin instalar nada — con el botón **Try it out**. Free tier: la primera petición tras inactividad puede tardar ~50 s en despertar.)*
 
 ---
 
