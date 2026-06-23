@@ -91,6 +91,24 @@ se vea como una **aplicación interactiva completa y profesional de nivel senior
 - **Hint de ⌘K en primera visita** (toast informativo, una sola vez).
 - Verificado por DOM: títulos OK, ayuda abre/cierra por ? y Esc, comando en paleta.
 
+## Fix — Arranque en frío en Render free (bucle "…casi lista")
+Causa (verificada con workflow multi-agente + adversarial): NO es crash/OOM/timeout;
+es el **spin-down del free tier** (duerme ~15 min) → arranque en frío lento → la
+pantalla de spin-up de Render parece un bucle. Mitigación aplicada:
+- `spring.main.lazy-initialization=true` + `spring.jmx.enabled=false` +
+  `springdoc.packages-to-scan=com.nemeles.inventario.web` (saca el escaneo eager de
+  springdoc del camino crítico del boot) + consola H2 deshabilitada (seguridad).
+- Dockerfile ENTRYPOINT con flags de boot: `-XX:+UseSerialGC -XX:TieredStopAtLevel=1
+  -XX:MaxRAMPercentage=65.0 -Xss512k -XX:+ExitOnOutOfMemoryError`. **Se descartaron**
+  los topes duros `MaxMetaspaceSize`/`ReservedCodeCacheSize` (un verificador detectó
+  que con `ExitOnOutOfMemoryError` podían recrear el bucle por OOM de metaspace).
+- Verificado empírico bajo `-XX:MaxRAM=512m`: boot OK, health 200/0.15s, seeding=6,
+  Swagger lazy sin OOM, 10 tests verdes.
+- **Acciones manuales del usuario** (no código): borrar `JAVA_TOOL_OPTIONS` del dashboard
+  de Render (las flags ahora viven solo en el Dockerfile) + **keep-warm externo**
+  (UptimeRobot/cron-job.org → GET `/actuator/health` cada 5 min) para que la instancia
+  no duerma y el cliente no caiga en frío.
+
 ## Estado: app completa de nivel senior
 11 endpoints (4 controllers) · 10 tests + CI · 7 vistas SPA · CRUD + auditoría +
 reportes server-side + paleta ⌘K + configuración + reset de demo + a11y + OG.
