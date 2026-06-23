@@ -1,75 +1,489 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>API de Control de Inventario — Demo · Nemeles</title>
-  <style>
-    :root { --bg:#0b0f17; --bg2:#10151f; --panel:#161c28; --border:#222c3c;
-            --text:#f2f5fa; --muted:#9aa7bd; --dim:#5c6880; --acc:#ff7a1a; --ok:#3dd68c; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:'Segoe UI',system-ui,sans-serif; color:var(--text);
-           background:linear-gradient(160deg,var(--bg),var(--bg2)); min-height:100vh; }
-    .wrap { max-width:820px; margin:0 auto; padding:64px 24px; }
-    .kicker { font-family:Consolas,monospace; color:var(--dim); letter-spacing:2px; font-size:13px; }
-    h1 { font-size:40px; line-height:1.1; margin:14px 0 6px; }
-    .bar { width:80px; height:6px; background:var(--acc); border-radius:3px; margin:14px 0 22px; }
-    p.lead { color:var(--muted); font-size:18px; line-height:1.55; max-width:620px; }
-    .btns { margin:28px 0 8px; display:flex; gap:14px; flex-wrap:wrap; }
-    a.btn { display:inline-block; padding:14px 22px; border-radius:10px; font-weight:600;
-            text-decoration:none; }
-    a.primary { background:var(--acc); color:#1a1208; }
-    a.ghost { border:1px solid var(--border); color:var(--text); background:var(--panel); }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin:34px 0; }
-    .card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px; }
-    .card h3 { margin:0 0 6px; font-size:15px; }
-    .card p { margin:0; color:var(--muted); font-size:14px; line-height:1.5; }
-    pre { background:#0c1119; border:1px solid var(--border); border-radius:12px; padding:16px;
-          overflow:auto; color:#d6deea; font-family:Consolas,monospace; font-size:13px; line-height:1.55; }
-    .tag { color:var(--ok); }
-    code.k { color:#5aa0e0; }
-    footer { color:var(--dim); font-family:Consolas,monospace; font-size:12px; margin-top:40px;
-             border-top:1px solid var(--border); padding-top:18px; }
-    a { color:var(--acc); }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Inventario — Demo en vivo · Nemeles</title>
+<meta name="description" content="API REST de control de inventario en Java + Spring Boot. Demo en vivo: alertas de stock, auditoría de movimientos y acciones reales contra la API.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#070B14; --bg-1:#0B1120; --surface:#111827; --surface-2:#161F31; --surface-3:#1C2740;
+  --border:#1F2A3D; --border-soft:#172033; --border-strong:#2B3A55;
+  --text:#F1F5FB; --text-2:#AEB9CC; --text-3:#6B7890; --text-4:#46526B;
+  --brand:#22D3A6; --brand-600:#10B98F; --brand-700:#0E9C79; --brand-glow:rgba(34,211,166,.18); --brand-ink:#04261D;
+  --accent-warm:#FF7A1A; --accent-warm-glow:rgba(255,122,26,.16);
+  --accent:#6E8BFF; --accent-glow:rgba(110,139,255,.16); --info-bg:rgba(110,139,255,.12);
+  --ok:#22D3A6; --warn:#F5B544; --warn-bg:rgba(245,181,68,.12);
+  --danger:#FF5C72; --danger-bg:rgba(255,92,114,.12); --danger-glow:rgba(255,92,114,.22);
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:22px; --r-pill:999px;
+  --s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:40px;--s12:48px;--s16:64px;--s20:80px;
+  --sh-md:0 8px 24px -8px rgba(0,0,0,.55); --sh-lg:0 20px 50px -16px rgba(0,0,0,.65);
+  --sh-brand:0 8px 30px -8px var(--brand-glow); --ring:0 0 0 3px var(--brand-glow);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Inter,system-ui,sans-serif;color:var(--text);font-size:15px;line-height:1.6;
+  background:radial-gradient(900px 500px at 72% -8%,var(--brand-glow),transparent 60%),linear-gradient(160deg,var(--bg-0),var(--bg-1));
+  background-attachment:fixed;min-height:100vh;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1140px;margin:0 auto;padding-inline:clamp(20px,5vw,40px)}
+h1,h2,h3{font-family:Sora,sans-serif;letter-spacing:-.02em;line-height:1.1}
+.mono{font-family:'JetBrains Mono',monospace}
+.tnum{font-variant-numeric:tabular-nums}
+a{color:var(--brand);text-decoration:none}
+section{padding-block:clamp(48px,8vw,80px)}
+.kicker{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;color:var(--text-3);font-size:12px}
+.h2{font-size:clamp(24px,4vw,30px);font-weight:700}
+.sub{color:var(--text-2);font-size:17px;max-width:640px;margin-top:var(--s3)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:var(--s6);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);transition:transform .18s,box-shadow .18s,border-color .18s}
+/* Topbar */
+.topbar{position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);background:rgba(11,17,32,.72);border-bottom:1px solid var(--border)}
+.topbar .wrap{display:flex;align-items:center;gap:var(--s4);height:56px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--brand);box-shadow:0 0 10px var(--brand)}
+.brand small{font-family:'JetBrains Mono',monospace;color:var(--text-3);font-size:12px}
+.spacer{flex:1}
+.status{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:12.5px;
+  padding:6px 12px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--surface-2);color:var(--text-2)}
+.status .sdot{width:8px;height:8px;border-radius:50%;background:var(--text-3)}
+.status.live .sdot{background:var(--ok);animation:pulse 2s infinite}
+.status.live{color:var(--ok);border-color:rgba(34,211,166,.35)}
+.status.waking .sdot{background:var(--warn)} .status.waking{color:var(--warn)}
+.status.offline .sdot{background:var(--danger)} .status.offline{color:var(--danger);border-color:rgba(255,92,114,.35)}
+.tlinks{display:flex;align-items:center;gap:var(--s3)}
+.tlinks a{color:var(--text-2);font-size:13.5px;font-weight:500} .tlinks a:hover{color:var(--text)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:Inter;font-weight:600;font-size:15px;
+  padding:12px 20px;border-radius:var(--r-md);border:1px solid transparent;cursor:pointer;transition:.18s;text-decoration:none}
+.btn svg{width:17px;height:17px}
+.btn-primary{background:var(--brand);color:var(--brand-ink);box-shadow:var(--sh-brand)}
+.btn-primary:hover{background:var(--brand-600);transform:translateY(-1px);box-shadow:0 10px 36px -8px var(--brand-glow)}
+.btn-ghost{background:var(--surface-2);border-color:var(--border);color:var(--text)}
+.btn-ghost:hover{border-color:var(--border-strong);background:var(--surface-3)}
+.btn-sm{padding:8px 14px;font-size:13.5px}
+.btn:focus-visible{outline:none;box-shadow:var(--ring)}
+/* Hero */
+.hero{padding-top:var(--s12)}
+.hero h1{font-size:clamp(38px,6vw,56px);font-weight:700;margin:var(--s4) 0}
+.hero .lead{color:var(--text-2);font-size:19px;max-width:660px}
+.hero .ctas{display:flex;gap:var(--s3);flex-wrap:wrap;margin-top:var(--s6)}
+.chips{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s6)}
+.chip{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-3);background:var(--surface-2);
+  border:1px solid var(--border);border-radius:var(--r-pill);padding:5px 11px}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--s4);margin-top:var(--s8)}
+.kpi{position:relative;overflow:hidden}
+.kpi .bar{position:absolute;top:0;left:0;right:0;height:3px;background:var(--brand)}
+.kpi.warm .bar{background:var(--accent-warm)} .kpi.alert .bar{background:var(--danger)}
+.kpi .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);font-weight:600}
+.kpi .val{font-family:Sora;font-weight:700;font-size:34px;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi.warm .val{color:#FFB36B} .kpi .meta{font-size:13px;color:var(--text-3);margin-top:4px}
+.kpi.alert.has .val{color:var(--danger)} .kpi.alert.has{cursor:pointer}
+.kpi .pulsebadge{display:none}
+.kpi.alert.has .pulsebadge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-family:'JetBrains Mono';
+  font-size:11px;color:var(--danger);background:var(--danger-bg);border-radius:var(--r-pill);padding:3px 9px}
+.kpi .pulsebadge .d{width:6px;height:6px;border-radius:50%;background:var(--danger);animation:pulse 1.6s infinite}
+/* Generic grid */
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--s4);margin-top:var(--s8)}
+.solve h3{font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px}
+.solve .ic{width:34px;height:34px;border-radius:var(--r-sm);background:var(--surface-3);display:grid;place-items:center;color:var(--brand);flex:none}
+.solve p{color:var(--text-2);font-size:14.5px;margin-top:10px}
+.solve .tech{color:var(--text-3);font-size:12.5px;margin-top:10px;font-family:'JetBrains Mono';line-height:1.5}
+.card:hover{transform:translateY(-2px);box-shadow:var(--sh-md);border-color:var(--border-strong)}
+/* integration chips */
+.intg{margin-top:var(--s6);display:flex;flex-wrap:wrap;gap:var(--s2)}
+.itag{font-size:12.5px;border-radius:var(--r-pill);padding:6px 12px;border:1px solid var(--border);display:inline-flex;gap:7px;align-items:center}
+.itag.on{color:var(--ok);background:var(--brand-glow);border-color:rgba(34,211,166,.3)}
+.itag.soon{color:var(--text-2);background:var(--surface-2)}
+.itag .t{font-family:'JetBrains Mono';font-size:10px;opacity:.7;text-transform:uppercase}
+/* Dashboard */
+.dash{display:grid;grid-template-columns:1.5fr 1fr;gap:var(--s5);align-items:start;margin-top:var(--s8)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.panel-h{padding:var(--s5) var(--s5) 0;display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
+.panel-h h3{font-size:16px;font-weight:600}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 12px;margin:var(--s4) var(--s5)}
+.search input{background:none;border:none;color:var(--text);font-family:Inter;font-size:14px;width:100%;outline:none}
+.search svg{width:16px;height:16px;color:var(--text-3);flex:none}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);text-align:left;font-weight:600;padding:8px var(--s5);border-bottom:1px solid var(--border)}
+thead th.r,td.r{text-align:right}
+tbody td{padding:12px var(--s5);border-bottom:1px solid var(--border-soft);font-size:14px;vertical-align:middle}
+tbody tr{transition:background .2s;cursor:pointer}
+tbody tr:hover{background:var(--surface-2)}
+tr.low td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
+.sku{font-family:'JetBrains Mono';font-size:12.5px;color:var(--text-3)}
+.pname{font-weight:600} .pdesc{color:var(--text-3);font-size:12.5px}
+.stockcell{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.sbar{height:5px;width:64px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.sbar i{display:block;height:100%;background:var(--ok);border-radius:99px;transition:width .5s}
+.badge{font-family:'JetBrains Mono';font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:var(--r-pill);display:inline-flex;align-items:center;gap:6px}
+.badge .bd{width:6px;height:6px;border-radius:50%}
+.badge.ok{color:var(--ok);background:var(--brand-glow)} .badge.ok .bd{background:var(--ok)}
+.badge.low{color:var(--danger);background:var(--danger-bg)} .badge.low .bd{background:var(--danger);animation:pulse 1.6s infinite}
+.movs{background:var(--bg-1);padding:var(--s4) var(--s5)}
+.mov{display:flex;align-items:center;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border-soft)}
+.mov:last-child{border:none}
+.movtag{font-family:'JetBrains Mono';font-size:10px;padding:2px 7px;border-radius:var(--r-sm)}
+.movtag.in{color:var(--ok);background:var(--brand-glow)} .movtag.out{color:var(--danger);background:var(--danger-bg)}
+.mov .mt{color:var(--text-3);margin-left:auto;font-family:'JetBrains Mono';font-size:11.5px}
+.pager{display:flex;align-items:center;justify-content:space-between;padding:var(--s4) var(--s5);font-size:13px;color:var(--text-3)}
+.pager button{background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);padding:6px 12px;border-radius:var(--r-sm);cursor:pointer;font-size:13px}
+.pager button:disabled{opacity:.4;cursor:default}
+/* alerts panel */
+.alert-item{display:flex;align-items:center;gap:10px;padding:11px var(--s5);border-bottom:1px solid var(--border-soft)}
+.alert-item:last-child{border:none}
+.alert-item .an{font-weight:600;font-size:14px} .alert-item .af{font-size:12px;color:var(--danger)}
+.repo{margin-left:auto}
+.empty-ok{padding:var(--s5);display:flex;gap:10px;align-items:center;color:var(--ok);font-size:14px}
+/* try form */
+.form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:var(--s4)}
+.form-row label{font-size:12.5px;color:var(--text-3);font-weight:500}
+.inp,select{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);color:var(--text);padding:10px 12px;font-family:Inter;font-size:14px;width:100%;outline:none}
+.inp:focus,select:focus{border-color:var(--brand);box-shadow:var(--ring)}
+.toggle{display:flex;gap:8px}
+.toggle button{flex:1;padding:9px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);font-family:'JetBrains Mono';font-size:13px;cursor:pointer;transition:.15s}
+.toggle button.sel-in{color:var(--ok);border-color:var(--ok);background:var(--brand-glow)}
+.toggle button.sel-out{color:var(--danger);border-color:var(--danger);background:var(--danger-bg)}
+.note{font-size:12px;color:var(--text-3);background:var(--warn-bg);border-radius:var(--r-sm);padding:9px 12px;margin-bottom:var(--s4)}
+.result{margin-top:var(--s4);padding:12px 14px;border-radius:var(--r-md);font-size:13.5px;display:none}
+.result.ok{display:block;color:var(--ok);background:var(--brand-glow);border:1px solid rgba(34,211,166,.3)}
+.result.err{display:block;color:#ffd1d8;background:var(--danger-bg);border:1px solid rgba(255,92,114,.3)}
+.jsonbox{margin:var(--s4) var(--s5) var(--s5);background:var(--bg-0);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden}
+.jsonbox summary{cursor:pointer;padding:10px 14px;font-family:'JetBrains Mono';font-size:12px;color:var(--text-3);list-style:none}
+.jsonbox pre{padding:0 14px 14px;font-family:'JetBrains Mono';font-size:12px;color:#cdd6e6;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow:auto}
+.httpcode{font-family:'JetBrains Mono';font-weight:600}
+.httpcode.s2{color:var(--ok)} .httpcode.s4{color:var(--danger)}
+/* endpoints */
+.eps{background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-top:var(--s6)}
+.ep{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border-soft);font-family:'JetBrains Mono';font-size:13px}
+.ep:last-child{border:none}
+.meth{font-size:10px;font-weight:600;padding:3px 8px;border-radius:var(--r-sm);min-width:42px;text-align:center}
+.meth.get{color:var(--accent);background:var(--info-bg)} .meth.post{color:var(--ok);background:var(--brand-glow)}
+.ep .path{color:var(--text-2)} .ep .cp{margin-left:auto;color:var(--text-3);cursor:pointer;font-size:11px}
+.ep .cp:hover{color:var(--text)}
+/* cta */
+.ctaband{background:linear-gradient(140deg,var(--surface),var(--surface-2));border:1px solid var(--border-strong);border-radius:var(--r-xl);padding:clamp(28px,5vw,48px);text-align:center;box-shadow:var(--sh-lg)}
+.ctaband ul{list-style:none;display:flex;gap:var(--s6);flex-wrap:wrap;justify-content:center;margin:var(--s5) 0;color:var(--text-2);font-size:14px}
+.ctaband li{display:flex;align-items:center;gap:8px}
+.ctaband .ctas{justify-content:center;display:flex;gap:var(--s3);flex-wrap:wrap;margin-top:var(--s4)}
+/* skeleton */
+.sk{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;color:transparent!important}
+/* toast */
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;transition:.3s;
+  background:var(--surface-3);border:1px solid var(--border-strong);color:var(--text);padding:12px 18px;border-radius:var(--r-md);font-size:14px;box-shadow:var(--sh-lg);z-index:100;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* footer */
+footer{border-top:1px solid var(--border);padding-block:var(--s10);color:var(--text-3);font-size:13px}
+footer .mono2{font-family:'JetBrains Mono';font-size:12px;color:var(--text-4);margin-top:8px}
+/* reveal */
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .5s cubic-bezier(.2,.7,.2,1),transform .5s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 currentColor;opacity:1}70%{box-shadow:0 0 0 7px transparent;opacity:.6}100%{box-shadow:0 0 0 0 transparent;opacity:1}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes flash{0%{background:var(--brand-glow)}100%{background:transparent}}
+.flash{animation:flash .7s}
+@media(max-width:980px){.dash{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){
+  .tlinks .lk{display:none}.brand small{display:none}
+  table thead{display:none}
+  table,tbody,tr,td{display:block;width:100%}
+  tbody tr{padding:10px var(--s4);border-bottom:1px solid var(--border)}
+  tbody td{border:none;padding:4px 0;display:flex;justify-content:space-between}
+  tbody td::before{content:attr(data-l);color:var(--text-3);font-size:12px}
+  .stockcell{align-items:flex-end}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="kicker">// NEMELES — BACKEND ENGINEER · JAVA · SPRING BOOT</div>
-    <h1>API de Control de Inventario</h1>
-    <div class="bar"></div>
-    <p class="lead">Demo en vivo de una API REST en <b>Java 17 + Spring Boot</b>: productos, control de
-      stock con <b>auditoría de cada movimiento</b> y alertas de reposición. El dinero se maneja en
-      centavos (sin errores de redondeo). Pruébala ahora mismo en el navegador.</p>
+<div id="toast"></div>
 
-    <div class="btns">
-      <a class="btn primary" href="/swagger-ui.html">▶ Probar la API (Swagger UI)</a>
-      <a class="btn ghost" href="/v3/api-docs">Especificación OpenAPI (JSON)</a>
-    </div>
-
-    <div class="grid">
-      <div class="card"><h3>REST limpia</h3><p>CRUD + entradas/salidas de stock, paginación, búsqueda y códigos HTTP correctos (201, 404, 409).</p></div>
-      <div class="card"><h3>Datos seguros</h3><p>Operaciones transaccionales con JPA/SQL y registro de auditoría append-only de cada movimiento.</p></div>
-      <div class="card"><h3>Probada + CI</h3><p>Pruebas automatizadas con JUnit 5 y pipeline de integración continua en GitHub Actions.</p></div>
-    </div>
-
-    <h3>Pruébala desde la terminal</h3>
-    <pre><span class="tag"># Listar productos</span>
-curl -s <span class="k">$BASE</span>/api/productos
-
-<span class="tag"># Crear un producto</span>
-curl -s -X POST <span class="k">$BASE</span>/api/productos \
-  -H "Content-Type: application/json" \
-  -d '{"sku":"LAP-900","nombre":"Laptop 14\"","precioCentavos":1299900,"stockInicial":5,"stockMinimo":2}'
-
-<span class="tag"># Registrar una salida (rechaza si no hay stock: HTTP 409)</span>
-curl -s -X POST <span class="k">$BASE</span>/api/productos/1/salida \
-  -H "Content-Type: application/json" -d '{"cantidad":3,"motivo":"Venta"}'
-
-<span class="tag"># Alertas de reposición</span>
-curl -s <span class="k">$BASE</span>/api/productos/bajo-stock</pre>
-
-    <footer>Código fuente en GitHub: busca el usuario <b>NemelesUrek</b>. · Hecho con Java · Spring Boot · JPA · H2 · springdoc-openapi.</footer>
+<!-- TOPBAR -->
+<div class="topbar"><div class="wrap">
+  <div class="brand"><span class="dot"></span>Nemeles <small>Backend Engineer — Java / Spring</small></div>
+  <div class="spacer"></div>
+  <div id="status" class="status waking"><span class="sdot"></span><span id="statusTxt">Conectando…</span></div>
+  <div class="tlinks">
+    <a class="lk" href="/swagger-ui/index.html" target="_blank">Swagger</a>
+    <a class="lk" href="/v3/api-docs" target="_blank">OpenAPI</a>
+    <a class="btn btn-primary btn-sm" href="#contacto">Contratar</a>
   </div>
+</div></div>
+
+<!-- HERO -->
+<section class="hero"><div class="wrap">
+  <div class="kicker reveal">// BACKEND ENGINEER · JAVA · SPRING BOOT</div>
+  <h1 class="reveal">Tu inventario bajo control,<br>sin hojas de cálculo ni sustos de stock.</h1>
+  <p class="lead reveal">Mira tus productos, recibe alertas cuando algo se está agotando y registra entradas y salidas en segundos. <b>Esta misma página está consultando la API real ahora mismo</b> — no es una maqueta.</p>
+  <div class="ctas reveal">
+    <a class="btn btn-primary" href="#demo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></svg>Ver la demo en vivo</a>
+    <a class="btn btn-ghost" href="#contacto">Hablar con Nemeles</a>
+  </div>
+  <div class="chips reveal">
+    <span class="chip">Java 17</span><span class="chip">Spring Boot</span><span class="chip">JPA / SQL</span>
+    <span class="chip">REST</span><span class="chip">OpenAPI</span><span class="chip">Desplegada en producción</span>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="card kpi reveal"><span class="bar"></span><div class="lbl">Productos</div><div class="val sk" id="kpiProd">000</div><div class="meta">referencias en tu catálogo</div></div>
+    <div class="card kpi warm reveal"><span class="bar"></span><div class="lbl">Valor del inventario</div><div class="val sk" id="kpiVal">000</div><div class="meta">a precio de catálogo</div></div>
+    <div class="card kpi reveal"><span class="bar"></span><div class="lbl">Unidades en bodega</div><div class="val sk" id="kpiUni">000</div><div class="meta">piezas totales</div></div>
+    <div class="card kpi alert reveal" id="kpiAlertCard"><span class="bar"></span><div class="lbl">Alertas de stock</div><div class="val sk" id="kpiAlert">0</div><div class="meta">requieren reposición</div><span class="pulsebadge"><span class="d"></span>REPONER YA</span></div>
+  </div>
+</div></section>
+
+<!-- SOLVES -->
+<section><div class="wrap">
+  <div class="kicker reveal">Beneficios</div>
+  <h2 class="h2 reveal">Lo que esto resuelve en tu negocio</h2>
+  <p class="sub reveal">Pensado para PyMEs que hoy llevan el inventario en papel, en la cabeza o en un Excel que nadie actualiza.</p>
+  <div class="grid4">
+    <div class="card solve reveal"><h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg></span>Nunca te quedes sin vender</h3><p>El sistema te avisa antes de que un producto se agote. Ves de un vistazo qué reponer hoy, sin revisar estante por estante.</p><div class="tech">GET /api/productos/bajo-stock — alertas calculadas en el servidor contra tu stock mínimo.</div></div>
+    <div class="card solve reveal"><h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>Cada movimiento queda registrado</h3><p>Compras, ventas, mermas y devoluciones quedan anotadas con fecha y motivo. Si algo no cuadra, sabes qué pasó y cuándo.</p><div class="tech">Historial inmutable; una salida mayor al disponible se rechaza con 409 Conflict.</div></div>
+    <div class="card solve reveal"><h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>Conéctalo a lo que ya usas</h3><p>Tu punto de venta, tu tienda en línea o tu app pueden leer y actualizar el inventario solos. Un solo dato, una sola verdad.</p><div class="tech">API REST + contrato OpenAPI/Swagger, integrable con cualquier frontend o servicio.</div></div>
+    <div class="card solve reveal"><h3><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg></span>Listo para crecer contigo</h3><p>Empiezas con 10 productos y funciona igual con 10 000. Sin instalar nada: corre en la nube, 24/7.</p><div class="tech">Paginación nativa y precios en centavos (enteros) sin errores de redondeo.</div></div>
+  </div>
+  <div class="intg reveal">
+    <span class="itag on"><span class="t">listo</span>Alertas de stock</span>
+    <span class="itag on"><span class="t">listo</span>Auditoría de movimientos</span>
+    <span class="itag on"><span class="t">listo</span>API REST + OpenAPI</span>
+    <span class="itag on"><span class="t">listo</span>Exportar a CSV/Excel</span>
+    <span class="itag on"><span class="t">listo</span>Nube 24/7</span>
+    <span class="itag soon"><span class="t">a medida</span>Integración e-commerce (Shopify/WooCommerce)</span>
+    <span class="itag soon"><span class="t">a medida</span>Webhooks · Zapier/Make</span>
+    <span class="itag soon"><span class="t">a medida</span>Multi-sucursal · POS · Facturación</span>
+  </div>
+</div></section>
+
+<!-- DASHBOARD -->
+<section id="demo"><div class="wrap">
+  <div class="kicker reveal">Demo interactiva</div>
+  <h2 class="h2 reveal">Pruébalo tú mismo — esto es la API trabajando</h2>
+  <p class="sub reveal">No son capturas. Cada acción de abajo llama a la API real y te responde al instante. <span class="mono" style="color:var(--text-3)">Frontend: 1 archivo, 0 frameworks.</span></p>
+  <div class="dash">
+    <!-- LEFT -->
+    <div class="panel reveal">
+      <div class="panel-h"><h3>Inventario</h3><button class="btn btn-ghost btn-sm" id="csvBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>Exportar CSV</button></div>
+      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="q" placeholder="Buscar por nombre o SKU…"></div>
+      <table><thead><tr><th>SKU</th><th>Producto</th><th class="r">Precio</th><th class="r">Stock</th><th class="r">Estado</th></tr></thead><tbody id="tbody"></tbody></table>
+      <div class="pager"><button id="prev">← Anterior</button><span id="pginfo">—</span><button id="next">Siguiente →</button></div>
+    </div>
+    <!-- RIGHT -->
+    <div>
+      <div class="panel reveal" style="margin-bottom:var(--s5)">
+        <div class="panel-h"><h3>Alertas de reposición</h3></div>
+        <div id="alerts"><div class="alert-item"><span class="sk" style="width:60%">cargando</span></div></div>
+      </div>
+      <div class="panel reveal" style="box-shadow:0 0 0 1px var(--brand-glow),inset 0 1px 0 rgba(255,255,255,.04)">
+        <div class="panel-h"><h3>Probar una acción</h3></div>
+        <div style="padding:var(--s5)">
+          <div class="note">Esto ejecuta una operación <b>real</b> contra la API. Pruébala sin miedo: es un entorno de demostración.</div>
+          <div class="form-row"><label>Producto</label><select id="fProd"></select></div>
+          <div class="form-row"><label>Acción</label><div class="toggle"><button id="tIn" class="sel-in">Entrada (+)</button><button id="tOut">Salida (−)</button></div></div>
+          <div class="form-row" style="flex-direction:row;gap:var(--s3)">
+            <div style="flex:1"><label>Cantidad</label><input class="inp" id="fCant" type="number" min="1" value="1"></div>
+            <div style="flex:2"><label>Motivo</label><input class="inp" id="fMot" type="text" value="Demo desde la landing"></div>
+          </div>
+          <button class="btn btn-primary" id="fGo" style="width:100%;justify-content:center">Ejecutar</button>
+          <div class="result" id="fRes"></div>
+        </div>
+        <details class="jsonbox"><summary id="jsumm">Respuesta JSON ▾</summary><pre id="jpre">Ejecuta una acción para ver la respuesta cruda de la API.</pre></details>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- UNDER THE HOOD -->
+<section><div class="wrap">
+  <div class="kicker reveal">Por dentro</div>
+  <h2 class="h2 reveal">¿Eres técnico? Esto es lo que hay debajo</h2>
+  <div class="grid4">
+    <div class="card solve reveal"><h3>Dinero en centavos</h3><p>Sin errores de redondeo: el precio es un entero de centavos; el $499.00 que ves solo se formatea para mostrar.</p></div>
+    <div class="card solve reveal"><h3>Errores RFC-7807</h3><p>El rechazo que probaste arriba es un Problem Detail estándar (409 + <span class="mono">detail</span> legible).</p></div>
+    <div class="card solve reveal"><h3>Auditoría append-only</h3><p>Cada entrada/salida queda registrada; el historial que ves en la tabla es inmutable.</p></div>
+    <div class="card solve reveal"><h3>Probada + CI</h3><p>Suite con JUnit 5 y pipeline de integración continua en GitHub Actions.</p></div>
+  </div>
+  <div class="eps reveal">
+    <div class="ep"><span class="meth get">GET</span><span class="path">/api/productos</span><span class="cp" data-c="/api/productos">copiar</span></div>
+    <div class="ep"><span class="meth get">GET</span><span class="path">/api/productos/bajo-stock</span><span class="cp" data-c="/api/productos/bajo-stock">copiar</span></div>
+    <div class="ep"><span class="meth get">GET</span><span class="path">/api/productos/{id}/movimientos</span><span class="cp" data-c="/api/productos/{id}/movimientos">copiar</span></div>
+    <div class="ep"><span class="meth post">POST</span><span class="path">/api/productos</span><span class="cp" data-c="/api/productos">copiar</span></div>
+    <div class="ep"><span class="meth post">POST</span><span class="path">/api/productos/{id}/entrada</span><span class="cp" data-c="/api/productos/{id}/entrada">copiar</span></div>
+    <div class="ep"><span class="meth post">POST</span><span class="path">/api/productos/{id}/salida</span><span class="cp" data-c="/api/productos/{id}/salida">copiar</span></div>
+  </div>
+  <p class="sub reveal" style="margin-top:var(--s5)">Documentación interactiva en <a href="/swagger-ui/index.html" target="_blank">Swagger UI</a> · especificación <a href="/v3/api-docs" target="_blank">OpenAPI</a> · código en <a href="https://github.com/NemelesUrek/inventario-api" target="_blank">GitHub</a>.</p>
+</div></section>
+
+<!-- CTA -->
+<section id="contacto"><div class="wrap">
+  <div class="ctaband reveal">
+    <div class="kicker">Trabajemos juntos</div>
+    <h2 class="h2" style="margin-top:10px">¿Quieres algo así para tu negocio?</h2>
+    <p class="sub" style="margin:14px auto 0">Sistemas a la medida: inventario, ventas, reservas, reportes. Backend serio en Java + Spring, con la API documentada y desplegada — listo para conectarse a tu web, tu app o tu punto de venta.</p>
+    <ul>
+      <li><svg viewBox="0 0 24 24" width="16" fill="none" stroke="var(--brand)" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>Hecho a la medida, no una plantilla</li>
+      <li><svg viewBox="0 0 24 24" width="16" fill="none" stroke="var(--brand)" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>Código limpio, probado y documentado</li>
+      <li><svg viewBox="0 0 24 24" width="16" fill="none" stroke="var(--brand)" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>Te entrego algo funcionando, no diapositivas</li>
+    </ul>
+    <div class="ctas">
+      <a class="btn btn-primary" href="mailto:emuiser1@gmail.com?subject=Proyecto%20backend%20-%20vi%20tu%20demo%20de%20inventario&body=Hola%20Nemeles%2C%20vi%20tu%20demo%20en%20vivo%20y%20me%20interesa%20algo%20parecido%20para%20mi%20negocio.">Hablemos de tu proyecto</a>
+      <a class="btn btn-ghost" href="/swagger-ui/index.html" target="_blank">Ver el código y la API</a>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div><b style="color:var(--text-2)">Nemeles</b> — Backend Engineer · Java · Spring Boot · REST · SQL</div>
+  <div class="mono2">Esta misma página corre sobre la API que ves arriba. Si carga, es porque funciona. · Frontend en HTML/CSS/JS vanilla, sin dependencias. · <a href="https://github.com/NemelesUrek" target="_blank">github.com/NemelesUrek</a></div>
+</div></footer>
+
+<script>
+const API='';
+let PRODUCTS=[], FILTERED=[], PAGE=0, PER=10, ACTION='entrada';
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const fmtMXN=c=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(c/100);
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+function setStatus(s,txt){const el=$('#status');el.className='status '+s;$('#statusTxt').textContent=txt;}
+function fetchT(url,opt={},ms=60000){const c=new AbortController();const id=setTimeout(()=>c.abort(),ms);
+  return fetch(url,{...opt,signal:c.signal}).finally(()=>clearTimeout(id));}
+
+async function loadAll(){
+  setStatus('waking','Despertando servidor…');
+  let slow=setTimeout(()=>{if($('#status').classList.contains('waking'))toast('El servidor de demo estaba en reposo (free tier). Despertando, ~50s…');},4500);
+  try{
+    const [pr,bs]=await Promise.all([
+      fetchT(API+'/api/productos?page=0&size=200').then(r=>r.json()),
+      fetchT(API+'/api/productos/bajo-stock').then(r=>r.json())
+    ]);
+    clearTimeout(slow);
+    PRODUCTS=pr.content||[];
+    setStatus('live','API en vivo');
+    renderKPIs(pr,bs); applyFilter(); renderAlerts(bs); fillSelect();
+  }catch(e){
+    clearTimeout(slow);
+    setStatus('offline','Sin conexión');
+    $('#tbody').innerHTML='';
+    const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=5;td.style.padding='28px';td.style.textAlign='center';td.style.color='var(--text-3)';
+    td.textContent='No pudimos conectar con la API. ';
+    const b=document.createElement('button');b.className='btn btn-ghost btn-sm';b.textContent='Reintentar conexión';b.onclick=loadAll;td.appendChild(b);
+    tr.appendChild(td);$('#tbody').appendChild(tr);
+  }
+}
+function renderKPIs(pr,bs){
+  const total=pr.page?pr.page.totalElements:PRODUCTS.length;
+  const valor=PRODUCTS.reduce((a,p)=>a+p.precioCentavos*p.stock,0);
+  const uni=PRODUCTS.reduce((a,p)=>a+p.stock,0);
+  const al=Array.isArray(bs)?bs.length:0;
+  set('#kpiProd',total); set('#kpiVal',fmtMXN(valor)); set('#kpiUni',uni.toLocaleString('es-MX')); set('#kpiAlert',al);
+  const c=$('#kpiAlertCard'); if(al>0){c.classList.add('has');c.onclick=()=>$('#demo').scrollIntoView({behavior:'smooth'});}
+  function set(id,v){const e=$(id);e.classList.remove('sk');e.textContent=v;}
+}
+function applyFilter(){
+  const q=$('#q').value.trim().toLowerCase();
+  FILTERED=q?PRODUCTS.filter(p=>(p.nombre+' '+p.sku).toLowerCase().includes(q)):PRODUCTS.slice();
+  PAGE=0; renderTable();
+}
+function renderTable(){
+  const tb=$('#tbody'); tb.innerHTML='';
+  const pages=Math.max(1,Math.ceil(FILTERED.length/PER));
+  if(PAGE>=pages)PAGE=pages-1;
+  const slice=FILTERED.slice(PAGE*PER,PAGE*PER+PER);
+  if(!slice.length){const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=5;td.style.cssText='padding:24px;text-align:center;color:var(--text-3)';td.textContent='Sin coincidencias.';tr.appendChild(td);tb.appendChild(tr);}
+  slice.forEach(p=>{
+    const tr=document.createElement('tr'); if(p.bajoStock)tr.classList.add('low'); tr.dataset.id=p.id;
+    tr.appendChild(cell('SKU',sp('sku',p.sku)));
+    const prod=document.createElement('div');const n=sp('pname',p.nombre);const d=sp('pdesc',p.descripcion||'');prod.append(n,document.createElement('br'),d);
+    tr.appendChild(cell('Producto',prod));
+    const pc=cell('Precio',document.createTextNode(p.precio)); pc.classList.add('r'); pc.classList.add('tnum'); tr.appendChild(pc);
+    const sc=document.createElement('div');sc.className='stockcell';
+    const sn=sp('tnum',String(p.stock));sn.style.fontWeight='600';
+    const bar=document.createElement('div');bar.className='sbar';const fill=document.createElement('i');
+    const pct=p.stockMinimo>0?Math.min(100,p.stock/(p.stockMinimo*3)*100):100; fill.style.width=pct+'%'; if(p.bajoStock)fill.style.background='var(--danger)';
+    bar.appendChild(fill); sc.append(sn,bar);
+    const stc=cell('Stock',sc); stc.classList.add('r'); tr.appendChild(stc);
+    const badge=document.createElement('span');badge.className='badge '+(p.bajoStock?'low':'ok');const bd=document.createElement('span');bd.className='bd';badge.append(bd,document.createTextNode(p.bajoStock?'Reponer':'En stock'));
+    const bc=cell('Estado',badge); bc.classList.add('r'); tr.appendChild(bc);
+    tr.onclick=()=>toggleMovs(tr,p.id);
+    tb.appendChild(tr);
+  });
+  $('#pginfo').textContent=`Página ${PAGE+1} de ${pages} · ${FILTERED.length} productos`;
+  $('#prev').disabled=PAGE===0; $('#next').disabled=PAGE>=pages-1;
+}
+function cell(label,node){const td=document.createElement('td');td.dataset.l=label;td.appendChild(node);return td;}
+function sp(cls,txt){const s=document.createElement('span');s.className=cls;s.textContent=txt;return s;}
+async function toggleMovs(tr,id){
+  const nx=tr.nextElementSibling;
+  if(nx&&nx.classList.contains('movrow')){nx.remove();return;}
+  const row=document.createElement('tr');row.className='movrow';const td=document.createElement('td');td.colSpan=5;td.className='movs';td.textContent='Cargando historial…';row.appendChild(td);tr.after(row);
+  try{const mv=await fetchT(API+'/api/productos/'+id+'/movimientos').then(r=>r.json());
+    td.textContent='';
+    if(!mv.length){td.textContent='Sin movimientos registrados.';return;}
+    mv.forEach(m=>{const d=document.createElement('div');d.className='mov';
+      const tag=document.createElement('span');tag.className='movtag '+(m.tipo==='ENTRADA'?'in':'out');tag.textContent=m.tipo;
+      d.append(tag,sp('tnum',(m.tipo==='ENTRADA'?'+':'−')+m.cantidad),sp('',' → '+m.stockResultante+' u.'),sp('',m.motivo||''));
+      const t=document.createElement('span');t.className='mt';t.textContent=rel(m.fecha);d.appendChild(t);td.appendChild(d);});
+  }catch(e){td.textContent='No se pudo cargar el historial.';}
+}
+function rel(iso){const s=Math.round((Date.now()-new Date(iso))/1000);const rtf=new Intl.RelativeTimeFormat('es',{numeric:'auto'});
+  if(s<60)return rtf.format(-s,'second');if(s<3600)return rtf.format(-Math.round(s/60),'minute');if(s<86400)return rtf.format(-Math.round(s/3600),'hour');return rtf.format(-Math.round(s/86400),'day');}
+function renderAlerts(bs){
+  const c=$('#alerts');c.innerHTML='';
+  if(!Array.isArray(bs)||!bs.length){const d=document.createElement('div');d.className='empty-ok';d.innerHTML='<svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>';const sp2=document.createElement('span');sp2.textContent='Todo en orden. Ningún producto por debajo del mínimo.';d.appendChild(sp2);c.appendChild(d);return;}
+  bs.forEach(p=>{const d=document.createElement('div');d.className='alert-item';
+    const info=document.createElement('div');info.append(sp('an',p.nombre));const f=sp('af','faltan '+Math.max(0,p.stockMinimo-p.stock)+' para el mínimo');f.style.display='block';info.appendChild(f);
+    const b=document.createElement('button');b.className='btn btn-ghost btn-sm repo';b.textContent='+ Reponer';b.onclick=()=>{$('#fProd').value=p.id;setAction('entrada');$('#fCant').value=Math.max(1,p.stockMinimo-p.stock);$('#demo').scrollIntoView({behavior:'smooth'});};
+    d.append(info,b);c.appendChild(d);});
+}
+function fillSelect(){const s=$('#fProd');s.innerHTML='';PRODUCTS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=`${p.nombre} — ${p.sku} (stock: ${p.stock})`;s.appendChild(o);});}
+function setAction(a){ACTION=a;$('#tIn').className=a==='entrada'?'sel-in':'';$('#tOut').className=a==='salida'?'sel-out':'';}
+async function doAction(){
+  const id=$('#fProd').value, cant=parseInt($('#fCant').value)||0, mot=$('#fMot').value||'Demo';
+  if(!id||cant<1){toast('Elige producto y una cantidad válida.');return;}
+  const btn=$('#fGo');btn.disabled=true;const old=btn.textContent;btn.textContent='Ejecutando…';
+  const url=API+'/api/productos/'+id+'/'+ACTION;
+  try{
+    const res=await fetchT(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cantidad:cant,motivo:mot})});
+    const body=await res.json();
+    showJson('POST '+url,res.status,body);
+    const r=$('#fRes');
+    if(res.ok){r.className='result ok';r.textContent=`Listo. Stock de ${body.nombre}: ${body.stock-(ACTION==='entrada'?cant:-cant)} → ${body.stock}`;
+      const idx=PRODUCTS.findIndex(p=>p.id==id);if(idx>=0)PRODUCTS[idx]=body;
+      const bs=await fetchT(API+'/api/productos/bajo-stock').then(r=>r.json());
+      renderKPIs({page:{totalElements:PRODUCTS.length}},bs);applyFilter();renderAlerts(bs);fillSelect();$('#fProd').value=id;
+      const tr=$(`tr[data-id="${id}"]`);if(tr){tr.classList.add('flash');setTimeout(()=>tr.classList.remove('flash'),700);}
+      toast('✓ '+(ACTION==='entrada'?'Entrada':'Salida')+' registrada · stock actualizado');
+    }else{r.className='result err';r.textContent=body.detail||body.title||('Error '+res.status);}
+  }catch(e){toast('No se pudo completar. Intenta de nuevo.');}
+  btn.disabled=false;btn.textContent=old;
+}
+function showJson(line,status,body){
+  const pre=$('#jpre');pre.textContent='';
+  const head=document.createElement('div');head.textContent=line+'  → ';
+  const code=document.createElement('span');code.className='httpcode '+(status<300?'s2':'s4');code.textContent='HTTP '+status;
+  head.appendChild(code);pre.appendChild(head);pre.appendChild(document.createTextNode('\n'+JSON.stringify(body,null,2)));
+  $('#jsumm').textContent='Respuesta JSON ▾  (HTTP '+status+')';
+}
+function exportCSV(){
+  const rows=[['sku','nombre','precio','stock','stockMinimo','bajoStock']];
+  PRODUCTS.forEach(p=>rows.push([p.sku,'"'+(p.nombre||'').replace(/"/g,'""')+'"',(p.precioCentavos/100).toFixed(2),p.stock,p.stockMinimo,p.bajoStock]));
+  const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='inventario.csv';a.click();URL.revokeObjectURL(a.href);toast('CSV exportado');
+}
+// wires
+$('#q').addEventListener('input',applyFilter);
+$('#prev').onclick=()=>{if(PAGE>0){PAGE--;renderTable();}};
+$('#next').onclick=()=>{PAGE++;renderTable();};
+$('#tIn').onclick=()=>setAction('entrada');$('#tOut').onclick=()=>setAction('salida');
+$('#fGo').onclick=doAction; $('#csvBtn').onclick=exportCSV;
+$$('.cp').forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.c);b.textContent='✓ copiado';setTimeout(()=>b.textContent='copiar',1200);});
+// reveal
+const io=new IntersectionObserver(es=>es.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('in'),i*50);io.unobserve(e.target);}}),{threshold:.08});
+$$('.reveal').forEach(e=>io.observe(e));
+loadAll();
+</script>
 </body>
 </html>
