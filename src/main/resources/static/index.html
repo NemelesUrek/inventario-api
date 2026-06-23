@@ -179,6 +179,22 @@ tr.low td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
 .modal-bg.open{display:flex}
 .modal{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--r-lg);width:100%;max-width:440px;box-shadow:var(--sh-lg);animation:fade .25s}
 .modal h3{font-size:18px;padding:var(--s5) var(--s5) 0}.modal .body{padding:var(--s5)}
+/* command palette */
+kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--text-2);line-height:1.4}
+.kbtn{display:flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-3);border-radius:var(--r-md);padding:6px 11px;font-size:13px;cursor:pointer;font-family:Inter}.kbtn:hover{border-color:var(--border-strong);color:var(--text-2)}.kbtn kbd{pointer-events:none}
+.pal-bg{position:fixed;inset:0;background:rgba(4,8,18,.55);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;z-index:90;padding-top:11vh}
+.pal-bg.open{display:flex}
+.pal{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--r-lg);width:100%;max-width:560px;box-shadow:var(--sh-lg);overflow:hidden;animation:fade .18s}
+.pal-search{display:flex;align-items:center;gap:11px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.pal-search svg{width:18px;height:18px;color:var(--text-3);flex:none}
+.pal-search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:16px;font-family:Inter}
+.pal-list{max-height:48vh;overflow:auto;padding:8px}
+.pal-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-md);cursor:pointer;font-size:14.5px}
+.pal-item .pi{width:30px;height:30px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;color:var(--text-3);flex:none}.pal-item .pi svg{width:16px;height:16px}
+.pal-item .pt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pal-item .pcat{font-size:11px;color:var(--text-4);font-family:'JetBrains Mono';flex:none}
+.pal-item.sel{background:var(--brand-glow)}.pal-item.sel .pi{color:var(--brand);background:var(--surface)}
+.pal-foot{display:flex;gap:16px;padding:9px 16px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text-3)}
+.pal-foot span{display:flex;align-items:center;gap:6px}
 /* toast / skeleton / anim */
 #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;transition:.3s;background:var(--surface-3);border:1px solid var(--border-strong);color:var(--text);padding:12px 18px;border-radius:var(--r-md);font-size:14px;box-shadow:var(--sh-lg);z-index:100;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -226,6 +242,7 @@ tr.low td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
       <button class="hamb" id="hamb"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
       <h1 id="viewTitle">Panel</h1>
       <div class="spacer"></div>
+      <button class="kbtn" id="palBtn" title="Paleta de comandos"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Buscar <kbd>Ctrl K</kbd></button>
       <a class="btn btn-primary btn-sm" data-view="contratar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>Contratar</a>
     </header>
 
@@ -358,6 +375,19 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
   </div>
   <div class="result" id="nRes"></div>
   <div style="display:flex;gap:var(--s3);margin-top:var(--s4)"><button class="btn btn-ghost" id="nCancel" style="flex:1;justify-content:center">Cancelar</button><button class="btn btn-primary" id="nSave" style="flex:1;justify-content:center">Crear producto</button></div>
+</div></div></div>
+
+<!-- COMMAND PALETTE -->
+<div class="pal-bg" id="palette"><div class="pal">
+  <div class="pal-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="palInput" placeholder="Buscar acción, vista o producto…" autocomplete="off"><kbd>esc</kbd></div>
+  <div class="pal-list" id="palList"></div>
+  <div class="pal-foot"><span><kbd>↑</kbd><kbd>↓</kbd> navegar</span><span><kbd>↵</kbd> seleccionar</span><span><kbd>esc</kbd> cerrar</span></div>
+</div></div>
+
+<!-- CONFIRM DIALOG -->
+<div class="modal-bg" id="confirmBg"><div class="modal" style="max-width:400px"><h3 id="confirmTitle">Confirmar</h3><div class="body">
+  <p id="confirmMsg" style="color:var(--text-2);font-size:14.5px"></p>
+  <div style="display:flex;gap:var(--s3);margin-top:var(--s5)"><button class="btn btn-ghost" id="confirmNo" style="flex:1;justify-content:center">Cancelar</button><button class="btn" id="confirmYes" style="flex:1;justify-content:center;background:var(--danger);color:#fff">Confirmar</button></div>
 </div></div></div>
 
 <script>
@@ -495,7 +525,7 @@ $('#nSave').onclick=async()=>{
   btn.disabled=false;
 };
 async function deleteProduct(p){
-  if(!confirm(`¿Eliminar "${p.nombre}" (${p.sku})?\nEsta acción no se puede deshacer.`))return;
+  if(!await confirmDialog('Eliminar producto',`¿Seguro que quieres eliminar "${p.nombre}" (${p.sku})? Esta acción no se puede deshacer.`,'Eliminar'))return;
   try{const res=await fetchT(API+'/api/productos/'+p.id,{method:'DELETE'});
     if(res.status===204||res.ok){toast('✓ Producto eliminado');await refresh();}
     else{const b=await res.json().catch(()=>({}));toast(b.detail||('No se pudo eliminar ('+res.status+')'));}
@@ -550,6 +580,62 @@ $('#prev').onclick=()=>{if(PAGE>0){PAGE--;renderTable();}};$('#next').onclick=()
 $('#tIn').onclick=()=>setAction('entrada');$('#tOut').onclick=()=>setAction('salida');
 $('#fGo').onclick=doAction;$('#csvBtn').onclick=exportCSV;
 $$('.cp').forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.c);const o=b.textContent;b.textContent='✓ copiado';setTimeout(()=>b.textContent=o,1200);});
+/* COMMAND PALETTE (⌘K / Ctrl+K) */
+const PIC={nav:'<path d="M5 12h14M13 6l6 6-6 6"/>',add:'<path d="M12 5v14M5 12h14"/>',csv:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/>',theme:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 22v-2M2 12h2M20 12h2"/>',refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>',edit:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'};
+let PAL=[],PALF=[],PALSEL=0;
+function paletteCommands(){
+  const c=[
+    {t:'Ir a Panel',c:'Navegar',i:PIC.nav,run:()=>go('panel')},
+    {t:'Ir a Inventario',c:'Navegar',i:PIC.nav,run:()=>go('inventario')},
+    {t:'Ir a Movimientos',c:'Navegar',i:PIC.nav,run:()=>go('movimientos')},
+    {t:'Ir a Reportes',c:'Navegar',i:PIC.nav,run:()=>go('reportes')},
+    {t:'Ir a API & Docs',c:'Navegar',i:PIC.nav,run:()=>go('api')},
+    {t:'Ir a Contratar',c:'Navegar',i:PIC.nav,run:()=>go('contratar')},
+    {t:'Nuevo producto',c:'Acción',i:PIC.add,run:()=>{go('inventario');openCreate();}},
+    {t:'Exportar inventario (CSV)',c:'Acción',i:PIC.csv,run:exportCSV},
+    {t:'Cambiar tema (claro/oscuro)',c:'Acción',i:PIC.theme,run:()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark')},
+    {t:'Actualizar datos',c:'Acción',i:PIC.refresh,run:()=>{refresh();toast('Datos actualizados');}},
+  ];
+  PRODUCTS.forEach(p=>c.push({t:'Editar: '+p.nombre,c:p.sku,i:PIC.edit,run:()=>{go('inventario');editProduct(p);}}));
+  return c;
+}
+function openPalette(){PAL=paletteCommands();$('#palInput').value='';renderPalette('');$('#palette').classList.add('open');setTimeout(()=>$('#palInput').focus(),40);}
+function closePalette(){$('#palette').classList.remove('open');}
+function renderPalette(qy){
+  const list=$('#palList');list.innerHTML='';PALSEL=0;
+  const f=qy.trim().toLowerCase();
+  PALF=f?PAL.filter(c=>(c.t+' '+c.c).toLowerCase().includes(f)):PAL;
+  if(!PALF.length){list.innerHTML='<div style="padding:18px;text-align:center;color:var(--text-3);font-size:14px">Sin resultados</div>';return;}
+  PALF.forEach((c,i)=>{const d=document.createElement('div');d.className='pal-item'+(i===0?' sel':'');
+    d.innerHTML='<span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+c.i+'</svg></span><span class="pt"></span><span class="pcat"></span>';
+    d.querySelector('.pt').textContent=c.t;d.querySelector('.pcat').textContent=c.c;
+    d.onclick=()=>{c.run();closePalette();};d.onmousemove=()=>setSel(i);list.appendChild(d);});
+}
+function setSel(i){PALSEL=i;$$('#palList .pal-item').forEach((e,j)=>e.classList.toggle('sel',j===i));}
+function moveSel(d){const items=$$('#palList .pal-item');if(!items.length)return;PALSEL=(PALSEL+d+items.length)%items.length;setSel(PALSEL);items[PALSEL].scrollIntoView({block:'nearest'});}
+function runSel(){const c=PALF[PALSEL];if(c){c.run();closePalette();}}
+$('#palInput').addEventListener('input',e=>renderPalette(e.target.value));
+$('#palInput').addEventListener('keydown',e=>{if(e.key==='ArrowDown'){e.preventDefault();moveSel(1);}else if(e.key==='ArrowUp'){e.preventDefault();moveSel(-1);}else if(e.key==='Enter'){e.preventDefault();runSel();}});
+$('#palette').onclick=e=>{if(e.target===$('#palette'))closePalette();};
+$('#palBtn').onclick=openPalette;
+/* CONFIRM DIALOG */
+function confirmDialog(title,msg,yesLabel){return new Promise(res=>{
+  $('#confirmTitle').textContent=title;$('#confirmMsg').textContent=msg;$('#confirmYes').textContent=yesLabel||'Confirmar';
+  $('#confirmBg').classList.add('open');setTimeout(()=>$('#confirmNo').focus(),40);
+  const done=v=>{$('#confirmBg').classList.remove('open');res(v);};
+  $('#confirmYes').onclick=()=>done(true);$('#confirmNo').onclick=()=>done(false);
+  $('#confirmBg').onclick=e=>{if(e.target===$('#confirmBg'))done(false);};
+});}
+/* SHORTCUTS GLOBALES */
+document.addEventListener('keydown',e=>{
+  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#palette').classList.contains('open')?closePalette():openPalette();return;}
+  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');return;}
+  if(typing)return;
+  if(e.key==='/'){e.preventDefault();go('inventario');$('#q').focus();}
+  else if(e.key==='n'){e.preventDefault();go('inventario');openCreate();}
+  else if(e.key==='t'){setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');}
+});
 /* init */
 try{setTheme(localStorage.getItem('theme')||'dark')}catch(e){setTheme('dark');}
 go(location.hash.slice(1)||'panel');

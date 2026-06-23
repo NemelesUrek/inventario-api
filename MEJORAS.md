@@ -25,8 +25,18 @@ se vea como una **aplicación interactiva completa y profesional de nivel senior
 - **Tests:** +2 (feed global de movimientos, y actualizar+eliminar). **8 tests verdes.**
 - Verificado local por DOM: 6 nav, MOVS=6, 12 botones de acción, modal de edición OK.
 
+## Iteración 3 — Paleta de comandos + atajos + UX pro
+- **Command palette (⌘K / Ctrl+K)**: overlay con búsqueda difusa sobre navegación,
+  acciones (nuevo, CSV, tema, actualizar) y productos (editar). Navegación con
+  flechas + Enter, ratón con hover, cierre con Esc. Botón "Buscar ⌘K" en el topbar.
+- **Atajos globales**: Ctrl+K (paleta), `/` (buscar inventario), `n` (nuevo),
+  `t` (tema), Esc (cerrar). Guardados para no dispararse al escribir.
+- **Diálogo de confirmación propio** (reemplaza `confirm()` nativo) para eliminar.
+- Verificado por DOM: 16 items, filtros, nav por teclado, Ctrl+K, confirm OK.
+
 ## Pendiente / próximas iteraciones
 - [ ] Endpoint /api/stats para los KPIs/reportes server-side.
+- [ ] Más reportes/gráficas (tendencia por movimientos, rotación).
 - [ ] Más reportes/gráficas (tendencia, rotación) y filtros.
 - [ ] Command palette / atajos de teclado.
 - [ ] Estados vacíos/skeleton más pulidos, toasts apilables.
