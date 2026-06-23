@@ -39,11 +39,11 @@ public class DemoDataService {
     }
 
     private void seed() {
-        service.crear("CAF-001", "Café de altura 1 kg", "Grano arábica, tueste medio", 18900, 40, 10);
-        service.crear("TAZ-114", "Taza de cerámica 350 ml", "Color mate, apta para microondas", 7950, 8, 12);   // bajo stock
-        service.crear("AUR-220", "Audífonos inalámbricos", "Bluetooth 5.3, 24 h de batería", 49900, 25, 5);
-        service.crear("CUA-007", "Cuaderno A5 punteado", "120 hojas, tapa dura", 5990, 120, 20);
-        service.crear("MOC-330", "Mochila urbana 20 L", "Resistente al agua, puerto USB", 64900, 4, 6);          // bajo stock
-        service.crear("BOT-410", "Botella térmica 750 ml", "Acero inoxidable, 12 h frío", 21500, 60, 15);
+        service.crear("CAF-001", "Café de altura 1 kg", "Grano arábica, tueste medio", 18900, 40, 10, "Alimentos");
+        service.crear("TAZ-114", "Taza de cerámica 350 ml", "Color mate, apta para microondas", 7950, 8, 12, "Hogar");   // bajo stock
+        service.crear("AUR-220", "Audífonos inalámbricos", "Bluetooth 5.3, 24 h de batería", 49900, 25, 5, "Electrónica");
+        service.crear("CUA-007", "Cuaderno A5 punteado", "120 hojas, tapa dura", 5990, 120, 20, "Oficina");
+        service.crear("MOC-330", "Mochila urbana 20 L", "Resistente al agua, puerto USB", 64900, 4, 6, "Accesorios");    // bajo stock
+        service.crear("BOT-410", "Botella térmica 750 ml", "Acero inoxidable, 12 h frío", 21500, 60, 15, "Hogar");
     }
 }

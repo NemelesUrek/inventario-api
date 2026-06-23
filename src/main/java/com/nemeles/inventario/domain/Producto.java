@@ -42,6 +42,10 @@ public class Producto {
     @Column(nullable = false)
     private int stockMinimo;
 
+    /** Categoría opcional (p. ej. Electrónica, Hogar). Útil para filtrar y agrupar. */
+    @Column(length = 80)
+    private String categoria;
+
     @Column(nullable = false, updatable = false)
     private Instant creadoEn = Instant.now();
 
@@ -52,13 +56,14 @@ public class Producto {
         // requerido por JPA
     }
 
-    public Producto(String sku, String nombre, String descripcion, long precioCentavos, int stock, int stockMinimo) {
+    public Producto(String sku, String nombre, String descripcion, long precioCentavos, int stock, int stockMinimo, String categoria) {
         this.sku = sku;
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precioCentavos = precioCentavos;
         this.stock = stock;
         this.stockMinimo = stockMinimo;
+        this.categoria = categoria;
     }
 
     @PreUpdate
@@ -84,6 +89,8 @@ public class Producto {
     public void setStock(int stock) { this.stock = stock; }
     public int getStockMinimo() { return stockMinimo; }
     public void setStockMinimo(int stockMinimo) { this.stockMinimo = stockMinimo; }
+    public String getCategoria() { return categoria; }
+    public void setCategoria(String categoria) { this.categoria = categoria; }
     public Instant getCreadoEn() { return creadoEn; }
     public Instant getActualizadoEn() { return actualizadoEn; }
 }

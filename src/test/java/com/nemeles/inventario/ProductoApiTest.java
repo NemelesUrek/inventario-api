@@ -35,13 +35,14 @@ class ProductoApiTest {
     @Test
     void crear_devuelve_201_con_location() throws Exception {
         String body = """
-                {"sku":"TST-201","nombre":"Producto de prueba","precioCentavos":1000,"stockInicial":5,"stockMinimo":1}""";
+                {"sku":"TST-201","nombre":"Producto de prueba","precioCentavos":1000,"stockInicial":5,"stockMinimo":1,"categoria":"Pruebas"}""";
         mvc.perform(post("/api/productos").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.sku").value("TST-201"))
                 .andExpect(jsonPath("$.stock").value(5))
-                .andExpect(jsonPath("$.precio").value("$10.00"));
+                .andExpect(jsonPath("$.precio").value("$10.00"))
+                .andExpect(jsonPath("$.categoria").value("Pruebas"));
     }
 
     @Test

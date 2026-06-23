@@ -65,7 +65,7 @@ public class ProductoController {
     public ResponseEntity<ProductoResponse> crear(@Valid @RequestBody CrearProductoRequest req,
                                                   UriComponentsBuilder uri) {
         Producto p = service.crear(req.sku(), req.nombre(), req.descripcion(),
-                req.precioCentavos(), req.stockInicial(), req.stockMinimo());
+                req.precioCentavos(), req.stockInicial(), req.stockMinimo(), req.categoria());
         URI location = uri.path("/api/productos/{id}").buildAndExpand(p.getId()).toUri();
         return ResponseEntity.created(location).body(ProductoResponse.de(p));
     }
@@ -74,7 +74,7 @@ public class ProductoController {
     @Operation(summary = "Actualizar datos de un producto")
     public ProductoResponse actualizar(@PathVariable Long id, @Valid @RequestBody ActualizarProductoRequest req) {
         return ProductoResponse.de(service.actualizar(id, req.nombre(), req.descripcion(),
-                req.precioCentavos(), req.stockMinimo()));
+                req.precioCentavos(), req.stockMinimo(), req.categoria()));
     }
 
     @DeleteMapping("/{id}")

@@ -11,6 +11,7 @@ public record CrearProductoRequest(
         @Size(max = 500) String descripcion,
         @PositiveOrZero long precioCentavos,
         @PositiveOrZero int stockInicial,
-        @PositiveOrZero int stockMinimo
+        @PositiveOrZero int stockMinimo,
+        @Size(max = 80) String categoria
 ) {
 }

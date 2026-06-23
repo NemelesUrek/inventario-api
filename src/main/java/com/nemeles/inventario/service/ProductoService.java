@@ -77,11 +77,11 @@ public class ProductoService {
 
     @Transactional
     public Producto crear(String sku, String nombre, String descripcion,
-                          long precioCentavos, int stockInicial, int stockMinimo) {
+                          long precioCentavos, int stockInicial, int stockMinimo, String categoria) {
         if (productos.existsBySkuIgnoreCase(sku)) {
             throw new ConflictException("Ya existe un producto con el SKU '" + sku + "'");
         }
-        Producto p = productos.save(new Producto(sku, nombre, descripcion, precioCentavos, stockInicial, stockMinimo));
+        Producto p = productos.save(new Producto(sku, nombre, descripcion, precioCentavos, stockInicial, stockMinimo, categoria));
         if (stockInicial > 0) {
             movimientos.save(new Movimiento(p, Movimiento.Tipo.ENTRADA, stockInicial, "Alta inicial"));
         }
@@ -89,12 +89,13 @@ public class ProductoService {
     }
 
     @Transactional
-    public Producto actualizar(Long id, String nombre, String descripcion, long precioCentavos, int stockMinimo) {
+    public Producto actualizar(Long id, String nombre, String descripcion, long precioCentavos, int stockMinimo, String categoria) {
         Producto p = obtener(id);
         p.setNombre(nombre);
         p.setDescripcion(descripcion);
         p.setPrecioCentavos(precioCentavos);
         p.setStockMinimo(stockMinimo);
+        p.setCategoria(categoria);
         return productos.save(p);
     }
 

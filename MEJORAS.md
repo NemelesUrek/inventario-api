@@ -95,8 +95,17 @@ se vea como una **aplicación interactiva completa y profesional de nivel senior
 11 endpoints (4 controllers) · 10 tests + CI · 7 vistas SPA · CRUD + auditoría +
 reportes server-side + paleta ⌘K + configuración + reset de demo + a11y + OG.
 
+## Iteración 11 — Módulo de Categorías (multiuso)
+- **Backend end-to-end:** campo `categoria` en `Producto` (+constructor/getter/setter),
+  en `CrearProductoRequest`/`ActualizarProductoRequest`/`ProductoResponse`, en
+  `ProductoService.crear/actualizar` y en el seed (5 categorías). Test ampliado.
+- **Frontend:** campo en el modal (con `datalist` de categorías existentes), **etiqueta
+  de categoría** en la tabla, **filtro por categoría** (select), **gráfica "valor por
+  categoría"** en Reportes y categoría en el CSV.
+- Verificado por DOM: filtro Hogar→2, 5 barras de categoría, modal precarga, 10 tests.
+
 ## Pendiente / próximas iteraciones (nice-to-have)
-- [ ] Segundo módulo (categorías/proveedores) para reforzar "multiuso".
+- [ ] QA final sobre el deploy en vivo (humo de los 11 endpoints + app).
 - [ ] Paginación server-side real cuando crezca el catálogo.
 - [ ] Tests e2e del frontend.
 - [ ] Más reportes/gráficas (tendencia, rotación) y filtros.
