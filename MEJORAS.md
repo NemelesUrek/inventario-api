@@ -76,10 +76,17 @@ se vea como una **aplicación interactiva completa y profesional de nivel senior
   paleta + endpoint en la vista API. Confirmación con diálogo propio.
 - Verificado: 7→reset→6 vía curl; botón/comando/endpoint presentes.
 
+## Iteración 9 — Orden, filtro y estados vacíos
+- **Orden por columnas** (SKU/Producto/Precio/Stock) con clic en el encabezado,
+  asc/desc y flecha indicadora.
+- **Chip "Solo bajo stock"** que filtra la tabla.
+- **Estados vacíos con contexto** (búsqueda sin resultados / sin bajo stock / sin
+  productos) con icono.
+- Verificado por DOM: precio asc $59.90 / desc $649.00, filtro 2 filas, mensajes OK.
+
 ## Pendiente / próximas iteraciones
-- [ ] Orden por columnas en la tabla de inventario + chip de "bajo stock".
-- [ ] Estados vacíos ilustrados (búsqueda sin resultados).
-- [ ] document.title por vista; hint de ⌘K en primera visita.
+- [ ] Overlay de atajos de teclado ("?") + document.title por vista.
+- [ ] Hint de ⌘K en primera visita (descubribilidad).
 - [ ] Más reportes/gráficas (tendencia, rotación) y filtros.
 - [ ] Command palette / atajos de teclado.
 - [ ] Estados vacíos/skeleton más pulidos, toasts apilables.

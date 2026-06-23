@@ -111,6 +111,11 @@ a{color:var(--brand);text-decoration:none}
 table{width:100%;border-collapse:collapse}
 thead th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);text-align:left;font-weight:600;padding:9px var(--s5);border-bottom:1px solid var(--border)}
 thead th.r,td.r{text-align:right}
+thead th.sortable{cursor:pointer;user-select:none;transition:color .15s}thead th.sortable:hover{color:var(--text-2)}
+.sar{color:var(--brand);font-size:10px}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;padding:7px 13px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);cursor:pointer;transition:.15s;font-family:Inter}
+.chip:hover{border-color:var(--border-strong);color:var(--text)}
+.chip.on{background:var(--danger-bg);border-color:var(--danger);color:var(--danger)}
 tbody td{padding:12px var(--s5);border-bottom:1px solid var(--border-soft);font-size:14px;vertical-align:middle}
 tbody tr{transition:background .18s;cursor:pointer}tbody tr:hover{background:var(--surface-2)}
 tr.low td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
@@ -305,10 +310,10 @@ html[data-motion="off"] *{animation:none!important;transition:none!important;scr
     <section class="view" id="view-inventario">
       <p class="vtitle">Catálogo completo. Busca, da de alta productos y gestiona el stock.</p>
       <div class="section-h first"><div class="search" style="flex:1;max-width:360px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="q" placeholder="Buscar por nombre o SKU…"></div>
-        <div style="display:flex;gap:var(--s2)"><button class="btn btn-ghost btn-sm" id="csvBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>CSV</button><button class="btn btn-primary btn-sm" id="newBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>Nuevo producto</button></div>
+        <div style="display:flex;gap:var(--s2);align-items:center"><button class="chip" id="lowChip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Solo bajo stock</button><button class="btn btn-ghost btn-sm" id="csvBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>CSV</button><button class="btn btn-primary btn-sm" id="newBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>Nuevo producto</button></div>
       </div>
       <div class="card" style="padding:0">
-        <table><thead><tr><th>SKU</th><th>Producto</th><th class="r">Precio</th><th class="r">Stock</th><th class="r">Estado</th><th class="r">Acciones</th></tr></thead><tbody id="tbody"></tbody></table>
+        <table><thead><tr><th class="sortable" data-sort="sku">SKU</th><th class="sortable" data-sort="nombre">Producto</th><th class="r sortable" data-sort="precio">Precio</th><th class="r sortable" data-sort="stock">Stock</th><th class="r">Estado</th><th class="r">Acciones</th></tr></thead><tbody id="tbody"></tbody></table>
         <div class="pager"><button id="prev">← Anterior</button><span id="pginfo">—</span><button id="next">Siguiente →</button></div>
       </div>
       <p class="vtitle" style="margin-top:var(--s4)">Clic en un producto para ver su historial de movimientos (auditoría).</p>
@@ -463,6 +468,7 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
 const API='';
 let PRODUCTS=[], FILTERED=[], PAGE=0, PER=10, ACTION='entrada';
 let MOVS=[], MOVFILTER='all', EDIT_ID=null;
+let SORT={key:'nombre',dir:1}, LOWONLY=false;
 const nameOf=pid=>{const p=PRODUCTS.find(x=>x.id===pid);return p?p.nombre:null;};
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
 const fmtMXN=c=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(c/100);
@@ -527,12 +533,26 @@ function renderKPIs(pr,bs){
   const c=$('#kAlertCard');if(al>0){c.classList.add('has');c.style.cursor='pointer';c.onclick=()=>go('inventario');}
   function set(id,v){const e=$(id);e.classList.remove('sk');e.textContent=v;}
 }
-function applyFilter(){const q=$('#q').value.trim().toLowerCase();FILTERED=q?PRODUCTS.filter(p=>(p.nombre+' '+p.sku).toLowerCase().includes(q)):PRODUCTS.slice();PAGE=0;renderTable();}
+function cmp(a,b){const k=SORT.key;
+  if(k==='precio')return a.precioCentavos-b.precioCentavos;
+  if(k==='stock')return a.stock-b.stock;
+  if(k==='sku')return a.sku.localeCompare(b.sku,'es');
+  return (a.nombre||'').localeCompare(b.nombre||'','es');}
+function applyFilter(){
+  const q=$('#q').value.trim().toLowerCase();
+  let arr=PRODUCTS.slice();
+  if(q)arr=arr.filter(p=>(p.nombre+' '+p.sku).toLowerCase().includes(q));
+  if(LOWONLY)arr=arr.filter(p=>p.bajoStock);
+  arr.sort((a,b)=>cmp(a,b)*SORT.dir);
+  FILTERED=arr;PAGE=0;renderTable();
+}
+function updateSortArrows(){$$('#view-inventario thead th.sortable').forEach(th=>{const old=th.querySelector('.sar');if(old)old.remove();if(th.dataset.sort===SORT.key){const a=document.createElement('span');a.className='sar';a.textContent=SORT.dir>0?' ▲':' ▼';th.appendChild(a);}});}
 function renderTable(){
   const tb=$('#tbody');tb.innerHTML='';
   const pages=Math.max(1,Math.ceil(FILTERED.length/PER));if(PAGE>=pages)PAGE=pages-1;
   const slice=FILTERED.slice(PAGE*PER,PAGE*PER+PER);
-  if(!slice.length){tb.innerHTML='<tr><td colspan="6" style="padding:22px;text-align:center;color:var(--text-3)">Sin coincidencias.</td></tr>';}
+  if(!slice.length){const msg=LOWONLY?'No hay productos bajo el mínimo. 🎉':($('#q').value.trim()?'Sin coincidencias para tu búsqueda.':'No hay productos todavía. Crea el primero.');
+    tb.innerHTML='<tr><td colspan="6" style="padding:34px;text-align:center;color:var(--text-3)"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.5;margin-bottom:8px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><div>'+msg+'</div></td></tr>';}
   slice.forEach(p=>{
     const tr=document.createElement('tr');if(p.bajoStock)tr.classList.add('low');tr.dataset.id=p.id;
     tr.appendChild(cell('SKU',sp('sku',p.sku)));
@@ -666,6 +686,9 @@ function renderCharts(){
 }
 /* wires */
 $('#q').addEventListener('input',applyFilter);
+$$('#view-inventario thead th.sortable').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;if(SORT.key===k)SORT.dir*=-1;else{SORT.key=k;SORT.dir=1;}updateSortArrows();applyFilter();});
+$('#lowChip').onclick=()=>{LOWONLY=!LOWONLY;$('#lowChip').classList.toggle('on',LOWONLY);applyFilter();};
+updateSortArrows();
 $('#prev').onclick=()=>{if(PAGE>0){PAGE--;renderTable();}};$('#next').onclick=()=>{PAGE++;renderTable();};
 $('#tIn').onclick=()=>setAction('entrada');$('#tOut').onclick=()=>setAction('salida');
 $('#fGo').onclick=doAction;$('#csvBtn').onclick=exportCSV;
