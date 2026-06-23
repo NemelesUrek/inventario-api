@@ -15,9 +15,17 @@ se vea como una **aplicación interactiva completa y profesional de nivel senior
 - Inventario: buscador, tabla con semáforo, paginación, historial por producto, CSV.
 - Responsive (sidebar colapsable en móvil), accesible (focus rings), micro-animaciones.
 
+## Iteración 2 — CRUD completo + auditoría global
+- **Vista Movimientos** nueva: feed de auditoría global con filtros (Todos/Entradas/Salidas),
+  badges de tipo, cantidad con color, stock final, motivo y "hace X" relativo.
+- **Backend:** nuevo endpoint **GET /api/movimientos** (MovimientoController + repo
+  `findTop100ByOrderByFechaDescIdDesc` + service, respetando capas).
+- **Editar / eliminar** productos desde la tabla (modal reutilizado en modo edición vía
+  PUT; botón eliminar con confirmación vía DELETE). Columna "Acciones".
+- **Tests:** +2 (feed global de movimientos, y actualizar+eliminar). **8 tests verdes.**
+- Verificado local por DOM: 6 nav, MOVS=6, 12 botones de acción, modal de edición OK.
+
 ## Pendiente / próximas iteraciones
-- [ ] Editar y eliminar productos desde la UI (requiere PUT/DELETE en backend).
-- [ ] Vista global de Movimientos (auditoría) + endpoint /api/movimientos.
 - [ ] Endpoint /api/stats para los KPIs/reportes server-side.
 - [ ] Más reportes/gráficas (tendencia, rotación) y filtros.
 - [ ] Command palette / atajos de teclado.

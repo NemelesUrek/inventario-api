@@ -51,6 +51,11 @@ public class ProductoService {
         return movimientos.findByProductoIdOrderByFechaDesc(productoId);
     }
 
+    @Transactional(readOnly = true)
+    public List<Movimiento> movimientosRecientes() {
+        return movimientos.findTop100ByOrderByFechaDescIdDesc();
+    }
+
     @Transactional
     public Producto crear(String sku, String nombre, String descripcion,
                           long precioCentavos, int stockInicial, int stockMinimo) {

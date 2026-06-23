@@ -1,8 +1,10 @@
 package com.nemeles.inventario;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -71,5 +73,36 @@ class ProductoApiTest {
                         .content("""
                                 {"cantidad":5,"motivo":"Venta"}"""))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void feed_global_de_movimientos_devuelve_auditoria() throws Exception {
+        // El alta inicial de los productos sembrados genera movimientos de tipo ENTRADA.
+        mvc.perform(get("/api/movimientos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].tipo").exists())
+                .andExpect(jsonPath("$[0].stockResultante").exists());
+    }
+
+    @Test
+    void actualizar_y_eliminar_producto() throws Exception {
+        String body = """
+                {"sku":"TST-PUT","nombre":"Nombre viejo","precioCentavos":1500,"stockInicial":3,"stockMinimo":1}""";
+        String resp = mvc.perform(post("/api/productos").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        int id = JsonPath.read(resp, "$.id");
+
+        mvc.perform(put("/api/productos/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nombre":"Nombre nuevo","precioCentavos":2000,"stockMinimo":2}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("Nombre nuevo"))
+                .andExpect(jsonPath("$.precio").value("$20.00"));
+
+        mvc.perform(delete("/api/productos/" + id)).andExpect(status().isNoContent());
+        mvc.perform(get("/api/productos/" + id)).andExpect(status().isNotFound());
     }
 }
