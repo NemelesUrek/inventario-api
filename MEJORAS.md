@@ -53,12 +53,18 @@ se vea como una **aplicación interactiva completa y profesional de nivel senior
   aria-modal/labelledby en modales y paleta.
 - Verificado por DOM: 7 nav, densidad compacta OK, tema sincroniza seg + meta, roles OK.
 
+## Iteración 6 — Tarjeta social (OG) + README
+- **Imagen OG 1200×630** (`/og.png`) generada con Pillow (`tools/make_og.py`):
+  marca, tagline, 3 chips ($43,355 / 8 endpoints / 9 tests·CI) y autor. Meta
+  `og:image` + `twitter:card=summary_large_image` con URL absoluta del demo.
+- **README actualizado**: app en vivo como enlace principal, sección "La app
+  (interfaz)", y filas nuevas de endpoints (`/api/movimientos`, `/api/stats`).
+- Verificado: og.png se sirve (200, image/png, 96KB) y la meta está presente.
+
 ## Pendiente / próximas iteraciones
-- [ ] Imagen OG (tarjeta social 1200×630) servida en /og.png para preview rico.
 - [ ] Focus-trap (Tab) en modales/paleta.
 - [ ] Skeletons de carga en la tabla + toasts apilables con tipo.
 - [ ] Endpoint POST /api/demo/reset (reiniciar datos de demo).
-- [ ] Actualizar README con la app y endpoints nuevos.
 - [ ] Más reportes/gráficas (tendencia, rotación) y filtros.
 - [ ] Command palette / atajos de teclado.
 - [ ] Estados vacíos/skeleton más pulidos, toasts apilables.

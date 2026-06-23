@@ -6,8 +6,9 @@
 
 API REST para gestionar productos y stock, con **auditoría de cada movimiento** y **alertas de reposición**. Backend en **Java + Spring Boot**, probado y desplegable.
 
-> **▶ Demo en vivo:** **https://inventario-api-h6b3.onrender.com/swagger-ui/index.html**
-> *(pruébala en el navegador — sin instalar nada — con el botón **Try it out**. Free tier: la primera petición tras inactividad puede tardar ~50 s en despertar.)*
+> **▶ App en vivo:** **https://inventario-api-h6b3.onrender.com**
+> **▶ API interactiva (Swagger):** **https://inventario-api-h6b3.onrender.com/swagger-ui/index.html**
+> *(pruébalas en el navegador, sin instalar nada. Free tier: la primera petición tras inactividad puede tardar ~50 s en despertar.)*
 
 ---
 
@@ -21,6 +22,14 @@ En una tienda o almacén, el stock se descuadra fácil: dos ventas a la vez, un 
 - **Alertas de reposición**: endpoint que lista los productos en o por debajo de su mínimo.
 - **Dinero en centavos** (`long`), nunca en coma flotante → sin errores de redondeo.
 - **Errores consistentes** en formato RFC-7807 (`ProblemDetail`).
+
+## La app (interfaz en vivo)
+Además de la API, el proyecto incluye una **aplicación web** (HTML/CSS/JS sin librerías) que la consume en el mismo origen:
+- **Panel** con KPIs (valor del inventario en $MXN, unidades, alertas).
+- **Inventario**: alta, edición y baja de productos, búsqueda, paginación, semáforo de stock y export CSV.
+- **Movimientos**: auditoría global con filtros (entradas/salidas).
+- **Reportes**: gráficas SVG propias + métricas agregadas en el servidor (`/api/stats`).
+- **Paleta de comandos** (Ctrl/Cmd + K), tema claro/oscuro y densidad ajustable.
 
 ---
 
@@ -37,6 +46,8 @@ En una tienda o almacén, el stock se descuadra fácil: dos ventas a la vez, un 
 | `POST` | `/api/productos/{id}/salida` | Salida de stock (**409** si no alcanza) |
 | `GET` | `/api/productos/{id}/movimientos` | Historial de movimientos |
 | `GET` | `/api/productos/bajo-stock` | Alertas de reposición |
+| `GET` | `/api/movimientos` | Auditoría global (últimos movimientos) |
+| `GET` | `/api/stats` | Resumen agregado del inventario (server-side) |
 
 Documentación interactiva en **`/swagger-ui.html`** · spec OpenAPI en **`/v3/api-docs`**.
 
