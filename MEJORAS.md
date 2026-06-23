@@ -61,10 +61,16 @@ se vea como una **aplicación interactiva completa y profesional de nivel senior
   (interfaz)", y filas nuevas de endpoints (`/api/movimientos`, `/api/stats`).
 - Verificado: og.png se sirve (200, image/png, 96KB) y la meta está presente.
 
+## Iteración 7 — Pulido UX senior
+- **Skeletons de carga** en la tabla mientras llega la API (8 filas shimmer).
+- **Toasts con tipo** (éxito/error/info) con acento de color; aplicados a todas
+  las acciones (crear/editar/eliminar/stock/CSV/actualizar/rechazos).
+- **Focus-trap** (Tab) en modales y paleta de comandos.
+- Verificado por DOM: skeleton 8×6, toast "ok show", trap activo, sin regresiones.
+
 ## Pendiente / próximas iteraciones
-- [ ] Focus-trap (Tab) en modales/paleta.
-- [ ] Skeletons de carga en la tabla + toasts apilables con tipo.
-- [ ] Endpoint POST /api/demo/reset (reiniciar datos de demo).
+- [ ] Endpoint POST /api/demo/reset (reiniciar datos de demo) + botón en Config.
+- [ ] Estados vacíos ilustrados (inventario/movimientos sin datos).
 - [ ] Más reportes/gráficas (tendencia, rotación) y filtros.
 - [ ] Command palette / atajos de teclado.
 - [ ] Estados vacíos/skeleton más pulidos, toasts apilables.

@@ -224,6 +224,7 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
 /* toast / skeleton / anim */
 #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;transition:.3s;background:var(--surface-3);border:1px solid var(--border-strong);color:var(--text);padding:12px 18px;border-radius:var(--r-md);font-size:14px;box-shadow:var(--sh-lg);z-index:100;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-left:3px solid var(--ok)}#toast.err{border-left:3px solid var(--danger)}#toast.info{border-left:3px solid var(--accent)}
 .sk{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;color:transparent!important}
 @keyframes pulse{0%{box-shadow:0 0 0 0 currentColor;opacity:1}70%{box-shadow:0 0 0 7px transparent;opacity:.6}100%{box-shadow:0 0 0 0 transparent;opacity:1}}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -465,7 +466,7 @@ const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
 const fmtMXN=c=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(c/100);
 const SVGNS='http://www.w3.org/2000/svg';
 function svg(t,a){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+function toast(m,type){const t=$('#toast');t.textContent=m;t.className=(type||'')+' show';clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
 function setStatus(s,txt){['#sideStatus'].forEach(id=>{const e=$(id);if(e){e.className='status '+s;}});$('#sideStatusTxt').textContent=txt;}
 function fetchT(u,o={},ms=60000){const c=new AbortController();const id=setTimeout(()=>c.abort(),ms);return fetch(u,{...o,signal:c.signal}).finally(()=>clearTimeout(id));}
 function sp(c,t){const s=document.createElement('span');s.className=c;s.textContent=t;return s;}
@@ -499,9 +500,15 @@ $('#themeBtn').onclick=()=>setTheme(document.documentElement.dataset.theme==='da
 $('#hamb').onclick=()=>$('#sidebar').classList.toggle('open');
 
 /* DATA */
+function skeletonRows(n){
+  const tb=$('#tbody');tb.innerHTML='';
+  for(let i=0;i<n;i++){const tr=document.createElement('tr');
+    [70,170,80,90,80,70].forEach((w,j)=>{const td=document.createElement('td');if(j>=2)td.className='r';const s=document.createElement('span');s.className='sk';s.style.cssText='display:inline-block;height:13px;width:'+w+'px;border-radius:5px';td.appendChild(s);tr.appendChild(td);});
+    tb.appendChild(tr);}
+}
 async function loadAll(){
-  setStatus('waking','Conectando…');
-  let slow=setTimeout(()=>{if($('#sideStatus').classList.contains('waking'))toast('El servidor de demo estaba en reposo (free tier). Despertando, ~50s…');},4500);
+  setStatus('waking','Conectando…');skeletonRows(8);
+  let slow=setTimeout(()=>{if($('#sideStatus').classList.contains('waking'))toast('El servidor de demo estaba en reposo (free tier). Despertando, ~50s…','info');},4500);
   try{
     const [pr,bs]=await Promise.all([fetchT(API+'/api/productos?page=0&size=200').then(r=>r.json()),fetchT(API+'/api/productos/bajo-stock').then(r=>r.json())]);
     clearTimeout(slow);PRODUCTS=pr.content||[];setStatus('live','API en vivo');
@@ -557,7 +564,7 @@ function rel(iso){const s=Math.round((Date.now()-new Date(iso))/1000);const r=ne
 function renderPanelAlerts(bs){const c=$('#panelAlerts');c.innerHTML='';
   if(!Array.isArray(bs)||!bs.length){c.innerHTML='<div class="empty-ok"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg> Todo en orden. Ningún producto bajo el mínimo.</div>';return;}
   bs.forEach(p=>{const d=document.createElement('div');d.className='alert-item';const info=document.createElement('div');const f=sp('af','faltan '+Math.max(0,p.stockMinimo-p.stock)+' para el mínimo');info.append(sp('an',p.nombre),f);
-    const b=document.createElement('button');b.className='btn btn-ghost btn-sm';b.textContent='+ Reponer';b.style.marginLeft='auto';b.onclick=()=>{$('#fProd').value=p.id;setAction('entrada');$('#fCant').value=Math.max(1,p.stockMinimo-p.stock);toast('Cargado en "Probar la API"');};
+    const b=document.createElement('button');b.className='btn btn-ghost btn-sm';b.textContent='+ Reponer';b.style.marginLeft='auto';b.onclick=()=>{$('#fProd').value=p.id;setAction('entrada');$('#fCant').value=Math.max(1,p.stockMinimo-p.stock);toast('Cargado en "Probar la API"','info');};
     d.append(info,b);c.appendChild(d);});}
 function fillSelect(){const s=$('#fProd');s.innerHTML='';PRODUCTS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=`${p.nombre} — ${p.sku} (stock: ${p.stock})`;s.appendChild(o);});}
 function setAction(a){ACTION=a;$('#tIn').className=a==='entrada'?'sel-in':'';$('#tOut').className=a==='salida'?'sel-out':'';}
@@ -569,9 +576,9 @@ async function doAction(){
     const body=await res.json();const r=$('#fRes');
     if(res.ok){r.className='result ok';r.textContent=`Listo. Stock de ${body.nombre}: ${body.stock-(ACTION==='entrada'?cant:-cant)} → ${body.stock}`;await refresh(id);
       const tr=$(`tr[data-id="${id}"]`);if(tr){tr.classList.add('flash');setTimeout(()=>tr.classList.remove('flash'),700);}
-      toast('✓ '+(ACTION==='entrada'?'Entrada':'Salida')+' registrada');
-    }else{r.className='result err';r.textContent=body.detail||body.title||('Error '+res.status);}
-  }catch(e){toast('No se pudo completar.');}
+      toast('✓ '+(ACTION==='entrada'?'Entrada':'Salida')+' registrada','ok');
+    }else{r.className='result err';r.textContent=body.detail||body.title||('Error '+res.status);toast('Operación rechazada ('+res.status+')','err');}
+  }catch(e){toast('No se pudo completar.','err');}
   btn.disabled=false;btn.textContent=old;
 }
 async function refresh(keepSel){const [pr,bs]=await Promise.all([fetchT(API+'/api/productos?page=0&size=200').then(r=>r.json()),fetchT(API+'/api/productos/bajo-stock').then(r=>r.json())]);PRODUCTS=pr.content||[];renderKPIs(pr,bs);applyFilter();renderPanelAlerts(bs);fillSelect();if(keepSel)$('#fProd').value=keepSel;if($('#view-reportes').classList.contains('active'))renderCharts();if($('#view-movimientos').classList.contains('active'))loadMovs();}
@@ -590,7 +597,7 @@ $('#nSave').onclick=async()=>{
     else{const sku=$('#nSku').value.trim();if(!sku){$('#nRes').className='result err';$('#nRes').textContent='El SKU es obligatorio.';btn.disabled=false;return;}
       res=await fetchT(API+'/api/productos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sku,nombre,descripcion,precioCentavos,stockInicial:parseInt($('#nStock').value)||0,stockMinimo})});}
     const body=await res.json();
-    if(res.ok){$('#modalBg').classList.remove('open');toast(EDIT_ID?'✓ Producto actualizado':'✓ Producto creado');await refresh();go('inventario');}
+    if(res.ok){$('#modalBg').classList.remove('open');toast(EDIT_ID?'✓ Producto actualizado':'✓ Producto creado','ok');await refresh();go('inventario');}
     else{$('#nRes').className='result err';$('#nRes').textContent=body.detail||body.title||'No se pudo guardar.';}
   }catch(e){$('#nRes').className='result err';$('#nRes').textContent='Error de red.';}
   btn.disabled=false;
@@ -598,9 +605,9 @@ $('#nSave').onclick=async()=>{
 async function deleteProduct(p){
   if(!await confirmDialog('Eliminar producto',`¿Seguro que quieres eliminar "${p.nombre}" (${p.sku})? Esta acción no se puede deshacer.`,'Eliminar'))return;
   try{const res=await fetchT(API+'/api/productos/'+p.id,{method:'DELETE'});
-    if(res.status===204||res.ok){toast('✓ Producto eliminado');await refresh();}
-    else{const b=await res.json().catch(()=>({}));toast(b.detail||('No se pudo eliminar ('+res.status+')'));}
-  }catch(e){toast('Error de red al eliminar.');}
+    if(res.status===204||res.ok){toast('✓ Producto eliminado','ok');await refresh();}
+    else{const b=await res.json().catch(()=>({}));toast(b.detail||('No se pudo eliminar ('+res.status+')'),'err');}
+  }catch(e){toast('Error de red al eliminar.','err');}
 }
 /* MOVIMIENTOS (auditoría global) */
 async function loadMovs(){
@@ -626,7 +633,7 @@ function renderMovBody(){
 $$('#movFilter button').forEach(b=>b.onclick=()=>{$$('#movFilter button').forEach(x=>x.classList.remove('on'));b.classList.add('on');MOVFILTER=b.dataset.f;renderMovBody();});
 $('#movReload').onclick=loadMovs;
 function exportCSV(){const rows=[['sku','nombre','precio','stock','stockMinimo','bajoStock']];PRODUCTS.forEach(p=>rows.push([p.sku,'"'+(p.nombre||'').replace(/"/g,'""')+'"',(p.precioCentavos/100).toFixed(2),p.stock,p.stockMinimo,p.bajoStock]));
-  const b=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='inventario.csv';a.click();URL.revokeObjectURL(a.href);toast('CSV exportado');}
+  const b=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='inventario.csv';a.click();URL.revokeObjectURL(a.href);toast('CSV exportado','ok');}
 /* STATS (server-side, GET /api/stats) */
 async function loadStats(){try{const s=await fetchT(API+'/api/stats').then(r=>r.json());renderStats(s);}catch(e){}}
 function renderStats(s){
@@ -675,7 +682,7 @@ function paletteCommands(){
     {t:'Nuevo producto',c:'Acción',i:PIC.add,run:()=>{go('inventario');openCreate();}},
     {t:'Exportar inventario (CSV)',c:'Acción',i:PIC.csv,run:exportCSV},
     {t:'Cambiar tema (claro/oscuro)',c:'Acción',i:PIC.theme,run:()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark')},
-    {t:'Actualizar datos',c:'Acción',i:PIC.refresh,run:()=>{refresh();toast('Datos actualizados');}},
+    {t:'Actualizar datos',c:'Acción',i:PIC.refresh,run:()=>{refresh();toast('Datos actualizados','info');}},
   ];
   PRODUCTS.forEach(p=>c.push({t:'Editar: '+p.nombre,c:p.sku,i:PIC.edit,run:()=>{go('inventario');editProduct(p);}}));
   return c;
@@ -717,11 +724,20 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='n'){e.preventDefault();go('inventario');openCreate();}
   else if(e.key==='t'){setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');}
 });
+/* FOCUS TRAP (modales + paleta) */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Tab')return;
+  const open=document.querySelector('.modal-bg.open, .pal-bg.open');if(!open)return;
+  const list=[...open.querySelectorAll('button,input,select,textarea,a[href],[tabindex]:not([tabindex="-1"])')].filter(el=>el.offsetParent!==null&&!el.disabled);
+  if(!list.length)return;const first=list[0],last=list[list.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+});
 /* CONFIG wiring */
 $('#cfgTheme').querySelectorAll('button').forEach(b=>b.onclick=()=>setTheme(b.dataset.v));
 $('#cfgDensity').querySelectorAll('button').forEach(b=>b.onclick=()=>setDensity(b.dataset.v));
 $('#cfgMotion').querySelectorAll('button').forEach(b=>b.onclick=()=>setMotion(b.dataset.v));
-$('#cfgReload').onclick=()=>{refresh();toast('Datos actualizados');};
+$('#cfgReload').onclick=()=>{refresh();toast('Datos actualizados','info');};
 $('#cfgCsv').onclick=exportCSV;
 /* init */
 function pref(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
