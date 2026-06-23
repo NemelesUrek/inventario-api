@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stockly — Control de Inventario · Nemeles</title>
 <meta name="description" content="Aplicación de control de inventario en Java + Spring Boot. Dashboard, productos, reportes y API en vivo.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%2322D3A6'/%3E%3Cpath d='M5 8l7-3 7 3v8l-7 3-7-3z' fill='none' stroke='%23042619' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M5 8l7 3 7-3M12 11v8' stroke='%23042619' stroke-width='1.6' fill='none'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#070B14">
+<meta property="og:title" content="Stockly — Control de Inventario">
+<meta property="og:description" content="App de inventario en Java + Spring Boot: panel, productos, reportes y API REST documentada, todo en vivo.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Stockly · Nemeles">
+<meta name="twitter:card" content="summary">
+<meta name="author" content="Nemeles — Backend Engineer">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -166,6 +174,13 @@ tr.low td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
 .movtype{font-family:'JetBrains Mono';font-size:10px;font-weight:600;padding:4px 10px;border-radius:var(--r-pill);display:inline-flex;align-items:center;gap:6px}
 .movtype.in{color:var(--ok);background:var(--brand-glow)}.movtype.out{color:var(--danger);background:var(--danger-bg)}
 .movtype .ar{font-size:12px}
+/* config view + densidad */
+.cfg-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s4);padding:14px 0;border-bottom:1px solid var(--border-soft)}
+.cfg-t{font-weight:600;font-size:14.5px}.cfg-d{font-size:12.5px;color:var(--text-3);margin-top:2px}
+[data-density="compact"] tbody td{padding:7px var(--s5)}
+[data-density="compact"] thead th{padding:6px var(--s5)}
+[data-density="compact"] .pal-item{padding:7px 12px}
+[data-density="compact"] .card{padding:var(--s4)}
 .ep .path{color:var(--text-2)}.ep .cp{margin-left:auto;color:var(--text-3);cursor:pointer;font-size:11px}.ep .cp:hover{color:var(--text)}
 .codeblk{background:var(--bg-0);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;font-family:'JetBrains Mono';font-size:12.5px;color:#cdd6e6;white-space:pre-wrap;overflow:auto;margin-top:var(--s4)}
 [data-theme="light"] .codeblk{background:#0d1424;color:#cdd6e6}
@@ -218,6 +233,7 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
   tbody tr{padding:10px var(--s4)}tbody td{border:none;padding:4px 0;display:flex;justify-content:space-between}tbody td::before{content:attr(data-l);color:var(--text-3);font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+html[data-motion="off"] *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 </style>
 </head>
 <body>
@@ -234,20 +250,21 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
       <a data-view="reportes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M8 14l3-4 3 3 4-6"/></svg>Reportes</a>
       <div class="sec">Plataforma</div>
       <a data-view="api"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>API &amp; Docs</a>
+      <a data-view="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H23a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Configuración</a>
       <a data-view="contratar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>Contratar</a>
     </nav>
     <div class="side-foot">
       <div id="sideStatus" class="status waking"><span class="sdot"></span><span id="sideStatusTxt">…</span></div>
-      <button class="iconbtn" id="themeBtn" title="Tema claro/oscuro"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></button>
+      <button class="iconbtn" id="themeBtn" title="Tema claro/oscuro" aria-label="Cambiar tema claro u oscuro"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></button>
     </div>
   </aside>
   <!-- MAIN -->
   <div class="main">
     <header class="topbar">
-      <button class="hamb" id="hamb"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <button class="hamb" id="hamb" aria-label="Abrir menú de navegación"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
       <h1 id="viewTitle">Panel</h1>
       <div class="spacer"></div>
-      <button class="kbtn" id="palBtn" title="Paleta de comandos"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Buscar <kbd>Ctrl K</kbd></button>
+      <button class="kbtn" id="palBtn" title="Paleta de comandos" aria-label="Abrir paleta de comandos (Ctrl K)"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Buscar <kbd>Ctrl K</kbd></button>
       <a class="btn btn-primary btn-sm" data-view="contratar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>Contratar</a>
     </header>
 
@@ -345,6 +362,39 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
       </div>
     </section>
 
+    <!-- VIEW: CONFIG -->
+    <section class="view" id="view-config">
+      <p class="vtitle">Personaliza la aplicación a tu gusto.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="font-size:16px;margin-bottom:var(--s4)">Apariencia</h3>
+          <div class="cfg-row"><div><div class="cfg-t">Tema</div><div class="cfg-d">Claro u oscuro</div></div>
+            <div class="seg" id="cfgTheme"><button data-v="dark">Oscuro</button><button data-v="light">Claro</button></div></div>
+          <div class="cfg-row"><div><div class="cfg-t">Densidad</div><div class="cfg-d">Espaciado de las tablas</div></div>
+            <div class="seg" id="cfgDensity"><button data-v="comfortable">Cómoda</button><button data-v="compact">Compacta</button></div></div>
+          <div class="cfg-row" style="border:none"><div><div class="cfg-t">Animaciones</div><div class="cfg-d">Transiciones y revelados</div></div>
+            <div class="seg" id="cfgMotion"><button data-v="on">Sí</button><button data-v="off">No</button></div></div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:16px;margin-bottom:var(--s4)">Datos</h3>
+          <div class="note">Esta es una demo: la base es <b>H2 en memoria</b>, se reinicia sola cuando el servidor se reinicia. Puedes crear, editar y borrar libremente.</div>
+          <button class="btn btn-ghost" id="cfgReload" style="width:100%;justify-content:center;margin-bottom:var(--s3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Actualizar datos</button>
+          <button class="btn btn-ghost" id="cfgCsv" style="width:100%;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>Exportar inventario (CSV)</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:var(--s5)">
+        <h3 style="font-size:16px;margin-bottom:var(--s3)">Acerca de esta app</h3>
+        <p style="color:var(--text-2);font-size:14px;max-width:640px">Demo de <b>Stockly</b>, un sistema de control de inventario construido por <b>Nemeles</b>. La interfaz que ves consume su propia <b>API REST</b> (la misma de la vista «API & Docs»). Todo es HTML/CSS/JS sin librerías; el backend es Java + Spring Boot.</p>
+        <div class="intg" style="margin-top:var(--s4)">
+          <span class="itag on"><span class="t">stack</span>Java 17</span><span class="itag on"><span class="t">stack</span>Spring Boot</span><span class="itag on"><span class="t">stack</span>JPA / H2</span><span class="itag on"><span class="t">stack</span>OpenAPI</span><span class="itag on"><span class="t">stack</span>JUnit · CI</span><span class="itag on"><span class="t">stack</span>Docker</span>
+        </div>
+        <div style="display:flex;gap:var(--s3);margin-top:var(--s5);flex-wrap:wrap">
+          <a class="btn btn-ghost btn-sm" href="https://github.com/NemelesUrek/inventario-api" target="_blank">Código en GitHub</a>
+          <a class="btn btn-ghost btn-sm" href="/swagger-ui/index.html" target="_blank">Swagger UI</a>
+        </div>
+      </div>
+    </section>
+
     <!-- VIEW: CONTRATAR -->
     <section class="view" id="view-contratar">
       <p class="vtitle">¿Te gustó cómo funciona? Esto es lo que construyo.</p>
@@ -374,7 +424,7 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
 </div>
 
 <!-- MODAL crear/editar producto -->
-<div class="modal-bg" id="modalBg"><div class="modal"><h3 id="modalTitle">Nuevo producto</h3><div class="body">
+<div class="modal-bg" id="modalBg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h3 id="modalTitle">Nuevo producto</h3><div class="body">
   <div class="form-row" id="rowSku"><label>SKU</label><input class="inp" id="nSku" placeholder="LAP-900"></div>
   <div class="form-row"><label>Nombre</label><input class="inp" id="nNom" placeholder="Laptop 14&quot;"></div>
   <div class="form-row"><label>Descripción</label><input class="inp" id="nDesc" placeholder="Opcional"></div>
@@ -388,14 +438,14 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
 </div></div></div>
 
 <!-- COMMAND PALETTE -->
-<div class="pal-bg" id="palette"><div class="pal">
+<div class="pal-bg" id="palette"><div class="pal" role="dialog" aria-modal="true" aria-label="Paleta de comandos">
   <div class="pal-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="palInput" placeholder="Buscar acción, vista o producto…" autocomplete="off"><kbd>esc</kbd></div>
   <div class="pal-list" id="palList"></div>
   <div class="pal-foot"><span><kbd>↑</kbd><kbd>↓</kbd> navegar</span><span><kbd>↵</kbd> seleccionar</span><span><kbd>esc</kbd> cerrar</span></div>
 </div></div>
 
 <!-- CONFIRM DIALOG -->
-<div class="modal-bg" id="confirmBg"><div class="modal" style="max-width:400px"><h3 id="confirmTitle">Confirmar</h3><div class="body">
+<div class="modal-bg" id="confirmBg"><div class="modal" style="max-width:400px" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMsg"><h3 id="confirmTitle">Confirmar</h3><div class="body">
   <p id="confirmMsg" style="color:var(--text-2);font-size:14.5px"></p>
   <div style="display:flex;gap:var(--s3);margin-top:var(--s5)"><button class="btn btn-ghost" id="confirmNo" style="flex:1;justify-content:center">Cancelar</button><button class="btn" id="confirmYes" style="flex:1;justify-content:center;background:var(--danger);color:#fff">Confirmar</button></div>
 </div></div></div>
@@ -415,7 +465,7 @@ function fetchT(u,o={},ms=60000){const c=new AbortController();const id=setTimeo
 function sp(c,t){const s=document.createElement('span');s.className=c;s.textContent=t;return s;}
 
 /* ROUTER */
-const TITLES={panel:'Panel',inventario:'Inventario',movimientos:'Movimientos',reportes:'Reportes',api:'API & Docs',contratar:'Contratar'};
+const TITLES={panel:'Panel',inventario:'Inventario',movimientos:'Movimientos',reportes:'Reportes',api:'API & Docs',config:'Configuración',contratar:'Contratar'};
 function go(v){
   if(!TITLES[v])v='panel';
   $$('.view').forEach(s=>s.classList.remove('active'));
@@ -433,7 +483,12 @@ window.addEventListener('hashchange',()=>go(location.hash.slice(1)));
 
 /* THEME */
 function setTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('theme',t)}catch(e){}
-  $('#themeIcon').innerHTML=t==='dark'?'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>':'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';}
+  $('#themeIcon').innerHTML=t==='dark'?'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>':'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+  const tc=document.querySelector('meta[name="theme-color"]');if(tc)tc.content=t==='dark'?'#070B14':'#F6F8FC';
+  syncSeg('#cfgTheme',t);}
+function syncSeg(sel,v){const c=$(sel);if(!c)return;c.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
+function setDensity(d){document.documentElement.dataset.density=d;try{localStorage.setItem('density',d)}catch(e){}syncSeg('#cfgDensity',d);}
+function setMotion(m){document.documentElement.dataset.motion=m;try{localStorage.setItem('motion',m)}catch(e){}syncSeg('#cfgMotion',m);}
 $('#themeBtn').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
 $('#hamb').onclick=()=>$('#sidebar').classList.toggle('open');
 
@@ -656,8 +711,17 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='n'){e.preventDefault();go('inventario');openCreate();}
   else if(e.key==='t'){setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');}
 });
+/* CONFIG wiring */
+$('#cfgTheme').querySelectorAll('button').forEach(b=>b.onclick=()=>setTheme(b.dataset.v));
+$('#cfgDensity').querySelectorAll('button').forEach(b=>b.onclick=()=>setDensity(b.dataset.v));
+$('#cfgMotion').querySelectorAll('button').forEach(b=>b.onclick=()=>setMotion(b.dataset.v));
+$('#cfgReload').onclick=()=>{refresh();toast('Datos actualizados');};
+$('#cfgCsv').onclick=exportCSV;
 /* init */
-try{setTheme(localStorage.getItem('theme')||'dark')}catch(e){setTheme('dark');}
+function pref(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
+setTheme(pref('theme','dark'));
+setDensity(pref('density','comfortable'));
+setMotion(pref('motion','on'));
 go(location.hash.slice(1)||'panel');
 loadAll();
 </script>

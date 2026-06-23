@@ -43,11 +43,22 @@ se vea como una **aplicación interactiva completa y profesional de nivel senior
 - **Tests:** +1 (resumen agregado). **9 tests verdes.**
 - Verificado por DOM: 7 statpills, valor $43,355.00, actividad 6/0.
 
+## Iteración 5 — Configuración + favicon/OG + accesibilidad
+- **Vista Configuración**: tema (claro/oscuro), **densidad** (cómoda/compacta) y
+  **animaciones** (sí/no), todo persistido en localStorage y aplicado en init.
+  Sección "Acerca de" con stack + enlaces (GitHub, Swagger).
+- **Favicon SVG** (cubo de marca) + **meta OG/Twitter/theme-color** (preview pro
+  al compartir el enlace; theme-color cambia con el tema).
+- **Accesibilidad**: aria-labels en botones de icono; role=dialog/alertdialog +
+  aria-modal/labelledby en modales y paleta.
+- Verificado por DOM: 7 nav, densidad compacta OK, tema sincroniza seg + meta, roles OK.
+
 ## Pendiente / próximas iteraciones
-- [ ] Vista de Configuración (tema, densidad, reset de demo).
-- [ ] Favicon + meta OG/theme-color (preview pro al compartir el enlace).
-- [ ] Accesibilidad: focus-trap en modales, aria-labels.
-- [ ] Más reportes/gráficas (tendencia por movimientos, rotación).
+- [ ] Imagen OG (tarjeta social 1200×630) servida en /og.png para preview rico.
+- [ ] Focus-trap (Tab) en modales/paleta.
+- [ ] Skeletons de carga en la tabla + toasts apilables con tipo.
+- [ ] Endpoint POST /api/demo/reset (reiniciar datos de demo).
+- [ ] Actualizar README con la app y endpoints nuevos.
 - [ ] Más reportes/gráficas (tendencia, rotación) y filtros.
 - [ ] Command palette / atajos de teclado.
 - [ ] Estados vacíos/skeleton más pulidos, toasts apilables.
