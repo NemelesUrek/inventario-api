@@ -354,6 +354,7 @@ html[data-motion="off"] *{animation:none!important;transition:none!important;scr
         <div class="ep"><span class="meth del">DELETE</span><span class="path">/api/productos/{id}</span><span class="cp" data-c="/api/productos/{id}">copiar</span></div>
         <div class="ep"><span class="meth post">POST</span><span class="path">/api/productos/{id}/entrada</span><span class="cp" data-c="entrada">copiar</span></div>
         <div class="ep"><span class="meth post">POST</span><span class="path">/api/productos/{id}/salida</span><span class="cp" data-c="salida">copiar</span></div>
+        <div class="ep"><span class="meth post">POST</span><span class="path">/api/demo/reset</span><span class="cp" data-c="/api/demo/reset">copiar</span></div>
       </div>
       <pre class="codeblk"># Crear un producto
 curl -X POST $BASE/api/productos -H "Content-Type: application/json" \
@@ -386,7 +387,8 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
           <h3 style="font-size:16px;margin-bottom:var(--s4)">Datos</h3>
           <div class="note">Esta es una demo: la base es <b>H2 en memoria</b>, se reinicia sola cuando el servidor se reinicia. Puedes crear, editar y borrar libremente.</div>
           <button class="btn btn-ghost" id="cfgReload" style="width:100%;justify-content:center;margin-bottom:var(--s3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Actualizar datos</button>
-          <button class="btn btn-ghost" id="cfgCsv" style="width:100%;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>Exportar inventario (CSV)</button>
+          <button class="btn btn-ghost" id="cfgCsv" style="width:100%;justify-content:center;margin-bottom:var(--s3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>Exportar inventario (CSV)</button>
+          <button class="btn btn-ghost" id="cfgReset" style="width:100%;justify-content:center;color:var(--warm-2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Reiniciar datos de demo</button>
         </div>
       </div>
       <div class="card" style="margin-top:var(--s5)">
@@ -683,6 +685,7 @@ function paletteCommands(){
     {t:'Exportar inventario (CSV)',c:'Acción',i:PIC.csv,run:exportCSV},
     {t:'Cambiar tema (claro/oscuro)',c:'Acción',i:PIC.theme,run:()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark')},
     {t:'Actualizar datos',c:'Acción',i:PIC.refresh,run:()=>{refresh();toast('Datos actualizados','info');}},
+    {t:'Reiniciar datos de demo',c:'Acción',i:PIC.refresh,run:()=>resetDemo()},
   ];
   PRODUCTS.forEach(p=>c.push({t:'Editar: '+p.nombre,c:p.sku,i:PIC.edit,run:()=>{go('inventario');editProduct(p);}}));
   return c;
@@ -734,11 +737,19 @@ document.addEventListener('keydown',e=>{
   else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
 });
 /* CONFIG wiring */
+async function resetDemo(){
+  if(!await confirmDialog('Reiniciar datos de demo','Esto borra todos los productos y movimientos y vuelve a cargar el inventario de ejemplo. ¿Continuar?','Reiniciar'))return;
+  try{const res=await fetchT(API+'/api/demo/reset',{method:'POST'});const b=await res.json().catch(()=>({}));
+    if(res.ok){toast('✓ '+(b.mensaje||'Datos reiniciados'),'ok');await refresh();go('inventario');}
+    else{toast('No se pudo reiniciar ('+res.status+')','err');}
+  }catch(e){toast('Error de red al reiniciar.','err');}
+}
 $('#cfgTheme').querySelectorAll('button').forEach(b=>b.onclick=()=>setTheme(b.dataset.v));
 $('#cfgDensity').querySelectorAll('button').forEach(b=>b.onclick=()=>setDensity(b.dataset.v));
 $('#cfgMotion').querySelectorAll('button').forEach(b=>b.onclick=()=>setMotion(b.dataset.v));
 $('#cfgReload').onclick=()=>{refresh();toast('Datos actualizados','info');};
 $('#cfgCsv').onclick=exportCSV;
+$('#cfgReset').onclick=resetDemo;
 /* init */
 function pref(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
 setTheme(pref('theme','dark'));

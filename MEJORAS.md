@@ -68,9 +68,18 @@ se vea como una **aplicación interactiva completa y profesional de nivel senior
 - **Focus-trap** (Tab) en modales y paleta de comandos.
 - Verificado por DOM: skeleton 8×6, toast "ok show", trap activo, sin regresiones.
 
+## Iteración 8 — Reset de demo
+- **Backend:** `DemoDataService` (siembra reutilizable: `seedIfEmpty` + `reset`),
+  `DataSeeder` ahora delega; nuevo **POST /api/demo/reset** (DemoController) que
+  borra todo y vuelve a sembrar. **+1 test → 10 verdes.**
+- **Frontend:** botón "Reiniciar datos de demo" en Configuración + comando en la
+  paleta + endpoint en la vista API. Confirmación con diálogo propio.
+- Verificado: 7→reset→6 vía curl; botón/comando/endpoint presentes.
+
 ## Pendiente / próximas iteraciones
-- [ ] Endpoint POST /api/demo/reset (reiniciar datos de demo) + botón en Config.
-- [ ] Estados vacíos ilustrados (inventario/movimientos sin datos).
+- [ ] Orden por columnas en la tabla de inventario + chip de "bajo stock".
+- [ ] Estados vacíos ilustrados (búsqueda sin resultados).
+- [ ] document.title por vista; hint de ⌘K en primera visita.
 - [ ] Más reportes/gráficas (tendencia, rotación) y filtros.
 - [ ] Command palette / atajos de teclado.
 - [ ] Estados vacíos/skeleton más pulidos, toasts apilables.

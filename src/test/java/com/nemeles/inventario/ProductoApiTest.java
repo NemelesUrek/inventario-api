@@ -86,6 +86,14 @@ class ProductoApiTest {
     }
 
     @Test
+    void reset_reinicia_los_datos_de_demo() throws Exception {
+        mvc.perform(post("/api/demo/reset"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mensaje").exists())
+                .andExpect(jsonPath("$.productos").value(6));
+    }
+
+    @Test
     void stats_devuelve_resumen_agregado() throws Exception {
         mvc.perform(get("/api/stats"))
                 .andExpect(status().isOk())
