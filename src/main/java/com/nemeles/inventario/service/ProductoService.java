@@ -4,7 +4,9 @@ import com.nemeles.inventario.domain.Movimiento;
 import com.nemeles.inventario.domain.Producto;
 import com.nemeles.inventario.repo.MovimientoRepository;
 import com.nemeles.inventario.repo.ProductoRepository;
+import com.nemeles.inventario.web.dto.StatsResponse;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -54,6 +56,23 @@ public class ProductoService {
     @Transactional(readOnly = true)
     public List<Movimiento> movimientosRecientes() {
         return movimientos.findTop100ByOrderByFechaDescIdDesc();
+    }
+
+    @Transactional(readOnly = true)
+    public StatsResponse estadisticas() {
+        List<Producto> todos = productos.findAll();
+        long unidades = todos.stream().mapToLong(Producto::getStock).sum();
+        long valor = todos.stream().mapToLong(p -> p.getPrecioCentavos() * p.getStock()).sum();
+        long bajo = todos.stream().filter(Producto::isBajoStock).count();
+        return new StatsResponse(
+                todos.size(),
+                unidades,
+                valor,
+                String.format(Locale.US, "$%,.2f", valor / 100.0),
+                bajo,
+                movimientos.count(),
+                movimientos.countByTipo(Movimiento.Tipo.ENTRADA),
+                movimientos.countByTipo(Movimiento.Tipo.SALIDA));
     }
 
     @Transactional

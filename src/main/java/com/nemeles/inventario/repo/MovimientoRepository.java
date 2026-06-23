@@ -10,4 +10,6 @@ public interface MovimientoRepository extends JpaRepository<Movimiento, Long> {
 
     /** Feed global de auditoría: los movimientos más recientes de todo el inventario. */
     List<Movimiento> findTop100ByOrderByFechaDescIdDesc();
+
+    long countByTipo(Movimiento.Tipo tipo);
 }

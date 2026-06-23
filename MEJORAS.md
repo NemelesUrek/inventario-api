@@ -34,8 +34,19 @@ se vea como una **aplicación interactiva completa y profesional de nivel senior
 - **Diálogo de confirmación propio** (reemplaza `confirm()` nativo) para eliminar.
 - Verificado por DOM: 16 items, filtros, nav por teclado, Ctrl+K, confirm OK.
 
+## Iteración 4 — Estadísticas server-side + reportes ricos
+- **Backend:** nuevo endpoint **GET /api/stats** (StatsController + StatsResponse +
+  service `estadisticas()` + repo `countByTipo`): totales de productos, unidades,
+  valor (formateado), bajo-stock y conteo de movimientos por tipo.
+- **Reportes:** franja de 7 métricas server-side + gráfico de **actividad**
+  (entradas vs. salidas). Gráficas previas intactas.
+- **Tests:** +1 (resumen agregado). **9 tests verdes.**
+- Verificado por DOM: 7 statpills, valor $43,355.00, actividad 6/0.
+
 ## Pendiente / próximas iteraciones
-- [ ] Endpoint /api/stats para los KPIs/reportes server-side.
+- [ ] Vista de Configuración (tema, densidad, reset de demo).
+- [ ] Favicon + meta OG/theme-color (preview pro al compartir el enlace).
+- [ ] Accesibilidad: focus-trap en modales, aria-labels.
 - [ ] Más reportes/gráficas (tendencia por movimientos, rotación).
 - [ ] Más reportes/gráficas (tendencia, rotación) y filtros.
 - [ ] Command palette / atajos de teclado.

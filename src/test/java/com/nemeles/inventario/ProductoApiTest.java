@@ -86,6 +86,15 @@ class ProductoApiTest {
     }
 
     @Test
+    void stats_devuelve_resumen_agregado() throws Exception {
+        mvc.perform(get("/api/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalProductos", greaterThanOrEqualTo(6)))
+                .andExpect(jsonPath("$.entradas", greaterThanOrEqualTo(6)))
+                .andExpect(jsonPath("$.valorInventario").value(org.hamcrest.Matchers.startsWith("$")));
+    }
+
+    @Test
     void actualizar_y_eliminar_producto() throws Exception {
         String body = """
                 {"sku":"TST-PUT","nombre":"Nombre viejo","precioCentavos":1500,"stockInicial":3,"stockMinimo":1}""";

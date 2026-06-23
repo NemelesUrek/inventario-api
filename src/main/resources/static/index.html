@@ -143,6 +143,11 @@ tr.low td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
 .donut-wrap{display:flex;align-items:center;gap:var(--s6);flex-wrap:wrap}
 .legend{display:flex;flex-direction:column;gap:10px;font-size:13.5px}
 .legend .li{display:flex;align-items:center;gap:9px}.legend .sw{width:11px;height:11px;border-radius:3px}
+/* stats strip (server-side) */
+.statstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:var(--s3);margin-bottom:var(--s5)}
+.statpill{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px}
+.statpill .sl{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);font-weight:600}
+.statpill .sv{display:block;font-family:Sora;font-weight:700;font-size:21px;margin-top:4px;font-variant-numeric:tabular-nums}
 /* api / endpoints */
 .eps{background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden}
 .ep{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border-soft);font-family:'JetBrains Mono';font-size:13px}.ep:last-child{border:none}
@@ -287,12 +292,16 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
 
     <!-- VIEW: REPORTES -->
     <section class="view" id="view-reportes">
-      <p class="vtitle">Análisis de tu inventario, calculado en vivo.</p>
+      <p class="vtitle">Análisis de tu inventario, calculado en vivo. <span class="mono" style="color:var(--text-3)">Resumen agregado en el servidor: GET /api/stats</span></p>
+      <div class="statstrip" id="statStrip"></div>
       <div class="grid-2">
         <div class="card chart-card"><h3>Valor por producto</h3><div id="chartBars"></div></div>
         <div class="card chart-card"><h3>Salud del stock</h3><div class="donut-wrap"><div id="chartDonut"></div><div class="legend" id="donutLegend"></div></div></div>
       </div>
-      <div class="card chart-card" style="margin-top:var(--s5)"><h3>Distribución de unidades</h3><div id="chartUnits"></div></div>
+      <div class="grid-2" style="margin-top:var(--s5)">
+        <div class="card chart-card"><h3>Distribución de unidades</h3><div id="chartUnits"></div></div>
+        <div class="card chart-card"><h3>Actividad de stock</h3><div id="chartActivity"></div><p class="vtitle" style="margin:var(--s4) 0 0">Conteo de movimientos por tipo (entradas vs. salidas).</p></div>
+      </div>
     </section>
 
     <!-- VIEW: MOVIMIENTOS -->
@@ -315,6 +324,7 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
         <div class="ep"><span class="meth get">GET</span><span class="path">/api/productos/bajo-stock</span><span class="cp" data-c="/api/productos/bajo-stock">copiar</span></div>
         <div class="ep"><span class="meth get">GET</span><span class="path">/api/productos/{id}/movimientos</span><span class="cp" data-c="/api/productos/{id}/movimientos">copiar</span></div>
         <div class="ep"><span class="meth get">GET</span><span class="path">/api/movimientos</span><span class="cp" data-c="/api/movimientos">copiar</span></div>
+        <div class="ep"><span class="meth get">GET</span><span class="path">/api/stats</span><span class="cp" data-c="/api/stats">copiar</span></div>
         <div class="ep"><span class="meth post">POST</span><span class="path">/api/productos</span><span class="cp" data-c="/api/productos">copiar</span></div>
         <div class="ep"><span class="meth put">PUT</span><span class="path">/api/productos/{id}</span><span class="cp" data-c="/api/productos/{id}">copiar</span></div>
         <div class="ep"><span class="meth del">DELETE</span><span class="path">/api/productos/{id}</span><span class="cp" data-c="/api/productos/{id}">copiar</span></div>
@@ -556,8 +566,18 @@ $$('#movFilter button').forEach(b=>b.onclick=()=>{$$('#movFilter button').forEac
 $('#movReload').onclick=loadMovs;
 function exportCSV(){const rows=[['sku','nombre','precio','stock','stockMinimo','bajoStock']];PRODUCTS.forEach(p=>rows.push([p.sku,'"'+(p.nombre||'').replace(/"/g,'""')+'"',(p.precioCentavos/100).toFixed(2),p.stock,p.stockMinimo,p.bajoStock]));
   const b=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='inventario.csv';a.click();URL.revokeObjectURL(a.href);toast('CSV exportado');}
+/* STATS (server-side, GET /api/stats) */
+async function loadStats(){try{const s=await fetchT(API+'/api/stats').then(r=>r.json());renderStats(s);}catch(e){}}
+function renderStats(s){
+  const strip=$('#statStrip');if(!strip)return;strip.innerHTML='';
+  const pills=[['Valor inventario',s.valorInventario,'warm'],['Unidades',Number(s.unidadesTotales).toLocaleString('es-MX'),''],['Productos',s.totalProductos,''],['Bajo stock',s.productosBajoStock,s.productosBajoStock>0?'danger':''],['Movimientos',s.totalMovimientos,''],['Entradas',s.entradas,'ok'],['Salidas',s.salidas,'danger']];
+  pills.forEach(([l,v,cls])=>{const d=document.createElement('div');d.className='statpill';const sv=sp('sv',String(v));if(cls==='warm')sv.style.color='var(--warm-2)';else if(cls==='ok')sv.style.color='var(--ok)';else if(cls==='danger'&&v>0)sv.style.color='var(--danger)';d.append(sp('sl',l),sv);strip.appendChild(d);});
+  const ca=$('#chartActivity');ca.innerHTML='';const max=Math.max(1,s.entradas,s.salidas);
+  [['Entradas',s.entradas,'var(--ok)'],['Salidas',s.salidas,'var(--danger)']].forEach(([n,v,c])=>{const row=document.createElement('div');row.className='barrow';const tr=document.createElement('div');tr.className='track';const fi=document.createElement('i');fi.style.background=c;fi.style.width='0';setTimeout(()=>fi.style.width=(v/max*100)+'%',60);tr.appendChild(fi);row.append(sp('nm',n),tr,sp('vv',v+(v===1?' mov':' movs')));ca.appendChild(row);});
+}
 /* CHARTS */
 function renderCharts(){
+  loadStats();
   // bars: valor por producto
   const cb=$('#chartBars');cb.innerHTML='';
   const byVal=PRODUCTS.map(p=>({n:p.nombre,v:p.precioCentavos*p.stock})).sort((a,b)=>b.v-a.v);const max=Math.max(1,...byVal.map(x=>x.v));
