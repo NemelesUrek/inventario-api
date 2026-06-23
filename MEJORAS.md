@@ -84,9 +84,21 @@ se vea como una **aplicación interactiva completa y profesional de nivel senior
   productos) con icono.
 - Verificado por DOM: precio asc $59.90 / desc $649.00, filtro 2 filas, mensajes OK.
 
-## Pendiente / próximas iteraciones
-- [ ] Overlay de atajos de teclado ("?") + document.title por vista.
-- [ ] Hint de ⌘K en primera visita (descubribilidad).
+## Iteración 10 — Ayuda, título y descubribilidad
+- **Overlay de atajos** (tecla `?` o comando en paleta): lista de 6 atajos,
+  role=dialog, cierra con Esc.
+- **document.title por vista** ("Movimientos · Stockly — Nemeles", etc.).
+- **Hint de ⌘K en primera visita** (toast informativo, una sola vez).
+- Verificado por DOM: títulos OK, ayuda abre/cierra por ? y Esc, comando en paleta.
+
+## Estado: app completa de nivel senior
+11 endpoints (4 controllers) · 10 tests + CI · 7 vistas SPA · CRUD + auditoría +
+reportes server-side + paleta ⌘K + configuración + reset de demo + a11y + OG.
+
+## Pendiente / próximas iteraciones (nice-to-have)
+- [ ] Segundo módulo (categorías/proveedores) para reforzar "multiuso".
+- [ ] Paginación server-side real cuando crezca el catálogo.
+- [ ] Tests e2e del frontend.
 - [ ] Más reportes/gráficas (tendencia, rotación) y filtros.
 - [ ] Command palette / atajos de teclado.
 - [ ] Estados vacíos/skeleton más pulidos, toasts apilables.

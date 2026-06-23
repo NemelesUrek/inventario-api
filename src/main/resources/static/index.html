@@ -226,6 +226,9 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
 .pal-item.sel{background:var(--brand-glow)}.pal-item.sel .pi{color:var(--brand);background:var(--surface)}
 .pal-foot{display:flex;gap:16px;padding:9px 16px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text-3)}
 .pal-foot span{display:flex;align-items:center;gap:6px}
+.kbd-list{display:flex;flex-direction:column}
+.kbd-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-soft);font-size:14px}
+.kbd-row:last-child{border:none}.kbd-row>span:first-child{color:var(--text-2)}.kbd-row kbd{margin-left:4px}
 /* toast / skeleton / anim */
 #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;transition:.3s;background:var(--surface-3);border:1px solid var(--border-strong);color:var(--text);padding:12px 18px;border-radius:var(--r-md);font-size:14px;box-shadow:var(--sh-lg);z-index:100;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -464,6 +467,19 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
   <div style="display:flex;gap:var(--s3);margin-top:var(--s5)"><button class="btn btn-ghost" id="confirmNo" style="flex:1;justify-content:center">Cancelar</button><button class="btn" id="confirmYes" style="flex:1;justify-content:center;background:var(--danger);color:#fff">Confirmar</button></div>
 </div></div></div>
 
+<!-- HELP / ATAJOS -->
+<div class="modal-bg" id="helpBg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" style="max-width:460px"><h3 id="helpTitle">Atajos de teclado</h3><div class="body">
+  <div class="kbd-list">
+    <div class="kbd-row"><span>Buscar / paleta de comandos</span><span><kbd>Ctrl</kbd><kbd>K</kbd></span></div>
+    <div class="kbd-row"><span>Buscar en inventario</span><span><kbd>/</kbd></span></div>
+    <div class="kbd-row"><span>Nuevo producto</span><span><kbd>N</kbd></span></div>
+    <div class="kbd-row"><span>Cambiar tema</span><span><kbd>T</kbd></span></div>
+    <div class="kbd-row"><span>Mostrar esta ayuda</span><span><kbd>?</kbd></span></div>
+    <div class="kbd-row"><span>Cerrar diálogos</span><span><kbd>Esc</kbd></span></div>
+  </div>
+  <button class="btn btn-ghost" id="helpClose" style="width:100%;justify-content:center;margin-top:var(--s5)">Entendido</button>
+</div></div></div>
+
 <script>
 const API='';
 let PRODUCTS=[], FILTERED=[], PAGE=0, PER=10, ACTION='entrada';
@@ -487,6 +503,7 @@ function go(v){
   $('#view-'+v).classList.add('active');
   $$('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===v));
   $('#viewTitle').textContent=TITLES[v];
+  document.title=TITLES[v]+' · Stockly — Nemeles';
   if(v==='reportes')renderCharts();
   if(v==='movimientos')loadMovs();
   $('#sidebar').classList.remove('open');
@@ -694,7 +711,7 @@ $('#tIn').onclick=()=>setAction('entrada');$('#tOut').onclick=()=>setAction('sal
 $('#fGo').onclick=doAction;$('#csvBtn').onclick=exportCSV;
 $$('.cp').forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.c);const o=b.textContent;b.textContent='✓ copiado';setTimeout(()=>b.textContent=o,1200);});
 /* COMMAND PALETTE (⌘K / Ctrl+K) */
-const PIC={nav:'<path d="M5 12h14M13 6l6 6-6 6"/>',add:'<path d="M12 5v14M5 12h14"/>',csv:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/>',theme:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 22v-2M2 12h2M20 12h2"/>',refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>',edit:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'};
+const PIC={nav:'<path d="M5 12h14M13 6l6 6-6 6"/>',add:'<path d="M12 5v14M5 12h14"/>',csv:'<path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/>',theme:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 22v-2M2 12h2M20 12h2"/>',refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>',edit:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.4 2.4 0 1 1 3.4 2.2c-.8.4-1 .8-1 1.6M12 17h.01"/>'};
 let PAL=[],PALF=[],PALSEL=0;
 function paletteCommands(){
   const c=[
@@ -709,6 +726,7 @@ function paletteCommands(){
     {t:'Cambiar tema (claro/oscuro)',c:'Acción',i:PIC.theme,run:()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark')},
     {t:'Actualizar datos',c:'Acción',i:PIC.refresh,run:()=>{refresh();toast('Datos actualizados','info');}},
     {t:'Reiniciar datos de demo',c:'Acción',i:PIC.refresh,run:()=>resetDemo()},
+    {t:'Atajos de teclado',c:'Ayuda',i:PIC.help,run:()=>openHelp()},
   ];
   PRODUCTS.forEach(p=>c.push({t:'Editar: '+p.nombre,c:p.sku,i:PIC.edit,run:()=>{go('inventario');editProduct(p);}}));
   return c;
@@ -740,13 +758,18 @@ function confirmDialog(title,msg,yesLabel){return new Promise(res=>{
   $('#confirmYes').onclick=()=>done(true);$('#confirmNo').onclick=()=>done(false);
   $('#confirmBg').onclick=e=>{if(e.target===$('#confirmBg'))done(false);};
 });}
+/* HELP / ATAJOS */
+function openHelp(){$('#helpBg').classList.add('open');setTimeout(()=>$('#helpClose').focus(),40);}
+$('#helpClose').onclick=()=>$('#helpBg').classList.remove('open');
+$('#helpBg').onclick=e=>{if(e.target===$('#helpBg'))$('#helpBg').classList.remove('open');};
 /* SHORTCUTS GLOBALES */
 document.addEventListener('keydown',e=>{
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#palette').classList.contains('open')?closePalette():openPalette();return;}
-  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');return;}
+  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#helpBg').classList.remove('open');if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
   if(typing)return;
-  if(e.key==='/'){e.preventDefault();go('inventario');$('#q').focus();}
+  if(e.key==='?'){e.preventDefault();openHelp();}
+  else if(e.key==='/'){e.preventDefault();go('inventario');$('#q').focus();}
   else if(e.key==='n'){e.preventDefault();go('inventario');openCreate();}
   else if(e.key==='t'){setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');}
 });
@@ -780,6 +803,7 @@ setDensity(pref('density','comfortable'));
 setMotion(pref('motion','on'));
 go(location.hash.slice(1)||'panel');
 loadAll();
+try{if(!localStorage.getItem('seen_v1')){localStorage.setItem('seen_v1','1');setTimeout(()=>toast('Tip: pulsa Ctrl/Cmd + K para buscar y navegar · ? para ver atajos','info'),1600);}}catch(e){}
 </script>
 </body>
 </html>
