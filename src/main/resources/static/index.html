@@ -353,7 +353,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
 
     <!-- VIEW: PANEL -->
     <section class="view active" id="view-panel">
-      <p class="vtitle">Resumen de tu inventario en tiempo real. <span class="mono" style="color:var(--text-3)">Datos en vivo desde la API.</span></p>
+      <p class="vtitle">Resumen de tu inventario, al instante.</p>
       <div class="grid-kpi">
         <div class="card kpi"><span class="bar"></span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/></svg></span><div class="lbl">Productos</div><div class="val sk" id="kProd">00</div><div class="meta">referencias</div></div>
         <div class="card kpi warm"><span class="bar"></span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><div class="lbl">Valor del inventario</div><div class="val sk" id="kVal">00</div><div class="meta">a precio de catálogo</div></div>
@@ -366,11 +366,11 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
           <div id="panelAlerts"></div>
         </div>
         <div class="card">
-          <h3 style="font-size:16px;margin-bottom:var(--s4)">Probar la API</h3>
-          <div class="note">Ejecuta una operación <b>real</b> contra la API. Es un entorno de demo.</div>
+          <h3 style="font-size:16px;margin-bottom:var(--s4)">Registrar movimiento</h3>
+          <p class="vtitle" style="margin:0 0 var(--s4)">Registra una entrada o salida; el stock y su historial se actualizan al instante.</p>
           <div class="form-row"><label>Producto</label><select id="fProd"></select></div>
           <div class="form-row"><label>Acción</label><div class="toggle"><button id="tIn" class="sel-in">Entrada (+)</button><button id="tOut">Salida (−)</button></div></div>
-          <div style="display:flex;gap:var(--s3)"><div class="form-row" style="flex:1"><label>Cantidad</label><input class="inp" id="fCant" type="number" min="1" value="1"></div><div class="form-row" style="flex:2"><label>Motivo</label><input class="inp" id="fMot" value="Demo desde la app"></div></div>
+          <div style="display:flex;gap:var(--s3)"><div class="form-row" style="flex:1"><label>Cantidad</label><input class="inp" id="fCant" type="number" min="1" value="1"></div><div class="form-row" style="flex:2"><label>Motivo</label><input class="inp" id="fMot" value="Ajuste manual"></div></div>
           <button class="btn btn-primary" id="fGo" style="width:100%;justify-content:center">Ejecutar acción</button>
           <div class="result" id="fRes"></div>
         </div>
@@ -392,7 +392,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
 
     <!-- VIEW: REPORTES -->
     <section class="view" id="view-reportes">
-      <p class="vtitle">Análisis de tu inventario, calculado en vivo. <span class="mono" style="color:var(--text-3)">Resumen agregado en el servidor: GET /api/stats</span></p>
+      <p class="vtitle">Análisis de tu inventario, calculado al instante.</p>
       <div class="statstrip" id="statStrip"></div>
       <div class="grid-2">
         <div class="card chart-card"><h3>Valor por producto</h3><div id="chartBars"></div></div>
@@ -407,7 +407,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
 
     <!-- VIEW: MOVIMIENTOS -->
     <section class="view" id="view-movimientos">
-      <p class="vtitle">Registro de auditoría: cada entrada y salida de stock, append-only. <span class="mono" style="color:var(--text-3)">GET /api/movimientos</span></p>
+      <p class="vtitle">Bitácora de movimientos: cada entrada y salida de stock queda registrada con fecha y hora.</p>
       <div class="section-h first">
         <div class="seg" id="movFilter"><button data-f="all" class="on">Todos</button><button data-f="ENTRADA">Entradas</button><button data-f="SALIDA">Salidas</button></div>
         <div style="display:flex;gap:var(--s4);align-items:center"><span class="mono" style="font-size:12px;color:var(--text-3)" id="movCount">—</span><button class="btn btn-ghost btn-sm" id="movReload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Actualizar</button></div>
@@ -461,15 +461,15 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
         </div>
         <div class="card">
           <h3 style="font-size:16px;margin-bottom:var(--s4)">Datos</h3>
-          <div class="note">Esta es una demo: la base es <b>H2 en memoria</b>, se reinicia sola cuando el servidor se reinicia. Puedes crear, editar y borrar libremente.</div>
+          <div class="note">Tus datos se guardan localmente en este equipo. Crea, edita y borra con confianza; siempre puedes restaurar el inventario de ejemplo.</div>
           <button class="btn btn-ghost" id="cfgReload" style="width:100%;justify-content:center;margin-bottom:var(--s3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Actualizar datos</button>
           <button class="btn btn-ghost" id="cfgCsv" style="width:100%;justify-content:center;margin-bottom:var(--s3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>Exportar inventario (CSV)</button>
-          <button class="btn btn-ghost" id="cfgReset" style="width:100%;justify-content:center;color:var(--warm-2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Reiniciar datos de demo</button>
+          <button class="btn btn-ghost" id="cfgReset" style="width:100%;justify-content:center;color:var(--warm-2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Restaurar inventario de ejemplo</button>
         </div>
       </div>
       <div class="card" style="margin-top:var(--s5)">
         <h3 style="font-size:16px;margin-bottom:var(--s3)">Acerca de esta app</h3>
-        <p style="color:var(--text-2);font-size:14px;max-width:640px">Demo de <b>Stockly</b>, un sistema de control de inventario construido por <b>Nemeles</b>. La interfaz que ves consume su propia <b>API REST</b> (la misma de la vista «API & Docs»). Todo es HTML/CSS/JS sin librerías; el backend es Java + Spring Boot.</p>
+        <p style="color:var(--text-2);font-size:14px;max-width:640px"><b>Stockly</b> es un sistema de control de inventario para tu negocio, construido por <b>Nemeles</b>. Funciona sobre una <b>API REST</b> documentada (Java + Spring Boot), lista para conectarse con tu tienda en línea, punto de venta u otros sistemas.</p>
         <div class="intg" style="margin-top:var(--s4)">
           <span class="itag on"><span class="t">stack</span>Java 17</span><span class="itag on"><span class="t">stack</span>Spring Boot</span><span class="itag on"><span class="t">stack</span>JPA / H2</span><span class="itag on"><span class="t">stack</span>OpenAPI</span><span class="itag on"><span class="t">stack</span>JUnit · CI</span><span class="itag on"><span class="t">stack</span>Docker</span>
         </div>
@@ -761,7 +761,7 @@ function fillCategories(){
 }
 function setAction(a){ACTION=a;$('#tIn').className=a==='entrada'?'sel-in':'';$('#tOut').className=a==='salida'?'sel-out':'';}
 async function doAction(){
-  const id=$('#fProd').value,cant=parseInt($('#fCant').value)||0,mot=$('#fMot').value||'Demo';
+  const id=$('#fProd').value,cant=parseInt($('#fCant').value)||0,mot=$('#fMot').value||'Ajuste manual';
   if(!id||cant<1){toast('Elige producto y cantidad válida.');return;}
   const btn=$('#fGo');btn.disabled=true;const old=btn.textContent;btn.textContent='Ejecutando…';
   try{const res=await fetchT(API+'/api/productos/'+id+'/'+ACTION,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cantidad:cant,motivo:mot})});
@@ -883,7 +883,7 @@ function paletteCommands(){
     {t:'Exportar inventario (CSV)',c:'Acción',i:PIC.csv,run:exportCSV},
     {t:'Cambiar tema (claro/oscuro)',c:'Acción',i:PIC.theme,run:()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark')},
     {t:'Actualizar datos',c:'Acción',i:PIC.refresh,run:()=>{refresh();toast('Datos actualizados','info');}},
-    {t:'Reiniciar datos de demo',c:'Acción',i:PIC.refresh,run:()=>resetDemo()},
+    {t:'Restaurar inventario de ejemplo',c:'Acción',i:PIC.refresh,run:()=>resetDemo()},
     {t:'Atajos de teclado',c:'Ayuda',i:PIC.help,run:()=>openHelp()},
   ];
   PRODUCTS.forEach(p=>c.push({t:'Editar: '+p.nombre,c:p.sku,i:PIC.edit,run:()=>{go('inventario');editProduct(p);}}));
@@ -942,7 +942,7 @@ document.addEventListener('keydown',e=>{
 });
 /* CONFIG wiring */
 async function resetDemo(){
-  if(!await confirmDialog('Reiniciar datos de demo','Esto borra todos los productos y movimientos y vuelve a cargar el inventario de ejemplo. ¿Continuar?','Reiniciar'))return;
+  if(!await confirmDialog('Restaurar inventario de ejemplo','Esto borra todos los productos y movimientos y vuelve a cargar el inventario de ejemplo. ¿Continuar?','Reiniciar'))return;
   try{const res=await fetchT(API+'/api/demo/reset',{method:'POST'});const b=await res.json().catch(()=>({}));
     if(res.ok){toast('✓ '+(b.mensaje||'Datos reiniciados'),'ok');await refresh();go('inventario');}
     else{toast('No se pudo reiniciar ('+res.status+')','err');}
