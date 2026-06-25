@@ -293,6 +293,9 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
 @keyframes pulse{0%{box-shadow:0 0 0 0 currentColor;opacity:1}70%{box-shadow:0 0 0 7px transparent;opacity:.6}100%{box-shadow:0 0 0 0 transparent;opacity:1}}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @keyframes flash{0%{background:var(--brand-glow)}100%{background:transparent}}.flash{animation:flash .7s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:15px;height:15px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;animation:spin .6s linear infinite;vertical-align:-2px}
+.btn.loading,button.loading{pointer-events:none}
 /* responsive */
 @media(max-width:980px){.grid-2{grid-template-columns:1fr}.grid-kpi{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){
@@ -559,6 +562,9 @@ function toast(m,type){const t=$('#toast');t.textContent=m;t.className=(type||''
 function setStatus(s,txt){if(window.DEMO_MODE&&s==='live'){s='demo';txt='Modo demostración';}['#sideStatus'].forEach(id=>{const e=$(id);if(e){e.className='status '+s;}});$('#sideStatusTxt').textContent=txt;}
 function fetchT(u,o={},ms=60000){const c=new AbortController();const id=setTimeout(()=>c.abort(),ms);return fetch(u,{...o,signal:c.signal}).finally(()=>clearTimeout(id));}
 function sp(c,t){const s=document.createElement('span');s.className=c;s.textContent=t;return s;}
+const debounce=(fn,ms)=>{let t;return function(){clearTimeout(t);const a=arguments;t=setTimeout(()=>fn.apply(null,a),ms);};};
+/* Spinner + disable unificado para cualquier acción async sobre un botón. */
+async function withLoading(btn,fn){if(!btn)return await fn();const old=btn.innerHTML,w=btn.offsetWidth;btn.disabled=true;if(w)btn.style.minWidth=w+'px';btn.classList.add('loading');btn.innerHTML='<span class="spin" aria-hidden="true"></span>';try{return await fn();}finally{btn.disabled=false;btn.style.minWidth='';btn.classList.remove('loading');btn.innerHTML=old;}}
 
 /* ===== MODO DEMOSTRACIÓN — datos embebidos (la página nunca se ve muerta) =====
    Si el backend no responde, un shim de fetch sirve este dataset en memoria.
@@ -763,18 +769,27 @@ function fillCategories(){
 function setAction(a){ACTION=a;$('#tIn').className=a==='entrada'?'sel-in':'';$('#tOut').className=a==='salida'?'sel-out':'';}
 async function doAction(){
   const id=$('#fProd').value,cant=parseInt($('#fCant').value)||0,mot=$('#fMot').value||'Ajuste manual';
-  if(!id||cant<1){toast('Elige producto y cantidad válida.');return;}
-  const btn=$('#fGo');btn.disabled=true;const old=btn.textContent;btn.textContent='Ejecutando…';
-  try{const res=await fetchT(API+'/api/productos/'+id+'/'+ACTION,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cantidad:cant,motivo:mot})});
-    const body=await res.json();const r=$('#fRes');
-    if(res.ok){r.className='result ok';r.textContent=`Listo. Stock de ${body.nombre}: ${body.stock-(ACTION==='entrada'?cant:-cant)} → ${body.stock}`;await refresh(id);
-      const tr=$(`tr[data-id="${id}"]`);if(tr){tr.classList.add('flash');setTimeout(()=>tr.classList.remove('flash'),700);}
-      toast('✓ '+(ACTION==='entrada'?'Entrada':'Salida')+' registrada','ok');
-    }else{r.className='result err';r.textContent=body.detail||body.title||('Error '+res.status);toast('Operación rechazada ('+res.status+')','err');}
-  }catch(e){toast('No se pudo completar.','err');}
-  btn.disabled=false;btn.textContent=old;
+  if(!id||cant<1){toast('Elige un producto y una cantidad válida.','err');return;}
+  await withLoading($('#fGo'),async()=>{
+    const r=$('#fRes');
+    try{
+      const res=await fetchT(API+'/api/productos/'+id+'/'+ACTION,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cantidad:cant,motivo:mot})});
+      const body=await res.json();
+      if(res.ok){
+        // UI optimista: el servidor ya devolvió el producto actualizado -> parchear local y repintar sin re-pedir todo.
+        const i=PRODUCTS.findIndex(p=>String(p.id)===String(id));const prev=i>=0?PRODUCTS[i].stock:null;
+        if(i>=0)PRODUCTS[i]=body;renderLocal(id);
+        r.className='result ok';r.textContent=`Stock de ${body.nombre}: ${prev!=null?prev:'—'} → ${body.stock}`;
+        const tr=$(`tr[data-id="${id}"]`);if(tr){tr.classList.add('flash');setTimeout(()=>tr.classList.remove('flash'),700);}
+        toast('✓ '+(ACTION==='entrada'?'Entrada':'Salida')+' registrada','ok');
+      }else{r.className='result err';r.textContent=body.detail||body.title||('No se pudo registrar el movimiento.');toast(body.detail||'Operación rechazada','err');}
+    }catch(e){r.className='result err';r.textContent='No se pudo completar la operación.';toast('No se pudo completar.','err');}
+  });
 }
 async function refresh(keepSel){const [pr,bs]=await Promise.all([fetchT(API+'/api/productos?page=0&size=200').then(r=>r.json()),fetchT(API+'/api/productos/bajo-stock').then(r=>r.json())]);PRODUCTS=pr.content||[];renderKPIs(pr,bs);applyFilter();renderPanelAlerts(bs);fillSelect();fillCategories();if(keepSel)$('#fProd').value=keepSel;if($('#view-reportes').classList.contains('active'))renderCharts();if($('#view-movimientos').classList.contains('active'))loadMovs();}
+function lowStockLocal(){return PRODUCTS.filter(p=>p.bajoStock);}
+/* Re-render desde el estado local, sin volver a pedir todo el catálogo (UI optimista). */
+function renderLocal(keepSel){const bs=lowStockLocal();renderKPIs({content:PRODUCTS,page:{totalElements:PRODUCTS.length}},bs);applyFilter();renderPanelAlerts(bs);fillSelect();fillCategories();if(keepSel)$('#fProd').value=keepSel;if($('#view-reportes').classList.contains('active'))renderCharts();if($('#view-movimientos').classList.contains('active'))loadMovs();}
 /* MODAL crear/editar + eliminar */
 function resetModal(){$('#nRes').className='result';['nSku','nNom','nDesc','nCat'].forEach(i=>$('#'+i).value='');$('#nPrecio').value='0';$('#nStock').value='0';$('#nMin').value='0';}
 function openCreate(){EDIT_ID=null;resetModal();$('#modalTitle').textContent='Nuevo producto';$('#nSave').textContent='Crear producto';$('#rowSku').style.display='';$('#rowStock').style.display='';$('#modalBg').classList.add('open');setTimeout(()=>$('#nSku').focus(),60);}
@@ -825,8 +840,14 @@ function renderMovBody(){
 }
 $$('#movFilter button').forEach(b=>b.onclick=()=>{$$('#movFilter button').forEach(x=>x.classList.remove('on'));b.classList.add('on');MOVFILTER=b.dataset.f;renderMovBody();});
 $('#movReload').onclick=loadMovs;
-function exportCSV(){const rows=[['sku','nombre','categoria','precio','stock','stockMinimo','bajoStock']];PRODUCTS.forEach(p=>rows.push([p.sku,'"'+(p.nombre||'').replace(/"/g,'""')+'"',p.categoria||'',(p.precioCentavos/100).toFixed(2),p.stock,p.stockMinimo,p.bajoStock]));
-  const b=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='inventario.csv';a.click();URL.revokeObjectURL(a.href);toast('CSV exportado','ok');}
+function exportCSV(){
+  /* Excel-friendly: BOM (acentos correctos), CRLF y todos los campos escapados. */
+  const esc=v=>{v=v==null?'':String(v);return /[",\r\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const head=['SKU','Nombre','Categoría','Precio','Stock','Stock mínimo','Estado'];
+  const rows=[head.map(esc).join(',')];
+  PRODUCTS.forEach(p=>rows.push([p.sku,p.nombre,p.categoria||'',(p.precioCentavos/100).toFixed(2),p.stock,p.stockMinimo,p.bajoStock?'Por reponer':'En stock'].map(esc).join(',')));
+  const csv='﻿'+rows.join('\r\n');
+  const b=new Blob([csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='inventario.csv';a.click();URL.revokeObjectURL(a.href);toast('Inventario exportado a CSV','ok');}
 /* STATS (server-side, GET /api/stats) */
 async function loadStats(){try{const s=await fetchT(API+'/api/stats').then(r=>r.json());renderStats(s);}catch(e){}}
 function renderStats(s){
@@ -860,7 +881,7 @@ function renderCharts(){
     arr.forEach(([n,v])=>{const row=document.createElement('div');row.className='barrow';const tr=document.createElement('div');tr.className='track';const fi=document.createElement('i');fi.style.background='linear-gradient(90deg,var(--warm),var(--warm-2))';fi.style.width='0';setTimeout(()=>fi.style.width=(v/mx*100)+'%',60);tr.appendChild(fi);row.append(sp('nm',n),tr,sp('vv',fmtMXN(v)));cc.appendChild(row);});}
 }
 /* wires */
-$('#q').addEventListener('input',applyFilter);
+$('#q').addEventListener('input',debounce(applyFilter,150));
 $$('#view-inventario thead th.sortable').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;if(SORT.key===k)SORT.dir*=-1;else{SORT.key=k;SORT.dir=1;}updateSortArrows();applyFilter();});
 $('#lowChip').onclick=()=>{LOWONLY=!LOWONLY;$('#lowChip').classList.toggle('on',LOWONLY);applyFilter();};
 $('#catFilter').onchange=()=>{CATFILTER=$('#catFilter').value;applyFilter();};
