@@ -19,10 +19,11 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://inventario-api-h6b3.onrender.com/og.png">
 <meta name="author" content="Nemeles — Backend Engineer">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+/* ============ TIPOGRAFÍA (self-host, funciona offline) ============ */
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url('/fonts/InterVariable.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;src:url('/fonts/JetBrainsMono.woff2') format('woff2')}
 /* ============ SISTEMA DE DISEÑO v2 — TEMA OSCURO (default) ============ */
 :root,[data-theme="dark"]{
   /* capas (apilado por luminancia) */
