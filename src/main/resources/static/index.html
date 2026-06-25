@@ -304,6 +304,19 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 html[data-motion="off"] *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+/* ===== v2 micro-interacciones (pulido senior) ===== */
+.btn{transition:background var(--d-fast) var(--ease-out-soft),border-color var(--d-fast) var(--ease-out-soft),color var(--d-fast) var(--ease-out-soft),transform var(--d-micro) var(--ease-out),box-shadow var(--d-fast) var(--ease-out)}
+.btn:active{transform:translateY(0) scale(.985)}
+.btn-primary:active{background:var(--brand-press)}
+.iconbtn:active,.chip:active,.ria:active,.kbtn:active,.seg button:active,.toggle button:active,.pager button:active,.cp:active{transform:scale(.95)}
+.nav a{transition:background var(--d-fast) var(--ease-out-soft),color var(--d-fast) var(--ease-out-soft)}
+.nav a:active{transform:scale(.99)}
+tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
+.card{transition:border-color var(--d-base) var(--ease-out-soft),box-shadow var(--d-base) var(--ease-out-soft)}
+.kpi{transition:transform var(--d-base) var(--ease-out),border-color var(--d-base) var(--ease-out-soft)}
+.kpi:hover{transform:translateY(-2px);border-color:var(--border-strong)}
+.iconbtn,.ria,.chip,.cp{transition:color var(--d-fast) var(--ease-out-soft),border-color var(--d-fast) var(--ease-out-soft),background var(--d-fast) var(--ease-out-soft),transform var(--d-micro) var(--ease-out)}
+:where(a[data-view],button,.cp,input,select,textarea,[tabindex]:not([tabindex="-1"])):focus-visible{outline:none;box-shadow:var(--ring)}
 </style>
 </head>
 <body>
