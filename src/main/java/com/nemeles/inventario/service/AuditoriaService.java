@@ -30,8 +30,12 @@ public class AuditoriaService {
         return repo.findTop200ByOrderByFechaDescIdDesc();
     }
 
-    /** Usuario que ejecuta la acción. Se reemplazará por el del login cuando exista. */
+    /** Usuario de la sesión actual; "sistema" si no hay sesión (seeders, arranque). */
     private String usuarioActual() {
-        return "sistema";
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return "sistema";
+        }
+        return auth.getName();
     }
 }
