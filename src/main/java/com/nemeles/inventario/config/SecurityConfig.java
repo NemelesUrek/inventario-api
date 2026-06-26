@@ -28,6 +28,7 @@ public class SecurityConfig {
                                 "/css/**", "/js/**", "/fonts/**", "/vendor/**",
                                 "/actuator/health", "/api/auth/login").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())
                 .formLogin(form -> form
