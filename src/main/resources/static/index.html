@@ -184,6 +184,7 @@ tr.low td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
 .badge .bd{width:6px;height:6px;border-radius:50%}
 .badge.ok{color:var(--ok);background:var(--brand-glow)}.badge.ok .bd{background:var(--ok)}
 .badge.low{color:var(--danger);background:var(--danger-bg)}.badge.low .bd{background:var(--danger);animation:pulse 1.6s infinite}
+.badge.out{color:#fff;background:var(--danger)}.badge.out .bd{background:#fff;animation:pulse 1.6s infinite}
 .movs{background:var(--bg-1);padding:var(--s4) var(--s5)}
 .mov{display:flex;align-items:center;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border-soft)}.mov:last-child{border:none}
 .movtag{font-family:'JetBrains Mono';font-size:10px;padding:2px 7px;border-radius:var(--r-sm)}
@@ -311,6 +312,17 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
   .inp,select,.search input,#q,.pal-search input{font-size:16px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ===== Impresión: conteo/reporte limpio para el almacén o el contador ===== */
+@media print{
+  :root{--bg-canvas:#fff;--bg-base:#fff}
+  .sidebar,.topbar,.rowact,.pager,.side-foot,#toast,.modal-bg,.pal-bg,.hamb,.search,.chip,.seg,#newBtn,#csvBtn{display:none!important}
+  .app{display:block}.main{background:#fff}.view{padding:0;max-width:none}
+  body{color:#000;background:#fff;font-size:12px}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  table{font-size:11px}thead th{color:#000;border-bottom:1px solid #000}tbody td{border-bottom:1px solid #ddd}
+  .view{display:none!important}.view.active{display:block!important}
+  a[href]:after{content:""}
+}
 html[data-motion="off"] *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 /* ===== v2 micro-interacciones (pulido senior) ===== */
 .btn{transition:background var(--d-fast) var(--ease-out-soft),border-color var(--d-fast) var(--ease-out-soft),color var(--d-fast) var(--ease-out-soft),transform var(--d-micro) var(--ease-out),box-shadow var(--d-fast) var(--ease-out)}
@@ -747,7 +759,7 @@ function renderTable(){
     const sc=document.createElement('div');sc.className='stockcell';const sn=sp('tnum',String(p.stock));sn.style.fontWeight='600';
     const bar=document.createElement('div');bar.className='sbar';const fi=document.createElement('i');const pct=p.stockMinimo>0?Math.min(100,p.stock/(p.stockMinimo*3)*100):100;fi.style.width=pct+'%';if(p.bajoStock)fi.style.background='var(--danger)';bar.appendChild(fi);sc.append(sn,bar);
     const stc=cell('Stock',sc);stc.className='r';tr.appendChild(stc);
-    const b=document.createElement('span');b.className='badge '+(p.bajoStock?'low':'ok');b.append(Object.assign(document.createElement('span'),{className:'bd'}),document.createTextNode(p.bajoStock?'Reponer':'En stock'));
+    const agot=p.stock===0;const b=document.createElement('span');b.className='badge '+(agot?'out':p.bajoStock?'low':'ok');b.append(Object.assign(document.createElement('span'),{className:'bd'}),document.createTextNode(agot?'Agotado':p.bajoStock?'Reponer':'En stock'));
     const bc=cell('Estado',b);bc.className='r';tr.appendChild(bc);
     const acts=document.createElement('div');acts.className='rowact';
     const eb=document.createElement('button');eb.className='ria';eb.title='Editar';eb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';eb.onclick=ev=>{ev.stopPropagation();editProduct(p);};
@@ -809,8 +821,11 @@ function lowStockLocal(){return PRODUCTS.filter(p=>p.bajoStock);}
 function renderLocal(keepSel){const bs=lowStockLocal();renderKPIs({content:PRODUCTS,page:{totalElements:PRODUCTS.length}},bs);applyFilter();renderPanelAlerts(bs);fillSelect();fillCategories();if(keepSel)$('#fProd').value=keepSel;if($('#view-reportes').classList.contains('active'))renderCharts();if($('#view-movimientos').classList.contains('active'))loadMovs();}
 /* MODAL crear/editar + eliminar */
 function resetModal(){$('#nRes').className='result';['nSku','nNom','nDesc','nCat'].forEach(i=>$('#'+i).value='');$('#nPrecio').value='0';$('#nStock').value='0';$('#nMin').value='0';}
-function openCreate(){EDIT_ID=null;resetModal();$('#modalTitle').textContent='Nuevo producto';$('#nSave').textContent='Crear producto';$('#rowSku').style.display='';$('#rowStock').style.display='';$('#modalBg').classList.add('open');setTimeout(()=>$('#nSku').focus(),60);}
-function editProduct(p){EDIT_ID=p.id;resetModal();$('#modalTitle').textContent='Editar producto';$('#nSave').textContent='Guardar cambios';$('#rowSku').style.display='none';$('#rowStock').style.display='none';$('#nNom').value=p.nombre;$('#nDesc').value=p.descripcion||'';$('#nCat').value=p.categoria||'';$('#nPrecio').value=(p.precioCentavos/100).toFixed(2);$('#nMin').value=p.stockMinimo;$('#modalBg').classList.add('open');setTimeout(()=>$('#nNom').focus(),60);}
+/* Validación en vivo: deshabilita Guardar hasta que los campos obligatorios sean válidos. */
+function validateModal(){const creating=$('#rowSku').style.display!=='none';const okNom=$('#nNom').value.trim().length>0;const okSku=!creating||$('#nSku').value.trim().length>0;const okPre=parseFloat($('#nPrecio').value||'0')>=0;$('#nSave').disabled=!(okNom&&okSku&&okPre);}
+function openCreate(){EDIT_ID=null;resetModal();$('#modalTitle').textContent='Nuevo producto';$('#nSave').textContent='Crear producto';$('#rowSku').style.display='';$('#rowStock').style.display='';$('#modalBg').classList.add('open');validateModal();setTimeout(()=>$('#nSku').focus(),60);}
+function editProduct(p){EDIT_ID=p.id;resetModal();$('#modalTitle').textContent='Editar producto';$('#nSave').textContent='Guardar cambios';$('#rowSku').style.display='none';$('#rowStock').style.display='none';$('#nNom').value=p.nombre;$('#nDesc').value=p.descripcion||'';$('#nCat').value=p.categoria||'';$('#nPrecio').value=(p.precioCentavos/100).toFixed(2);$('#nMin').value=p.stockMinimo;$('#modalBg').classList.add('open');validateModal();setTimeout(()=>$('#nNom').focus(),60);}
+['nNom','nSku','nPrecio'].forEach(id=>{const e=$('#'+id);if(e)e.addEventListener('input',validateModal);});
 $('#newBtn').onclick=openCreate;$('#nCancel').onclick=()=>$('#modalBg').classList.remove('open');
 $('#modalBg').onclick=e=>{if(e.target===$('#modalBg'))$('#modalBg').classList.remove('open');};
 $('#nSave').onclick=async()=>{
@@ -896,7 +911,7 @@ function renderCharts(){
   const low=PRODUCTS.filter(p=>p.bajoStock).length,ok=PRODUCTS.length-low;const cd=$('#chartDonut');cd.innerHTML='';
   const S=svg('svg',{viewBox:'0 0 42 42',width:160,height:160});const cx=21,cy=21,r=15.9,circ=2*Math.PI*r;
   S.appendChild(svg('circle',{cx,cy,r,fill:'none',stroke:'var(--surface-3)','stroke-width':6}));
-  const total=PRODUCTS.length||1;let off=0;[[ok,'var(--ok)'],[low,'var(--danger)']].forEach(([val,col])=>{if(!val)return;const seg=svg('circle',{cx,cy,r,fill:'none',stroke:col,'stroke-width':6,'stroke-dasharray':`${val/total*circ} ${circ}`,'stroke-dashoffset':-off,transform:'rotate(-90 21 21)','stroke-linecap':'round'});S.appendChild(seg);off+=val/total*circ;});
+  const total=PRODUCTS.length||1;let off=0;[[ok,'var(--ok)'],[low,'var(--danger)']].forEach(([val,col])=>{if(!val)return;const len=val/total*circ;const seg=svg('circle',{cx,cy,r,fill:'none',stroke:col,'stroke-width':6,'stroke-dasharray':`0 ${circ}`,'stroke-dashoffset':-off,transform:'rotate(-90 21 21)','stroke-linecap':'round'});seg.style.transition='stroke-dasharray var(--d-bar) var(--ease-out)';S.appendChild(seg);setTimeout(()=>seg.setAttribute('stroke-dasharray',`${len} ${circ}`),60);off+=len;});
   const tx=svg('text',{x:21,y:20,'text-anchor':'middle','font-size':7,fill:'var(--text)','font-weight':'700'});tx.textContent=total;const t2=svg('text',{x:21,y:26,'text-anchor':'middle','font-size':3.4,fill:'var(--text-3)'});t2.textContent='productos';S.append(tx,t2);cd.appendChild(S);
   const lg=$('#donutLegend');lg.innerHTML='';[[ok,'En stock','var(--ok)'],[low,'Por reponer','var(--danger)']].forEach(([v,n,c])=>{const li=document.createElement('div');li.className='li';const s=document.createElement('span');s.className='sw';s.style.background=c;li.append(s,sp('',`${n} — ${v}`));lg.appendChild(li);});
   // units bars
