@@ -337,6 +337,17 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
 .kpi:hover{transform:translateY(-2px);border-color:var(--border-strong)}
 .iconbtn,.ria,.chip,.cp{transition:color var(--d-fast) var(--ease-out-soft),border-color var(--d-fast) var(--ease-out-soft),background var(--d-fast) var(--ease-out-soft),transform var(--d-micro) var(--ease-out)}
 :where(a[data-view],button,.cp,input,select,textarea,[tabindex]:not([tabindex="-1"])):focus-visible{outline:none;box-shadow:var(--ring)}
+/* ===== Login + badge de usuario ===== */
+.login-bg{position:fixed;inset:0;background:radial-gradient(900px 520px at 50% -10%,var(--brand-glow),transparent 60%),var(--bg-base);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.login-bg.open{display:flex}
+.login-card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-modal);padding:34px;width:100%;max-width:380px;animation:fade .3s}
+.login-logo{display:flex;align-items:center;gap:10px;font-weight:var(--w-bold);font-size:19px;margin-bottom:18px;letter-spacing:-.02em}
+.login-logo .mk{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand-press));display:grid;place-items:center;color:var(--brand-ink)}
+.userbadge{display:flex;align-items:center;gap:10px;font-size:13px}
+.userbadge .uinfo{display:flex;flex-direction:column;line-height:1.25;text-align:right}
+.userbadge .uname{font-weight:var(--w-semi)}
+.userbadge .urol{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.userbadge .uavatar{width:32px;height:32px;border-radius:50%;background:var(--brand-ghost);color:var(--brand);display:grid;place-items:center;font-weight:var(--w-bold);font-size:13px;flex:none}
 </style>
 </head>
 <body>
@@ -370,6 +381,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
       <h1 id="viewTitle">Panel</h1>
       <div class="spacer"></div>
       <button class="kbtn" id="palBtn" title="Paleta de comandos" aria-label="Abrir paleta de comandos (Ctrl K)"><svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Buscar <kbd>Ctrl K</kbd></button>
+      <div id="userBadge" class="userbadge" style="display:none"></div>
       <a class="btn btn-primary btn-sm" data-view="contratar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg>Contratar</a>
     </header>
 
@@ -547,6 +559,20 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
       <b style="color:var(--text-2)">Stockly</b> — demo de Nemeles · Backend Engineer · Java · Spring Boot · REST · SQL · <span class="mono">esta app corre sobre la API que ves arriba</span>
     </footer>
   </div>
+</div>
+
+<!-- LOGIN -->
+<div class="login-bg" id="loginBg" role="dialog" aria-modal="true" aria-label="Iniciar sesión">
+  <form class="login-card" id="loginForm" autocomplete="on">
+    <div class="login-logo"><span class="mk"><svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7M12 11v10"/></svg></span>Stockly</div>
+    <h2 style="font-size:18px;margin-bottom:4px">Inicia sesión</h2>
+    <p class="vtitle" style="margin-bottom:18px">Sistema de control de inventario</p>
+    <div class="form-row"><label for="loginUser">Usuario</label><input class="inp" id="loginUser" name="username" autocomplete="username" value="admin"></div>
+    <div class="form-row"><label for="loginPass">Contraseña</label><input class="inp" id="loginPass" name="password" type="password" autocomplete="current-password" value="admin123"></div>
+    <div class="result err" id="loginErr" style="display:none;margin-top:0"></div>
+    <button class="btn btn-primary" id="loginBtn" type="submit" style="width:100%;justify-content:center;margin-top:8px">Entrar</button>
+    <p class="vtitle" style="margin-top:16px;font-size:12px">Usuarios de ejemplo: <b>admin / admin123</b> · también <span class="mono">almacen</span>, <span class="mono">compras</span>, <span class="mono">ventas</span> (clave = usuario + 123).</p>
+  </form>
 </div>
 
 <!-- MODAL crear/editar producto -->
@@ -728,8 +754,10 @@ window.fetch=async function(url,opts){
   if(window.DEMO_MODE&&path.includes('/api/'))return _demoRoute(url,opts||{});
   try{
     const r=await _origFetch(url,opts);
+    /* 401/403: el backend existe pero falta sesión -> pedir login (no caer a demo) */
+    if(path.includes('/api/')&&(r.status===401||r.status===403)&&!path.includes('/api/auth/')){if(window.showLogin)window.showLogin();return r;}
     /* backend ausente (p. ej. servidor estático que devuelve 404 HTML): caer a demo */
-    if(path.includes('/api/')&&!r.ok&&!((r.headers.get('content-type')||'').includes('json'))){enterDemo();return _demoRoute(url,opts||{});}
+    if(path.includes('/api/')&&!r.ok&&r.status!==401&&r.status!==403&&!((r.headers.get('content-type')||'').includes('json'))){enterDemo();return _demoRoute(url,opts||{});}
     return r;
   }catch(e){if(path.includes('/api/')){enterDemo();return _demoRoute(url,opts||{});}throw e;}
 };
@@ -834,7 +862,7 @@ function renderTable(){
     const acts=document.createElement('div');acts.className='rowact';
     const eb=document.createElement('button');eb.className='ria';eb.title='Editar';eb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';eb.onclick=ev=>{ev.stopPropagation();editProduct(p);};
     const db=document.createElement('button');db.className='ria danger';db.title='Eliminar';db.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/></svg>';db.onclick=ev=>{ev.stopPropagation();deleteProduct(p);};
-    acts.append(eb,db);const ac=cell('Acciones',acts);ac.className='r';tr.appendChild(ac);
+    if(can('producto.editar'))acts.append(eb);if(can('producto.eliminar'))acts.append(db);const ac=cell('Acciones',acts);ac.className='r';tr.appendChild(ac);
     tr.tabIndex=0;tr.setAttribute('role','button');tr.setAttribute('aria-expanded','false');tr.setAttribute('aria-label','Ver historial de '+p.nombre);
     tr.onclick=()=>toggleMovs(tr,p.id);tr.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target===tr){e.preventDefault();toggleMovs(tr,p.id);}};tb.appendChild(tr);
   });
@@ -1000,7 +1028,7 @@ function renderProveedores(){
     const acts=document.createElement('div');acts.className='rowact';
     const eb=document.createElement('button');eb.className='ria';eb.title='Editar';eb.setAttribute('aria-label','Editar '+p.nombre);eb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';eb.onclick=()=>editProveedor(p);
     const db=document.createElement('button');db.className='ria danger';db.title='Eliminar';db.setAttribute('aria-label','Eliminar '+p.nombre);db.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/></svg>';db.onclick=()=>deleteProveedor(p);
-    acts.append(eb,db);const ac=cell('Acciones',acts);ac.className='r';tr.appendChild(ac);
+    if(can('proveedor.editar'))acts.append(eb);if(can('proveedor.eliminar'))acts.append(db);const ac=cell('Acciones',acts);ac.className='r';tr.appendChild(ac);
     tb.appendChild(tr);});
 }
 function resetProvModal(){$('#pvRes').className='result';['pvNombre','pvContacto','pvTel','pvEmail','pvRfc','pvNotas'].forEach(i=>$('#'+i).value='');}
@@ -1054,6 +1082,49 @@ function renderAuditoria(){
 }
 $$('#audFilter button').forEach(b=>b.onclick=()=>{$$('#audFilter button').forEach(x=>x.classList.remove('on'));b.classList.add('on');AUDFILTER=b.dataset.f;renderAuditoria();});
 if($('#audReload'))$('#audReload').onclick=loadAuditoria;
+/* ===== SESIÓN / ROLES ===== */
+let CURRENT_USER=null;
+const PERMS={
+  ADMINISTRADOR:['*'],
+  ALMACEN:['producto.crear','producto.editar','stock.mover'],
+  COMPRAS:['proveedor.crear','proveedor.editar','stock.mover'],
+  VENTAS:['stock.mover']
+};
+function rolActual(){return (CURRENT_USER&&CURRENT_USER.roles&&CURRENT_USER.roles[0])||'';}
+/* Sin sesión (modo demo/sandbox) todo está permitido; con sesión, manda el rol. */
+function can(perm){if(!CURRENT_USER)return true;const list=PERMS[rolActual()]||[];return list.includes('*')||list.includes(perm);}
+window.showLogin=function(){CURRENT_USER=null;const b=$('#userBadge');if(b)b.style.display='none';$('#loginBg').classList.add('open');setTimeout(()=>{const u=$('#loginUser');if(u)u.focus();},60);};
+function hideLogin(){$('#loginBg').classList.remove('open');}
+function setUser(data){CURRENT_USER=data;const rol=rolActual();const b=$('#userBadge');if(!b)return;
+  b.innerHTML='';
+  const av=sp('uavatar',(data.username||'?').slice(0,1).toUpperCase());
+  const info=document.createElement('span');info.className='uinfo';info.append(sp('uname',data.username||''),sp('urol',rol));
+  const out=document.createElement('button');out.className='iconbtn';out.title='Cerrar sesión';out.setAttribute('aria-label','Cerrar sesión');out.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>';out.onclick=logout;
+  b.append(av,info,out);b.style.display='flex';
+  applyRoleGating();
+}
+function applyRoleGating(){
+  const show=(sel,ok)=>{const e=$(sel);if(e)e.style.display=ok?'':'none';};
+  show('#newBtn',can('producto.crear'));
+  show('#newProvBtn',can('proveedor.crear'));
+  show('#cfgReset',rolActual()==='ADMINISTRADOR');
+  const mov=$('#fGo');if(mov&&mov.closest('.card'))mov.closest('.card').style.display=can('stock.mover')?'':'none';
+  if(typeof applyFilter==='function')applyFilter();
+  if($('#provBody'))renderProveedores();
+}
+async function doLogin(e){
+  if(e)e.preventDefault();
+  const u=$('#loginUser').value.trim(),p=$('#loginPass').value,err=$('#loginErr');err.style.display='none';
+  await withLoading($('#loginBtn'),async()=>{
+    try{
+      const res=await _origFetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'username='+encodeURIComponent(u)+'&password='+encodeURIComponent(p)});
+      if(res.ok){const me=await _origFetch('/api/auth/me').then(r=>r.json());setUser(me);hideLogin();toast('Bienvenido, '+me.username,'ok');loadAll();}
+      else{err.textContent='Usuario o contraseña incorrectos.';err.style.display='block';}
+    }catch(ex){err.textContent='No se pudo conectar con el servidor.';err.style.display='block';}
+  });
+}
+async function logout(){try{await _origFetch('/api/auth/logout',{method:'POST'});}catch(e){}CURRENT_USER=null;toast('Sesión cerrada','info');showLogin();}
+if($('#loginForm'))$('#loginForm').addEventListener('submit',doLogin);
 /* STATS (server-side, GET /api/stats) */
 async function loadStats(){try{const s=await fetchT(API+'/api/stats').then(r=>r.json());renderStats(s);}catch(e){}}
 function renderStats(s){
@@ -1191,8 +1262,17 @@ setMotion(pref('motion','on'));
 $$('svg:not([role]):not([aria-label])').forEach(s=>s.setAttribute('aria-hidden','true'));
 hydrateUI();updateSortArrows();
 go(location.hash.slice(1)||window._savedView||'panel');
-/* Probar el backend; si no responde, entrar en modo demostración antes de cargar. */
-(async()=>{try{const h=await _origFetch('/actuator/health',{cache:'no-store'});if(!h.ok)enterDemo();}catch(e){enterDemo();}loadAll();})();
+/* Arranque: ¿hay backend? -> ¿sesión iniciada? Sin backend = modo demo (explorable, sin login). */
+(async()=>{
+  let backend=false;
+  try{const h=await _origFetch('/actuator/health',{cache:'no-store'});backend=h.ok;}catch(e){backend=false;}
+  if(!backend){enterDemo();loadAll();return;}
+  try{
+    const me=await _origFetch('/api/auth/me',{cache:'no-store'});
+    if(me.ok){setUser(await me.json());loadAll();}
+    else showLogin();
+  }catch(e){enterDemo();loadAll();}
+})();
 try{if(!localStorage.getItem('seen_v1')){localStorage.setItem('seen_v1','1');setTimeout(()=>toast('Tip: pulsa Ctrl/Cmd + K para buscar y navegar · ? para ver atajos','info'),1600);}}catch(e){}
 </script>
 </body>
