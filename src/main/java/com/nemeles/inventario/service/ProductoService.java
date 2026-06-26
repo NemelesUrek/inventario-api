@@ -22,10 +22,12 @@ public class ProductoService {
 
     private final ProductoRepository productos;
     private final MovimientoRepository movimientos;
+    private final AuditoriaService auditoria;
 
-    public ProductoService(ProductoRepository productos, MovimientoRepository movimientos) {
+    public ProductoService(ProductoRepository productos, MovimientoRepository movimientos, AuditoriaService auditoria) {
         this.productos = productos;
         this.movimientos = movimientos;
+        this.auditoria = auditoria;
     }
 
     @Transactional(readOnly = true)
@@ -85,6 +87,7 @@ public class ProductoService {
         if (stockInicial > 0) {
             movimientos.save(new Movimiento(p, Movimiento.Tipo.ENTRADA, stockInicial, "Alta inicial"));
         }
+        auditoria.registrar("CREAR", "PRODUCTO", p.getId(), "Alta de " + p.getNombre() + " (" + p.getSku() + ")");
         return p;
     }
 
@@ -96,13 +99,16 @@ public class ProductoService {
         p.setPrecioCentavos(precioCentavos);
         p.setStockMinimo(stockMinimo);
         p.setCategoria(categoria);
-        return productos.save(p);
+        Producto guardado = productos.save(p);
+        auditoria.registrar("ACTUALIZAR", "PRODUCTO", guardado.getId(), "Actualizó " + guardado.getNombre());
+        return guardado;
     }
 
     @Transactional
     public void eliminar(Long id) {
         Producto p = obtener(id);
         productos.delete(p);
+        auditoria.registrar("ELIMINAR", "PRODUCTO", id, "Eliminó " + p.getNombre() + " (" + p.getSku() + ")");
     }
 
     @Transactional
@@ -111,6 +117,7 @@ public class ProductoService {
         p.setStock(p.getStock() + cantidad);
         productos.save(p);
         movimientos.save(new Movimiento(p, Movimiento.Tipo.ENTRADA, cantidad, motivo));
+        auditoria.registrar("ENTRADA", "PRODUCTO", id, "Entrada +" + cantidad + " de " + p.getSku() + " (stock " + p.getStock() + ")");
         return p;
     }
 
@@ -124,6 +131,7 @@ public class ProductoService {
         p.setStock(p.getStock() - cantidad);
         productos.save(p);
         movimientos.save(new Movimiento(p, Movimiento.Tipo.SALIDA, cantidad, motivo));
+        auditoria.registrar("SALIDA", "PRODUCTO", id, "Salida -" + cantidad + " de " + p.getSku() + " (stock " + p.getStock() + ")");
         return p;
     }
 }

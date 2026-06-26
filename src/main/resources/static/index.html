@@ -352,6 +352,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
       <a data-view="movimientos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Movimientos</a>
       <a data-view="proveedores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Proveedores</a>
       <a data-view="reportes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M8 14l3-4 3 3 4-6"/></svg>Reportes</a>
+      <a data-view="auditoria"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l3 2"/></svg>Auditoría</a>
       <div class="sec">Plataforma</div>
       <a data-view="api"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>API &amp; Docs</a>
       <a data-view="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H23a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Configuración</a>
@@ -447,6 +448,18 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
       </div>
       <div class="card" style="padding:0">
         <table><thead><tr><th scope="col">Proveedor</th><th scope="col">Contacto</th><th scope="col">Teléfono</th><th scope="col">Email</th><th scope="col" class="r">Acciones</th></tr></thead><tbody id="provBody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- VIEW: AUDITORÍA -->
+    <section class="view" id="view-auditoria">
+      <p class="vtitle">Bitácora: cada cambio en el inventario queda registrado — qué, quién y cuándo.</p>
+      <div class="section-h first">
+        <div class="seg" id="audFilter"><button data-f="all" class="on">Todo</button><button data-f="PRODUCTO">Productos</button><button data-f="PROVEEDOR">Proveedores</button></div>
+        <div style="display:flex;gap:var(--s4);align-items:center"><span class="mono" style="font-size:12px;color:var(--text-3)" id="audCount">—</span><button class="btn btn-ghost btn-sm" id="audReload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Actualizar</button></div>
+      </div>
+      <div class="card" style="padding:0">
+        <table><thead><tr><th scope="col">Cuándo</th><th scope="col">Usuario</th><th scope="col">Acción</th><th scope="col">Entidad</th><th scope="col">Detalle</th></tr></thead><tbody id="audBody"></tbody></table>
       </div>
     </section>
 
@@ -630,7 +643,7 @@ const _DEMO_SEED=[
   {id:9,sku:'LAM-LED',nombre:'Lámpara LED de escritorio',descripcion:'Regulable, brazo articulado',precioCentavos:32900,stock:27,stockMinimo:8,categoria:'Hogar'},
   {id:10,sku:'PWB-20K',nombre:'Power bank 20 000 mAh',descripcion:'Carga rápida, doble USB-C',precioCentavos:45900,stock:31,stockMinimo:12,categoria:'Electrónica'}
 ];
-let _dProducts=[],_dMovs=[],_dSeq=100,_dMovSeq=200,_dProv=[],_dProvSeq=100;
+let _dProducts=[],_dMovs=[],_dSeq=100,_dMovSeq=200,_dProv=[],_dProvSeq=100,_dAud=[],_dAudSeq=500;
 const _DEMO_PROV=[
   {id:1,nombre:'Distribuidora del Norte',contacto:'Laura Méndez',telefono:'81 1234 5678',email:'ventas@distnorte.mx',rfc:'DNO120101AB1',notas:'Entrega en 48 h en zona metropolitana.'},
   {id:2,nombre:'Importaciones Pacífico',contacto:'Jorge Ramírez',telefono:'33 9876 5432',email:'compras@imppacifico.mx',rfc:'IPA150620CD2',notas:'Electrónica y accesorios.'},
@@ -641,6 +654,7 @@ const _DEMO_PROV=[
 const _hoursAgo=h=>new Date(Date.now()-h*3600e3).toISOString();
 const _normP=p=>Object.assign({},p,{precio:fmtMXN(p.precioCentavos),bajoStock:p.stock<=p.stockMinimo,creadoEn:_hoursAgo(720),actualizadoEn:_hoursAgo(2)});
 const _recalc=p=>{p.precio=fmtMXN(p.precioCentavos);p.bajoStock=p.stock<=p.stockMinimo;p.actualizadoEn=new Date().toISOString();return p;};
+function _audit(accion,entidad,id,desc){_dAud.push({id:_dAudSeq++,accion,entidad,entidadId:id,descripcion:desc,usuario:'sistema',fecha:new Date().toISOString()});}
 function _seedDemo(){
   _dProducts=_DEMO_SEED.map(_normP);_dSeq=100;_dMovSeq=200;
   _dProv=_DEMO_PROV.map(p=>Object.assign({activo:true,creadoEn:_hoursAgo(720),actualizadoEn:_hoursAgo(48)},p));_dProvSeq=100;
@@ -656,6 +670,16 @@ function _seedDemo(){
     {productoId:4,sku:'CUA-PRO',tipo:'ENTRADA',cantidad:80,motivo:'Reabastecimiento',h:3},
     {productoId:6,sku:'BOT-1LT',tipo:'SALIDA',cantidad:12,motivo:'Venta de mostrador',h:1}
   ].map(m=>{const p=_dProducts.find(x=>x.id===m.productoId);return {id:_dMovSeq++,productoId:m.productoId,sku:m.sku,tipo:m.tipo,cantidad:m.cantidad,stockResultante:p?p.stock:m.cantidad,motivo:m.motivo,fecha:_hoursAgo(m.h)};});
+  _dAud=[
+    {accion:'CREAR',entidad:'PRODUCTO',entidadId:1,descripcion:'Alta de Café de altura 1 kg (CAF-1KG)',h:120},
+    {accion:'ENTRADA',entidad:'PRODUCTO',entidadId:3,descripcion:'Entrada +30 de AUD-BT5 (stock 30)',h:72},
+    {accion:'CREAR',entidad:'PROVEEDOR',entidadId:1,descripcion:'Alta de proveedor Distribuidora del Norte',h:60},
+    {accion:'SALIDA',entidad:'PRODUCTO',entidadId:5,descripcion:'Salida -6 de MOC-URB (stock 5)',h:14},
+    {accion:'ACTUALIZAR',entidad:'PRODUCTO',entidadId:7,descripcion:'Actualizó Teclado mecánico',h:10},
+    {accion:'SALIDA',entidad:'PRODUCTO',entidadId:8,descripcion:'Salida -9 de MOU-INA (stock 3)',h:9},
+    {accion:'CREAR',entidad:'PROVEEDOR',entidadId:4,descripcion:'Alta de proveedor Café Sierra Alta',h:5},
+    {accion:'ENTRADA',entidad:'PRODUCTO',entidadId:4,descripcion:'Entrada +80 de CUA-PRO (stock 120)',h:3}
+  ].map(a=>({id:_dAudSeq++,accion:a.accion,entidad:a.entidad,entidadId:a.entidadId,descripcion:a.descripcion,usuario:'sistema',fecha:_hoursAgo(a.h)}));
 }
 function _seedIfEmpty(){if(!_dProducts.length)_seedDemo();}
 function _demoStats(){
@@ -674,25 +698,27 @@ function _demoRoute(url,opts){
   if(path==='/api/stats')return _json(_demoStats());
   if(path==='/api/movimientos'&&method==='GET')return _json(_dMovs.slice().sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)));
   if((m=path.match(/^\/api\/productos\/(\d+)\/movimientos$/)))return _json(_dMovs.filter(x=>x.productoId===+m[1]).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)));
+  if(path==='/api/auditoria'&&method==='GET')return _json(_dAud.slice().sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)));
   if((m=path.match(/^\/api\/productos\/(\d+)\/(entrada|salida)$/))&&method==='POST'){
     const p=_dProducts.find(x=>x.id===+m[1]),b=body(),cant=+b.cantidad||0,tipo=m[2]==='entrada'?'ENTRADA':'SALIDA';
     if(!p)return _json({title:'No encontrado',detail:'El producto no existe.'},404);
     if(tipo==='SALIDA'&&cant>p.stock)return _json({title:'Stock insuficiente',detail:'Solo hay '+p.stock+' unidades disponibles.'},409);
     p.stock+=tipo==='ENTRADA'?cant:-cant;_recalc(p);
     _dMovs.push({id:_dMovSeq++,productoId:p.id,sku:p.sku,tipo,cantidad:cant,stockResultante:p.stock,motivo:b.motivo||'—',fecha:new Date().toISOString()});
+    _audit(tipo,'PRODUCTO',p.id,(tipo==='ENTRADA'?'Entrada +':'Salida -')+cant+' de '+p.sku+' (stock '+p.stock+')');
     return _json(p);
   }
   if(path==='/api/productos'&&method==='POST'){const b=body();if(_dProducts.some(x=>x.sku===b.sku))return _json({title:'SKU duplicado',detail:'Ya existe un producto con el SKU '+b.sku+'.'},409);
     const np=_normP({id:_dSeq++,sku:b.sku,nombre:b.nombre,descripcion:b.descripcion||'',precioCentavos:b.precioCentavos||0,stock:b.stockInicial||0,stockMinimo:b.stockMinimo||0,categoria:b.categoria||null});
-    _dProducts.push(np);if(np.stock>0)_dMovs.push({id:_dMovSeq++,productoId:np.id,sku:np.sku,tipo:'ENTRADA',cantidad:np.stock,stockResultante:np.stock,motivo:'Alta de producto',fecha:new Date().toISOString()});return _json(np,201);}
-  if((m=path.match(/^\/api\/productos\/(\d+)$/))&&method==='PUT'){const p=_dProducts.find(x=>x.id===+m[1]);if(!p)return _json({title:'No encontrado'},404);const b=body();Object.assign(p,{nombre:b.nombre,descripcion:b.descripcion,precioCentavos:b.precioCentavos,stockMinimo:b.stockMinimo,categoria:b.categoria});_recalc(p);return _json(p);}
-  if((m=path.match(/^\/api\/productos\/(\d+)$/))&&method==='DELETE'){_dProducts=_dProducts.filter(x=>x.id!==+m[1]);return _json(null,204);}
+    _dProducts.push(np);if(np.stock>0)_dMovs.push({id:_dMovSeq++,productoId:np.id,sku:np.sku,tipo:'ENTRADA',cantidad:np.stock,stockResultante:np.stock,motivo:'Alta de producto',fecha:new Date().toISOString()});_audit('CREAR','PRODUCTO',np.id,'Alta de '+np.nombre+' ('+np.sku+')');return _json(np,201);}
+  if((m=path.match(/^\/api\/productos\/(\d+)$/))&&method==='PUT'){const p=_dProducts.find(x=>x.id===+m[1]);if(!p)return _json({title:'No encontrado'},404);const b=body();Object.assign(p,{nombre:b.nombre,descripcion:b.descripcion,precioCentavos:b.precioCentavos,stockMinimo:b.stockMinimo,categoria:b.categoria});_recalc(p);_audit('ACTUALIZAR','PRODUCTO',p.id,'Actualizó '+p.nombre);return _json(p);}
+  if((m=path.match(/^\/api\/productos\/(\d+)$/))&&method==='DELETE'){const pid=+m[1];const p=_dProducts.find(x=>x.id===pid);_dProducts=_dProducts.filter(x=>x.id!==pid);if(p)_audit('ELIMINAR','PRODUCTO',pid,'Eliminó '+p.nombre+' ('+p.sku+')');return _json(null,204);}
   if(path==='/api/demo/reset'&&method==='POST'){_seedDemo();return _json({mensaje:'Datos de demostración reiniciados'});}
   if(path==='/api/proveedores'&&method==='GET')return _json({content:_dProv.slice(),page:{totalElements:_dProv.length,size:200,number:0}});
   if((m=path.match(/^\/api\/proveedores\/(\d+)$/))&&method==='GET'){const pr=_dProv.find(x=>x.id===+m[1]);return pr?_json(pr):_json({title:'No encontrado'},404);}
-  if(path==='/api/proveedores'&&method==='POST'){const b=body();const np=Object.assign({id:_dProvSeq++,activo:true,creadoEn:new Date().toISOString(),actualizadoEn:new Date().toISOString()},b);_dProv.push(np);return _json(np,201);}
-  if((m=path.match(/^\/api\/proveedores\/(\d+)$/))&&method==='PUT'){const pr=_dProv.find(x=>x.id===+m[1]);if(!pr)return _json({title:'No encontrado'},404);Object.assign(pr,body(),{actualizadoEn:new Date().toISOString()});return _json(pr);}
-  if((m=path.match(/^\/api\/proveedores\/(\d+)$/))&&method==='DELETE'){_dProv=_dProv.filter(x=>x.id!==+m[1]);return _json(null,204);}
+  if(path==='/api/proveedores'&&method==='POST'){const b=body();const np=Object.assign({id:_dProvSeq++,activo:true,creadoEn:new Date().toISOString(),actualizadoEn:new Date().toISOString()},b);_dProv.push(np);_audit('CREAR','PROVEEDOR',np.id,'Alta de proveedor '+np.nombre);return _json(np,201);}
+  if((m=path.match(/^\/api\/proveedores\/(\d+)$/))&&method==='PUT'){const pr=_dProv.find(x=>x.id===+m[1]);if(!pr)return _json({title:'No encontrado'},404);Object.assign(pr,body(),{actualizadoEn:new Date().toISOString()});_audit('ACTUALIZAR','PROVEEDOR',pr.id,'Actualizó proveedor '+pr.nombre);return _json(pr);}
+  if((m=path.match(/^\/api\/proveedores\/(\d+)$/))&&method==='DELETE'){const pid=+m[1];const pr=_dProv.find(x=>x.id===pid);_dProv=_dProv.filter(x=>x.id!==pid);if(pr)_audit('ELIMINAR','PROVEEDOR',pid,'Eliminó proveedor '+pr.nombre);return _json(null,204);}
   return _json({title:'No disponible sin servidor',detail:path},404);
 }
 function enterDemo(){if(window.DEMO_MODE)return;window.DEMO_MODE=true;_seedIfEmpty();setStatus('demo','Modo demostración');}
@@ -709,7 +735,7 @@ window.fetch=async function(url,opts){
 };
 
 /* ROUTER */
-const TITLES={panel:'Panel',inventario:'Inventario',movimientos:'Movimientos',proveedores:'Proveedores',reportes:'Reportes',api:'API & Docs',config:'Configuración',contratar:'Contratar'};
+const TITLES={panel:'Panel',inventario:'Inventario',movimientos:'Movimientos',proveedores:'Proveedores',reportes:'Reportes',auditoria:'Auditoría',api:'API & Docs',config:'Configuración',contratar:'Contratar'};
 function go(v){
   if(!TITLES[v])v='panel';
   $$('.view').forEach(s=>s.classList.remove('active'));
@@ -720,6 +746,7 @@ function go(v){
   if(v==='reportes')renderCharts();
   if(v==='movimientos')loadMovs();
   if(v==='proveedores')loadProveedores();
+  if(v==='auditoria')loadAuditoria();
   $('#sidebar').classList.remove('open');
   if(location.hash!=='#'+v)location.hash=v;
   window.scrollTo(0,0);saveUI();
@@ -1004,6 +1031,29 @@ if($('#pvCancel'))$('#pvCancel').onclick=()=>$('#provModalBg').classList.remove(
 if($('#provModalBg'))$('#provModalBg').onclick=e=>{if(e.target===$('#provModalBg'))$('#provModalBg').classList.remove('open');};
 if($('#pvSave'))$('#pvSave').onclick=saveProv;
 if($('#qProv'))$('#qProv').addEventListener('input',debounce(renderProveedores,150));
+/* ===== AUDITORÍA (bitácora, solo lectura) ===== */
+let AUDIT=[],AUDFILTER='all';
+async function loadAuditoria(){
+  const tb=$('#audBody');if(!tb)return;tb.innerHTML='<tr><td colspan="5" style="padding:22px;text-align:center;color:var(--text-3)">Cargando…</td></tr>';
+  try{AUDIT=await fetchT(API+'/api/auditoria').then(r=>r.json());renderAuditoria();}
+  catch(e){tb.innerHTML='<tr><td colspan="5" style="padding:22px;text-align:center;color:var(--text-3)">No se pudo cargar. <button class="btn btn-ghost btn-sm" onclick="loadAuditoria()">Reintentar</button></td></tr>';}
+}
+function renderAuditoria(){
+  const tb=$('#audBody');if(!tb)return;tb.innerHTML='';
+  const list=AUDFILTER==='all'?AUDIT:AUDIT.filter(a=>a.entidad===AUDFILTER);
+  const cnt=$('#audCount');if(cnt)cnt.textContent=list.length+(list.length===1?' registro':' registros');
+  if(!list.length){tb.innerHTML='<tr><td colspan="5" style="padding:22px;text-align:center;color:var(--text-3)">Sin registros todavía.</td></tr>';return;}
+  const COLOR={CREAR:'in',ENTRADA:'in',SALIDA:'out',ELIMINAR:'out',ACTUALIZAR:''};
+  list.forEach(a=>{const tr=document.createElement('tr');tr.style.cursor='default';
+    const t=cell('Cuándo',sp('mt',rel(a.fecha)));t.title=new Date(a.fecha).toLocaleString('es-MX');tr.appendChild(t);
+    tr.appendChild(cell('Usuario',sp('sku',a.usuario||'sistema')));
+    const tag=document.createElement('span');tag.className='movtype '+(COLOR[a.accion]||'');tag.textContent=a.accion;tr.appendChild(cell('Acción',tag));
+    tr.appendChild(cell('Entidad',sp('cattag',a.entidad)));
+    tr.appendChild(cell('Detalle',document.createTextNode(a.descripcion||'—')));
+    tb.appendChild(tr);});
+}
+$$('#audFilter button').forEach(b=>b.onclick=()=>{$$('#audFilter button').forEach(x=>x.classList.remove('on'));b.classList.add('on');AUDFILTER=b.dataset.f;renderAuditoria();});
+if($('#audReload'))$('#audReload').onclick=loadAuditoria;
 /* STATS (server-side, GET /api/stats) */
 async function loadStats(){try{const s=await fetchT(API+'/api/stats').then(r=>r.json());renderStats(s);}catch(e){}}
 function renderStats(s){

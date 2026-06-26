@@ -13,9 +13,11 @@ import org.springframework.util.StringUtils;
 public class ProveedorService {
 
     private final ProveedorRepository repo;
+    private final AuditoriaService auditoria;
 
-    public ProveedorService(ProveedorRepository repo) {
+    public ProveedorService(ProveedorRepository repo, AuditoriaService auditoria) {
         this.repo = repo;
+        this.auditoria = auditoria;
     }
 
     @Transactional(readOnly = true)
@@ -34,7 +36,9 @@ public class ProveedorService {
 
     @Transactional
     public Proveedor crear(String nombre, String contacto, String telefono, String email, String rfc, String notas) {
-        return repo.save(new Proveedor(nombre, contacto, telefono, email, rfc, notas));
+        Proveedor p = repo.save(new Proveedor(nombre, contacto, telefono, email, rfc, notas));
+        auditoria.registrar("CREAR", "PROVEEDOR", p.getId(), "Alta de proveedor " + p.getNombre());
+        return p;
     }
 
     @Transactional
@@ -50,11 +54,15 @@ public class ProveedorService {
         if (activo != null) {
             p.setActivo(activo);
         }
-        return repo.save(p);
+        Proveedor guardado = repo.save(p);
+        auditoria.registrar("ACTUALIZAR", "PROVEEDOR", guardado.getId(), "Actualizó proveedor " + guardado.getNombre());
+        return guardado;
     }
 
     @Transactional
     public void eliminar(Long id) {
-        repo.delete(obtener(id));
+        Proveedor p = obtener(id);
+        repo.delete(p);
+        auditoria.registrar("ELIMINAR", "PROVEEDOR", id, "Eliminó proveedor " + p.getNombre());
     }
 }
