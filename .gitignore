@@ -37,3 +37,6 @@ build/
 /data-verify/
 *.mv.db
 *.trace.db
+# Keystore HTTPS self-signed (se genera localmente, NUNCA versionar)
+*.p12
+stockly-https.p12
