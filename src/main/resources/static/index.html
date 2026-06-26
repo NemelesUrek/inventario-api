@@ -595,10 +595,10 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
   <div class="form-row"><label>Nombre *</label><input class="inp" id="pvNombre" placeholder="Distribuidora del Norte"></div>
   <div style="display:flex;gap:var(--s3)">
     <div class="form-row" style="flex:1"><label>Contacto</label><input class="inp" id="pvContacto" placeholder="Persona de contacto"></div>
-    <div class="form-row" style="flex:1"><label>Teléfono</label><input class="inp" id="pvTel" placeholder="55 1234 5678"></div>
+    <div class="form-row" style="flex:1"><label>Teléfono</label><input class="inp" id="pvTel" placeholder="Opcional"></div>
   </div>
   <div style="display:flex;gap:var(--s3)">
-    <div class="form-row" style="flex:2"><label>Email</label><input class="inp" id="pvEmail" type="email" placeholder="ventas@proveedor.mx"></div>
+    <div class="form-row" style="flex:2"><label>Email</label><input class="inp" id="pvEmail" type="email" placeholder="Opcional"></div>
     <div class="form-row" style="flex:1"><label>RFC</label><input class="inp" id="pvRfc" placeholder="Opcional"></div>
   </div>
   <div class="form-row"><label>Notas</label><input class="inp" id="pvNotas" placeholder="Opcional"></div>
@@ -671,11 +671,11 @@ const _DEMO_SEED=[
 ];
 let _dProducts=[],_dMovs=[],_dSeq=100,_dMovSeq=200,_dProv=[],_dProvSeq=100,_dAud=[],_dAudSeq=500;
 const _DEMO_PROV=[
-  {id:1,nombre:'Distribuidora del Norte',contacto:'Laura Méndez',telefono:'81 1234 5678',email:'ventas@distnorte.mx',rfc:'DNO120101AB1',notas:'Entrega en 48 h en zona metropolitana.'},
-  {id:2,nombre:'Importaciones Pacífico',contacto:'Jorge Ramírez',telefono:'33 9876 5432',email:'compras@imppacifico.mx',rfc:'IPA150620CD2',notas:'Electrónica y accesorios.'},
-  {id:3,nombre:'Suministros La Bodega',contacto:'María Fernanda Ortiz',telefono:'55 4455 6677',email:'contacto@labodega.mx',rfc:'SLB180310EF3',notas:'Pedido mínimo $2,000.'},
-  {id:4,nombre:'Café Sierra Alta',contacto:'Esteban Cruz',telefono:'228 112 3344',email:'hola@sierralta.mx',rfc:'CSA200905GH4',notas:'Café de origen, tostado semanal.'},
-  {id:5,nombre:'Papelera Central',contacto:'Diana Reyes',telefono:'55 2233 8899',email:'pedidos@papelcentral.mx',rfc:'PCE110715IJ5',notas:''}
+  {id:1,nombre:'Distribuidora del Norte',contacto:'Laura Méndez',telefono:'',email:'',rfc:'DNO120101AB1',notas:'Entrega en 48 h en zona metropolitana.'},
+  {id:2,nombre:'Importaciones Pacífico',contacto:'Jorge Ramírez',telefono:'',email:'',rfc:'IPA150620CD2',notas:'Electrónica y accesorios.'},
+  {id:3,nombre:'Suministros La Bodega',contacto:'María Fernanda Ortiz',telefono:'',email:'',rfc:'SLB180310EF3',notas:'Pedido mínimo $2,000.'},
+  {id:4,nombre:'Café Sierra Alta',contacto:'Esteban Cruz',telefono:'',email:'',rfc:'CSA200905GH4',notas:'Café de origen, tostado semanal.'},
+  {id:5,nombre:'Papelera Central',contacto:'Diana Reyes',telefono:'',email:'',rfc:'PCE110715IJ5',notas:''}
 ];
 const _hoursAgo=h=>new Date(Date.now()-h*3600e3).toISOString();
 const _normP=p=>Object.assign({},p,{precio:fmtMXN(p.precioCentavos),bajoStock:p.stock<=p.stockMinimo,creadoEn:_hoursAgo(720),actualizadoEn:_hoursAgo(2)});
