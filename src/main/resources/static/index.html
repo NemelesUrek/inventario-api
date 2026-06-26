@@ -413,6 +413,18 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
 .sign-clear{position:absolute;top:8px;right:8px;background:var(--surface-3);border:1px solid var(--border);color:var(--text-2);font-size:12px;padding:5px 10px;border-radius:var(--r-sm);cursor:pointer}
 .sign-clear:hover{color:var(--text-1);border-color:var(--border-strong)}
 @media (prefers-reduced-motion:reduce){.pin-dots.err{animation:none}.pin-key:active{transform:none}}
+/* ===== FOTOS / ADJUNTOS ===== */
+.dropzone{border:1.5px dashed var(--border-strong);border-radius:var(--r-lg);padding:var(--s5);text-align:center;color:var(--text-3);cursor:pointer;font-size:13.5px;transition:border-color var(--d-fast) var(--ease-out),background var(--d-fast) var(--ease-out),color var(--d-fast) var(--ease-out)}
+.dropzone svg{width:26px;height:26px;display:block;margin:0 auto var(--s2);opacity:.6}
+.dropzone:hover,.dropzone.drag{border-color:var(--brand);background:var(--brand-ghost);color:var(--text-2)}
+.thumbs{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s4);min-height:8px}
+.thumb{position:relative;width:84px;height:84px;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);background:var(--surface-2);cursor:pointer}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .del{position:absolute;top:3px;right:3px;width:20px;height:20px;border:none;border-radius:var(--r-pill);background:rgba(4,8,18,.6);color:#fff;cursor:pointer;font-size:11px;display:grid;place-items:center;line-height:1}
+.thumb .del:hover{background:var(--danger)}
+.lightbox{position:fixed;inset:0;background:rgba(4,8,18,.85);display:none;align-items:center;justify-content:center;z-index:210;padding:32px;cursor:zoom-out}
+.lightbox.open{display:flex}
+.lightbox img{max-width:92vw;max-height:88vh;border-radius:var(--r-lg);box-shadow:var(--sh-modal)}
 </style>
 </head>
 <body>
@@ -513,7 +525,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
         <div style="display:flex;gap:var(--s4);align-items:center"><span class="mono" style="font-size:12px;color:var(--text-3)" id="movCount">—</span><button class="btn btn-ghost btn-sm" id="movReload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Actualizar</button></div>
       </div>
       <div class="card" style="padding:0">
-        <table><thead><tr><th scope="col">Tipo</th><th scope="col">Producto</th><th scope="col" class="r">Cantidad</th><th scope="col" class="r">Stock final</th><th scope="col">Motivo</th><th scope="col" class="r">Cuándo</th><th scope="col" class="r">Comprobante</th></tr></thead><tbody id="movBody"></tbody></table>
+        <table><thead><tr><th scope="col">Tipo</th><th scope="col">Producto</th><th scope="col" class="r">Cantidad</th><th scope="col" class="r">Stock final</th><th scope="col">Motivo</th><th scope="col" class="r">Cuándo</th><th scope="col" class="r">Documentos</th></tr></thead><tbody id="movBody"></tbody></table>
       </div>
     </section>
 
@@ -656,6 +668,17 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
   <div class="result" id="uRes"></div>
   <div style="display:flex;gap:var(--s3);margin-top:var(--s4)"><button class="btn btn-ghost" id="uCancel" style="flex:1;justify-content:center">Cancelar</button><button class="btn btn-primary" id="uSave" style="flex:1;justify-content:center">Crear usuario</button></div>
 </div></div></div>
+
+<!-- ===== FOTOS DE MOVIMIENTO ===== -->
+<div class="modal-bg" id="fotosBg" role="dialog" aria-modal="true" aria-labelledby="fotosTitle"><div class="modal"><h3 id="fotosTitle">Fotos de la mercancía</h3><div class="body">
+  <p class="vtitle" id="fotosSub" style="margin:0 0 var(--s4)">Adjunta fotos de la mercancía recibida.</p>
+  <div class="dropzone" id="fotoDrop" role="button" tabindex="0" aria-label="Subir foto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Arrastra una foto aquí o haz clic para elegir<br><span class="mono" style="font-size:11px">JPG, PNG o WEBP · máx. 8 MB</span></div>
+  <input type="file" id="fotoInput" accept="image/*" capture="environment" hidden>
+  <div class="thumbs" id="fotoThumbs"></div>
+  <div class="result" id="fotoRes"></div>
+  <div style="display:flex;gap:var(--s3);margin-top:var(--s4)"><button class="btn btn-ghost" id="fotosClose" style="flex:1;justify-content:center">Cerrar</button></div>
+</div></div></div>
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada"><img id="lightboxImg" alt="Foto de la mercancía"></div>
 
 <!-- LOGIN -->
 <div class="login-bg" id="loginBg" role="dialog" aria-modal="true" aria-label="Iniciar sesión">
@@ -820,7 +843,7 @@ const _DEMO_SEED=[
   {id:9,sku:'LAM-LED',nombre:'Lámpara LED de escritorio',descripcion:'Regulable, brazo articulado',precioCentavos:32900,stock:27,stockMinimo:8,categoria:'Hogar'},
   {id:10,sku:'PWB-20K',nombre:'Power bank 20 000 mAh',descripcion:'Carga rápida, doble USB-C',precioCentavos:45900,stock:31,stockMinimo:12,categoria:'Electrónica'}
 ];
-let _dProducts=[],_dMovs=[],_dSeq=100,_dMovSeq=200,_dProv=[],_dProvSeq=100,_dAud=[],_dAudSeq=500,_dUsers=[],_dUserSeq=10;
+let _dProducts=[],_dMovs=[],_dSeq=100,_dMovSeq=200,_dProv=[],_dProvSeq=100,_dAud=[],_dAudSeq=500,_dUsers=[],_dUserSeq=10,_dAdj=[],_dAdjSeq=900;
 const _DEMO_PROV=[
   {id:1,nombre:'Distribuidora del Norte',contacto:'Laura Méndez',telefono:'',email:'',rfc:'DNO120101AB1',notas:'Entrega en 48 h en zona metropolitana.'},
   {id:2,nombre:'Importaciones Pacífico',contacto:'Jorge Ramírez',telefono:'',email:'',rfc:'IPA150620CD2',notas:'Electrónica y accesorios.'},
@@ -832,6 +855,9 @@ const _hoursAgo=h=>new Date(Date.now()-h*3600e3).toISOString();
 const _normP=p=>Object.assign({},p,{precio:fmtMXN(p.precioCentavos),bajoStock:p.stock<=p.stockMinimo,creadoEn:_hoursAgo(720),actualizadoEn:_hoursAgo(2)});
 const _recalc=p=>{p.precio=fmtMXN(p.precioCentavos);p.bajoStock=p.stock<=p.stockMinimo;p.actualizadoEn=new Date().toISOString();return p;};
 function _audit(accion,entidad,id,desc){_dAud.push({id:_dAudSeq++,accion,entidad,entidadId:id,descripcion:desc,usuario:'sistema',fecha:new Date().toISOString()});}
+function _demoAdjPush(movId,tipo,dataURL){const a={id:_dAdjSeq++,movimientoId:movId,tipo,dataURL,fecha:new Date().toISOString()};_dAdj.push(a);return a;}
+function _demoAdjList(movId){return _dAdj.filter(a=>a.movimientoId===movId);}
+function _demoAdjDel(id){_dAdj=_dAdj.filter(a=>a.id!==id);}
 function _seedDemo(){
   _dProducts=_DEMO_SEED.map(_normP);_dSeq=100;_dMovSeq=200;
   _dProv=_DEMO_PROV.map(p=>Object.assign({activo:true,creadoEn:_hoursAgo(720),actualizadoEn:_hoursAgo(48)},p));_dProvSeq=100;
@@ -1183,7 +1209,9 @@ function renderMovBody(){
     const sf=cell('Stock final',document.createTextNode(m.stockResultante+' u.'));sf.className='r tnum';tr.appendChild(sf);
     tr.appendChild(cell('Motivo',sp('',m.motivo||'—')));
     const t=cell('Cuándo',sp('mt',rel(m.fecha)));t.className='r';t.title=new Date(m.fecha).toLocaleString('es-MX');tr.appendChild(t);
-    const pb=document.createElement('button');pb.className='ria';pb.title='Comprobante PDF';pb.setAttribute('aria-label','Comprobante PDF del movimiento '+m.id);pb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>';pb.onclick=()=>comprobantePDF(m);const cc=cell('Comprobante',pb);cc.className='r';tr.appendChild(cc);
+    const pb=document.createElement('button');pb.className='ria';pb.title='Comprobante PDF';pb.setAttribute('aria-label','Comprobante PDF del movimiento '+m.id);pb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>';pb.onclick=()=>comprobantePDF(m);
+    const fb=document.createElement('button');fb.className='ria';fb.title='Fotos de la mercancía';fb.setAttribute('aria-label','Fotos del movimiento '+m.id);fb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.2"/><path d="M8 6l1.4-2h5.2L16 6"/></svg>';fb.onclick=()=>openFotos(m);
+    const dact=document.createElement('div');dact.className='rowact';dact.append(pb,fb);const cc=cell('Documentos',dact);cc.className='r';tr.appendChild(cc);
     tb.appendChild(tr);});
 }
 /* Comprobante PDF: del servidor cuando hay backend; imprimible en el navegador en modo demo. */
@@ -1341,6 +1369,41 @@ if($('#uCancel'))$('#uCancel').onclick=()=>$('#userModalBg').classList.remove('o
 if($('#userModalBg'))$('#userModalBg').onclick=e=>{if(e.target===$('#userModalBg'))$('#userModalBg').classList.remove('open');};
 if($('#uSave'))$('#uSave').onclick=saveUser;
 if($('#qUser'))$('#qUser').addEventListener('input',debounce(renderUsuarios,150));
+/* ===== FOTOS DE MERCANCÍA (adjuntos por movimiento) ===== */
+let _fotoMov=null;
+function openFotos(m){_fotoMov=m;$('#fotosSub').textContent=(m.tipo==='ENTRADA'?'Entrada':'Salida')+' de '+(nameOf(m.productoId)||m.sku)+' · '+(m.tipo==='ENTRADA'?'+':'−')+m.cantidad+' u.';$('#fotoRes').className='result';$('#fotoThumbs').innerHTML='';$('#fotosBg').classList.add('open');loadFotos(m.id);}
+function closeFotos(){$('#fotosBg').classList.remove('open');_fotoMov=null;}
+async function loadFotos(movId){const c=$('#fotoThumbs');c.innerHTML='<span class="vtitle">Cargando…</span>';
+  try{const list=window.DEMO_MODE?_demoAdjList(movId):await fetchT(API+'/api/movimientos/'+movId+'/adjuntos').then(r=>r.json());renderThumbs(list);}
+  catch(e){c.innerHTML='<span class="vtitle">No se pudo cargar.</span>';}}
+function renderThumbs(list){const c=$('#fotoThumbs');c.innerHTML='';
+  if(!list||!list.length){c.innerHTML='<span class="vtitle" style="font-size:12.5px">Sin fotos todavía.</span>';return;}
+  list.forEach(a=>{const t=document.createElement('div');t.className='thumb';const img=document.createElement('img');img.src=a.dataURL||a.url;img.alt='Foto de la mercancía';img.loading='lazy';t.appendChild(img);
+    const del=document.createElement('button');del.className='del';del.type='button';del.textContent='✕';del.title='Eliminar';del.onclick=ev=>{ev.stopPropagation();deleteFoto(a);};t.appendChild(del);
+    t.onclick=()=>{$('#lightboxImg').src=a.dataURL||a.url;$('#lightbox').classList.add('open');};
+    c.appendChild(t);});}
+async function uploadFoto(file){if(!_fotoMov||!file)return;const movId=_fotoMov.id;
+  if(!/^image\//.test(file.type)){$('#fotoRes').className='result err';$('#fotoRes').textContent='Solo imágenes (JPG, PNG o WEBP).';return;}
+  if(file.size>8*1024*1024){$('#fotoRes').className='result err';$('#fotoRes').textContent='La imagen supera el límite de 8 MB.';return;}
+  $('#fotoRes').className='result';$('#fotoRes').textContent='';
+  try{
+    if(window.DEMO_MODE){const dataURL=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(file);});_demoAdjPush(movId,'FOTO',dataURL);}
+    else{const fd=new FormData();fd.append('file',file);fd.append('tipo','FOTO');if(_fotoMov.productoId)fd.append('productoId',_fotoMov.productoId);const res=await fetchT(API+'/api/movimientos/'+movId+'/adjuntos',{method:'POST',body:fd});if(!res.ok){const b=await res.json().catch(()=>({}));throw new Error(b.detail||'No se pudo subir.');}}
+    toast('✓ Foto adjuntada','ok');loadFotos(movId);
+  }catch(e){$('#fotoRes').className='result err';$('#fotoRes').textContent=e.message||'No se pudo subir la foto.';}}
+async function deleteFoto(a){
+  if(!await confirmDialog('Eliminar foto','¿Eliminar esta foto del movimiento?','Eliminar'))return;
+  try{if(window.DEMO_MODE)_demoAdjDel(a.id);else{const res=await fetchT(API+'/api/movimientos/'+a.movimientoId+'/adjuntos/'+a.id,{method:'DELETE'});if(!(res.status===204||res.ok))throw 0;}toast('✓ Foto eliminada','ok');if(_fotoMov)loadFotos(_fotoMov.id);}
+  catch(e){toast('No se pudo eliminar.','err');}}
+(function(){const dz=$('#fotoDrop'),fi=$('#fotoInput');if(!dz||!fi)return;
+  dz.onclick=()=>fi.click();dz.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fi.click();}};
+  fi.onchange=()=>{if(fi.files[0])uploadFoto(fi.files[0]);fi.value='';};
+  dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag');};dz.ondragleave=()=>dz.classList.remove('drag');
+  dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])uploadFoto(e.dataTransfer.files[0]);};
+})();
+if($('#fotosClose'))$('#fotosClose').onclick=closeFotos;
+if($('#fotosBg'))$('#fotosBg').onclick=e=>{if(e.target===$('#fotosBg'))closeFotos();};
+if($('#lightbox'))$('#lightbox').onclick=()=>$('#lightbox').classList.remove('open');
 /* ===== SESIÓN / ROLES ===== */
 let CURRENT_USER=null;
 const PERMS={
@@ -1511,7 +1574,7 @@ $('#helpBg').onclick=e=>{if(e.target===$('#helpBg'))$('#helpBg').classList.remov
 document.addEventListener('keydown',e=>{
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#palette').classList.contains('open')?closePalette():openPalette();return;}
-  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#provModalBg').classList.remove('open');$('#userModalBg').classList.remove('open');$('#mvConfirmBg').classList.remove('open');$('#helpBg').classList.remove('open');if(typeof Scan!=='undefined')Scan.cerrar();if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
+  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#provModalBg').classList.remove('open');$('#userModalBg').classList.remove('open');$('#mvConfirmBg').classList.remove('open');$('#fotosBg').classList.remove('open');$('#lightbox').classList.remove('open');$('#helpBg').classList.remove('open');if(typeof Scan!=='undefined')Scan.cerrar();if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
   if(typing)return;
   if(e.key==='?'){e.preventDefault();openHelp();}
   else if(e.key==='/'){e.preventDefault();go('inventario');$('#q').focus();}
