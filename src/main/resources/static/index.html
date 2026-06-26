@@ -392,6 +392,27 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
 .scan-input-row{display:flex;gap:var(--s2)} .scan-input-row .inp{flex:1}
 .scan-tip{margin-top:var(--s3);font-size:12px;color:var(--text-4);line-height:1.45}
 @media (prefers-reduced-motion:reduce){.scan-laser{animation:none;top:50%}}
+/* ===== CONFIRMACIÓN: PIN + FIRMA ===== */
+.pinModal{max-width:360px}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin:var(--s2) 0 var(--s4)}
+.pin-dots i{width:13px;height:13px;border-radius:var(--r-pill);border:1.5px solid var(--border-strong);background:transparent;transition:transform var(--d-fast) var(--ease-out),background var(--d-fast) var(--ease-out),border-color var(--d-fast) var(--ease-out)}
+.pin-dots i.on{background:var(--brand);border-color:var(--brand);transform:scale(1.18)}
+.pin-dots.err i{border-color:var(--danger);background:transparent}
+.pin-dots.err{animation:pinShake .42s var(--ease-out)}
+@keyframes pinShake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+.pin-err{min-height:16px;text-align:center;color:var(--danger);font-size:12.5px;font-weight:var(--w-med);margin-bottom:var(--s3)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pin-key{height:58px;border-radius:var(--r-lg);border:1px solid var(--border);background:var(--surface-3);color:var(--text-1);font-family:var(--font-sans);font-size:22px;font-weight:var(--w-semi);cursor:pointer;box-shadow:var(--el-1);-webkit-tap-highlight-color:transparent;user-select:none;transition:background var(--d-fast) var(--ease-out),transform var(--d-micro) var(--ease-out)}
+.pin-key:hover{background:var(--surface-4);border-color:var(--border-strong)}
+.pin-key:active{transform:scale(.95);background:var(--brand-ghost)}
+.pin-key:focus-visible{outline:none;box-shadow:var(--ring)}
+.pin-del{font-size:18px;color:var(--text-2)}
+.sign-box{position:relative;border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--surface-1);overflow:hidden;height:170px;touch-action:none}
+.sign-box canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.sign-base{position:absolute;left:14px;bottom:18px;color:var(--text-4);font-size:13px;pointer-events:none;letter-spacing:.05em}
+.sign-clear{position:absolute;top:8px;right:8px;background:var(--surface-3);border:1px solid var(--border);color:var(--text-2);font-size:12px;padding:5px 10px;border-radius:var(--r-sm);cursor:pointer}
+.sign-clear:hover{color:var(--text-1);border-color:var(--border-strong)}
+@media (prefers-reduced-motion:reduce){.pin-dots.err{animation:none}.pin-key:active{transform:none}}
 </style>
 </head>
 <body>
@@ -650,6 +671,35 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
   <div style="display:flex;gap:var(--s3);margin-top:var(--s4)"><button class="btn btn-ghost" id="pvCancel" style="flex:1;justify-content:center">Cancelar</button><button class="btn btn-primary" id="pvSave" style="flex:1;justify-content:center">Crear proveedor</button></div>
 </div></div></div>
 
+<!-- ===== CONFIRMAR MOVIMIENTO (PIN + firma) ===== -->
+<div class="modal-bg" id="mvConfirmBg" role="dialog" aria-modal="true" aria-labelledby="mvcTitle">
+  <div class="modal pinModal">
+    <h3 id="mvcTitle">Confirmar con PIN</h3>
+    <div class="body">
+      <p class="vtitle" id="mvcSub" style="margin:0 0 var(--s4)">Autoriza este movimiento.</p>
+      <div id="mvcPinStep">
+        <div class="pin-dots" id="pinDots" role="status" aria-live="polite" aria-label="Dígitos ingresados"><i></i><i></i><i></i><i></i></div>
+        <div class="pin-err" id="pinErr" aria-live="assertive"></div>
+        <div class="pin-pad" id="pinPad" role="group" aria-label="Teclado numérico">
+          <button type="button" class="pin-key" data-k="1">1</button><button type="button" class="pin-key" data-k="2">2</button><button type="button" class="pin-key" data-k="3">3</button>
+          <button type="button" class="pin-key" data-k="4">4</button><button type="button" class="pin-key" data-k="5">5</button><button type="button" class="pin-key" data-k="6">6</button>
+          <button type="button" class="pin-key" data-k="7">7</button><button type="button" class="pin-key" data-k="8">8</button><button type="button" class="pin-key" data-k="9">9</button>
+          <span></span><button type="button" class="pin-key" data-k="0">0</button><button type="button" class="pin-key pin-del" data-k="del" aria-label="Borrar">⌫</button>
+        </div>
+        <button class="btn btn-ghost" id="mvcCancel" type="button" style="width:100%;justify-content:center;margin-top:var(--s4)">Cancelar</button>
+      </div>
+      <div id="mvcSignStep" hidden>
+        <p class="vtitle" style="margin:0 0 var(--s3)">Firma de quien recibe / entrega</p>
+        <div class="sign-box"><canvas id="signPad"></canvas><span class="sign-base">✕ ____________________</span><button type="button" class="sign-clear" id="signClear">Limpiar</button></div>
+        <div style="display:flex;gap:10px;margin-top:var(--s4)">
+          <button class="btn btn-ghost" id="signCancel" type="button" style="flex:1;justify-content:center">Cancelar</button>
+          <button class="btn btn-primary" id="signOk" type="button" style="flex:1;justify-content:center" disabled>Confirmar movimiento</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== ESCÁNER de código de barras / QR ===== -->
 <div class="modal-bg scan-bg" id="scanBg" role="dialog" aria-modal="true" aria-label="Escanear código">
   <div class="modal scan-modal">
@@ -799,6 +849,7 @@ function _demoRoute(url,opts){
     const p=_dProducts.find(x=>x.id===+m[1]),b=body(),cant=+b.cantidad||0,tipo=m[2]==='entrada'?'ENTRADA':'SALIDA';
     if(!p)return _json({title:'No encontrado',detail:'El producto no existe.'},404);
     if(tipo==='SALIDA'&&cant>p.stock)return _json({title:'Stock insuficiente',detail:'Solo hay '+p.stock+' unidades disponibles.'},409);
+    if(b.pin&&b.pin!=='1234')return _json({title:'PIN incorrecto',detail:'El PIN no coincide.'},422);
     p.stock+=tipo==='ENTRADA'?cant:-cant;_recalc(p);
     _dMovs.push({id:_dMovSeq++,productoId:p.id,sku:p.sku,tipo,cantidad:cant,stockResultante:p.stock,motivo:b.motivo||'—',fecha:new Date().toISOString()});
     _audit(tipo,'PRODUCTO',p.id,(tipo==='ENTRADA'?'Entrada +':'Salida -')+cant+' de '+p.sku+' (stock '+p.stock+')');
@@ -964,24 +1015,68 @@ function fillCategories(){
     if(cats.includes(cur))sel.value=cur;else{sel.value='';if(CATFILTER&&!cats.includes(CATFILTER))CATFILTER='';}}
 }
 function setAction(a){ACTION=a;$('#tIn').className=a==='entrada'?'sel-in':'';$('#tOut').className=a==='salida'?'sel-out':'';}
-async function doAction(){
+/* doAction ahora valida y abre el modal de confirmación (PIN + firma). */
+function doAction(){
   const id=$('#fProd').value,cant=parseInt($('#fCant').value)||0,mot=$('#fMot').value||'Ajuste manual';
   if(!id||cant<1){toast('Elige un producto y una cantidad válida.','err');return;}
+  const prod=PRODUCTS.find(p=>String(p.id)===String(id));
+  openMvConfirm({id,cant,mot,accion:ACTION,prod,conFirma:reqFirma(ACTION,cant)});
+}
+/* commitAction = el POST real con pin/firma. 422 = PIN incorrecto -> shake (NO cierra, NO desloguea). */
+async function commitAction(ctx){
+  const firma=ctx.conFirma&&window._signExport?window._signExport():null;
   await withLoading($('#fGo'),async()=>{
     const r=$('#fRes');
     try{
-      const res=await fetchT(API+'/api/productos/'+id+'/'+ACTION,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cantidad:cant,motivo:mot})});
-      const body=await res.json();
+      const res=await fetchT(API+'/api/productos/'+ctx.id+'/'+ctx.accion,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cantidad:ctx.cant,motivo:ctx.mot,pin:ctx.pin,firma})});
+      const body=await res.json().catch(()=>({}));
+      if(res.status===422){pinShake('PIN incorrecto, intenta de nuevo.');$('#mvcSignStep').hidden=true;$('#mvcPinStep').hidden=false;return;}
+      closeMvConfirm();
       if(res.ok){
-        // UI optimista: el servidor ya devolvió el producto actualizado -> parchear local y repintar sin re-pedir todo.
-        const i=PRODUCTS.findIndex(p=>String(p.id)===String(id));const prev=i>=0?PRODUCTS[i].stock:null;
-        if(i>=0)PRODUCTS[i]=body;renderLocal(id);
+        const i=PRODUCTS.findIndex(p=>String(p.id)===String(ctx.id));const prev=i>=0?PRODUCTS[i].stock:null;
+        if(i>=0)PRODUCTS[i]=body;renderLocal(ctx.id);
         r.className='result ok';r.textContent=`Stock de ${body.nombre}: ${prev!=null?prev:'—'} → ${body.stock}`;
-        const tr=$(`tr[data-id="${id}"]`);if(tr){tr.classList.add('flash');setTimeout(()=>tr.classList.remove('flash'),700);}
-        toast('✓ '+(ACTION==='entrada'?'Entrada':'Salida')+' registrada','ok');
-      }else{r.className='result err';r.textContent=body.detail||body.title||('No se pudo registrar el movimiento.');toast(body.detail||'Operación rechazada','err');}
-    }catch(e){r.className='result err';r.textContent='No se pudo completar la operación.';toast('No se pudo completar la operación.','err',{label:'Reintentar',fn:()=>doAction()});}
+        const tr=$(`tr[data-id="${ctx.id}"]`);if(tr){tr.classList.add('flash');setTimeout(()=>tr.classList.remove('flash'),700);}
+        toast('✓ '+(ctx.accion==='entrada'?'Entrada':'Salida')+' registrada · PIN'+(firma?' + firma':''),'ok');
+      }else{r.className='result err';r.textContent=body.detail||body.title||'No se pudo registrar el movimiento.';toast(body.detail||'Operación rechazada','err');}
+    }catch(e){r.className='result err';r.textContent='No se pudo completar la operación.';toast('No se pudo completar la operación.','err',{label:'Reintentar',fn:()=>commitAction(ctx)});}
   });
+}
+/* ===== PIN + FIRMA ===== */
+const PIN_LEN=4,UMBRAL_FIRMA=25;
+let _pinBuf='',_mvCtx=null;
+const reqFirma=(accion,cant)=>accion==='salida'&&cant>=UMBRAL_FIRMA;
+function pinPaint(){$('#pinDots').querySelectorAll('i').forEach((d,i)=>d.classList.toggle('on',i<_pinBuf.length));}
+function pinShake(msg){const d=$('#pinDots');d.classList.add('err');$('#pinErr').textContent=msg||'PIN incorrecto, intenta de nuevo.';setTimeout(()=>{_pinBuf='';pinPaint();d.classList.remove('err');$('#pinErr').textContent='';},520);}
+function openMvConfirm(ctx){_mvCtx=ctx;_pinBuf='';pinPaint();$('#pinErr').textContent='';
+  $('#mvcSub').textContent='Autoriza la '+ctx.accion+' de '+ctx.cant+' u. de '+(ctx.prod?ctx.prod.nombre:'')+'.';
+  $('#mvcPinStep').hidden=false;$('#mvcSignStep').hidden=true;$('#mvConfirmBg').classList.add('open');
+  setTimeout(()=>{const k=$('#pinPad').querySelector('.pin-key');if(k)k.focus();},50);}
+function closeMvConfirm(){$('#mvConfirmBg').classList.remove('open');_mvCtx=null;_pinBuf='';}
+function onPinComplete(pin){if(!_mvCtx)return;_mvCtx.pin=pin;if(_mvCtx.conFirma){$('#mvcPinStep').hidden=true;$('#mvcSignStep').hidden=false;initSignPad();}else commitAction(_mvCtx);}
+if($('#pinPad'))$('#pinPad').addEventListener('click',e=>{const b=e.target.closest('.pin-key');if(!b||!_mvCtx)return;
+  if(b.dataset.k==='del'){_pinBuf=_pinBuf.slice(0,-1);pinPaint();return;}
+  if(_pinBuf.length>=PIN_LEN)return;_pinBuf+=b.dataset.k;pinPaint();if(_pinBuf.length===PIN_LEN)onPinComplete(_pinBuf);});
+if($('#mvcCancel'))$('#mvcCancel').onclick=closeMvConfirm;
+if($('#signCancel'))$('#signCancel').onclick=closeMvConfirm;
+if($('#mvConfirmBg'))$('#mvConfirmBg').addEventListener('keydown',e=>{if(!_mvCtx||$('#mvcPinStep').hidden)return;
+  if(e.key>='0'&&e.key<='9'){if(_pinBuf.length<PIN_LEN){_pinBuf+=e.key;pinPaint();if(_pinBuf.length===PIN_LEN)onPinComplete(_pinBuf);}}
+  else if(e.key==='Backspace'){_pinBuf=_pinBuf.slice(0,-1);pinPaint();}});
+function initSignPad(){
+  const c=$('#signPad');if(!c)return;const cx=c.getContext('2d'),dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=r.width*dpr;c.height=r.height*dpr;cx.scale(dpr,dpr);cx.lineWidth=2.4;cx.lineCap='round';cx.lineJoin='round';
+  cx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--text-1').trim()||'#0B1524';
+  let drawing=false,pts=[],dirty=false;
+  const pos=e=>{const b=c.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return{x:t.clientX-b.left,y:t.clientY-b.top};};
+  const start=e=>{drawing=true;pts=[pos(e)];e.preventDefault();};
+  const move=e=>{if(!drawing)return;pts.push(pos(e));if(pts.length>=3){const n=pts.length,a0=pts[n-2],a1=pts[n-1],mid={x:(a0.x+a1.x)/2,y:(a0.y+a1.y)/2},pm={x:(pts[n-3].x+a0.x)/2,y:(pts[n-3].y+a0.y)/2};cx.beginPath();cx.moveTo(pm.x,pm.y);cx.quadraticCurveTo(a0.x,a0.y,mid.x,mid.y);cx.stroke();}dirty=true;$('#signOk').disabled=false;e.preventDefault();};
+  const end=()=>{drawing=false;};
+  ['mousedown','touchstart'].forEach(ev=>c.addEventListener(ev,start,{passive:false}));
+  ['mousemove','touchmove'].forEach(ev=>c.addEventListener(ev,move,{passive:false}));
+  ['mouseup','mouseleave','touchend'].forEach(ev=>c.addEventListener(ev,end));
+  $('#signClear').onclick=()=>{cx.clearRect(0,0,c.width,c.height);dirty=false;$('#signOk').disabled=true;};
+  $('#signOk').onclick=()=>commitAction(_mvCtx);
+  window._signExport=()=>dirty?c.toDataURL('image/png'):null;
 }
 async function refresh(keepSel){const [pr,bs]=await Promise.all([fetchT(API+'/api/productos?page=0&size=200').then(r=>r.json()),fetchT(API+'/api/productos/bajo-stock').then(r=>r.json())]);PRODUCTS=pr.content||[];renderKPIs(pr,bs);applyFilter();renderPanelAlerts(bs);fillSelect();fillCategories();if(keepSel)$('#fProd').value=keepSel;if($('#view-reportes').classList.contains('active'))renderCharts();if($('#view-movimientos').classList.contains('active'))loadMovs();}
 function lowStockLocal(){return PRODUCTS.filter(p=>p.bajoStock);}
@@ -1321,7 +1416,7 @@ $('#helpBg').onclick=e=>{if(e.target===$('#helpBg'))$('#helpBg').classList.remov
 document.addEventListener('keydown',e=>{
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#palette').classList.contains('open')?closePalette():openPalette();return;}
-  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#provModalBg').classList.remove('open');$('#helpBg').classList.remove('open');if(typeof Scan!=='undefined')Scan.cerrar();if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
+  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#provModalBg').classList.remove('open');$('#mvConfirmBg').classList.remove('open');$('#helpBg').classList.remove('open');if(typeof Scan!=='undefined')Scan.cerrar();if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
   if(typing)return;
   if(e.key==='?'){e.preventDefault();openHelp();}
   else if(e.key==='/'){e.preventDefault();go('inventario');$('#q').focus();}
