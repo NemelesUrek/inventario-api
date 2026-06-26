@@ -350,6 +350,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
       <a data-view="panel" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Panel</a>
       <a data-view="inventario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7zM3 7l9 4 9-4M12 11v10"/></svg>Inventario</a>
       <a data-view="movimientos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Movimientos</a>
+      <a data-view="proveedores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Proveedores</a>
       <a data-view="reportes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M8 14l3-4 3 3 4-6"/></svg>Reportes</a>
       <div class="sec">Plataforma</div>
       <a data-view="api"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>API &amp; Docs</a>
@@ -434,6 +435,18 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
       </div>
       <div class="card" style="padding:0">
         <table><thead><tr><th>Tipo</th><th>Producto</th><th class="r">Cantidad</th><th class="r">Stock final</th><th>Motivo</th><th class="r">Cuándo</th></tr></thead><tbody id="movBody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- VIEW: PROVEEDORES -->
+    <section class="view" id="view-proveedores">
+      <p class="vtitle">Tus proveedores: a quién le compras el inventario.</p>
+      <div class="section-h first">
+        <div class="search" style="flex:1;max-width:360px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="qProv" placeholder="Buscar por nombre o contacto…"></div>
+        <button class="btn btn-primary btn-sm" id="newProvBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>Nuevo proveedor</button>
+      </div>
+      <div class="card" style="padding:0">
+        <table><thead><tr><th scope="col">Proveedor</th><th scope="col">Contacto</th><th scope="col">Teléfono</th><th scope="col">Email</th><th scope="col" class="r">Acciones</th></tr></thead><tbody id="provBody"></tbody></table>
       </div>
     </section>
 
@@ -538,6 +551,22 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
   <div style="display:flex;gap:var(--s3);margin-top:var(--s4)"><button class="btn btn-ghost" id="nCancel" style="flex:1;justify-content:center">Cancelar</button><button class="btn btn-primary" id="nSave" style="flex:1;justify-content:center">Crear producto</button></div>
 </div></div></div>
 
+<!-- MODAL crear/editar proveedor -->
+<div class="modal-bg" id="provModalBg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="provModalTitle"><h3 id="provModalTitle">Nuevo proveedor</h3><div class="body">
+  <div class="form-row"><label>Nombre *</label><input class="inp" id="pvNombre" placeholder="Distribuidora del Norte"></div>
+  <div style="display:flex;gap:var(--s3)">
+    <div class="form-row" style="flex:1"><label>Contacto</label><input class="inp" id="pvContacto" placeholder="Persona de contacto"></div>
+    <div class="form-row" style="flex:1"><label>Teléfono</label><input class="inp" id="pvTel" placeholder="55 1234 5678"></div>
+  </div>
+  <div style="display:flex;gap:var(--s3)">
+    <div class="form-row" style="flex:2"><label>Email</label><input class="inp" id="pvEmail" type="email" placeholder="ventas@proveedor.mx"></div>
+    <div class="form-row" style="flex:1"><label>RFC</label><input class="inp" id="pvRfc" placeholder="Opcional"></div>
+  </div>
+  <div class="form-row"><label>Notas</label><input class="inp" id="pvNotas" placeholder="Opcional"></div>
+  <div class="result" id="pvRes"></div>
+  <div style="display:flex;gap:var(--s3);margin-top:var(--s4)"><button class="btn btn-ghost" id="pvCancel" style="flex:1;justify-content:center">Cancelar</button><button class="btn btn-primary" id="pvSave" style="flex:1;justify-content:center">Crear proveedor</button></div>
+</div></div></div>
+
 <!-- COMMAND PALETTE -->
 <div class="pal-bg" id="palette"><div class="pal" role="dialog" aria-modal="true" aria-label="Paleta de comandos">
   <div class="pal-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="palInput" placeholder="Buscar acción, vista o producto…" autocomplete="off"><kbd>esc</kbd></div>
@@ -601,12 +630,20 @@ const _DEMO_SEED=[
   {id:9,sku:'LAM-LED',nombre:'Lámpara LED de escritorio',descripcion:'Regulable, brazo articulado',precioCentavos:32900,stock:27,stockMinimo:8,categoria:'Hogar'},
   {id:10,sku:'PWB-20K',nombre:'Power bank 20 000 mAh',descripcion:'Carga rápida, doble USB-C',precioCentavos:45900,stock:31,stockMinimo:12,categoria:'Electrónica'}
 ];
-let _dProducts=[],_dMovs=[],_dSeq=100,_dMovSeq=200;
+let _dProducts=[],_dMovs=[],_dSeq=100,_dMovSeq=200,_dProv=[],_dProvSeq=100;
+const _DEMO_PROV=[
+  {id:1,nombre:'Distribuidora del Norte',contacto:'Laura Méndez',telefono:'81 1234 5678',email:'ventas@distnorte.mx',rfc:'DNO120101AB1',notas:'Entrega en 48 h en zona metropolitana.'},
+  {id:2,nombre:'Importaciones Pacífico',contacto:'Jorge Ramírez',telefono:'33 9876 5432',email:'compras@imppacifico.mx',rfc:'IPA150620CD2',notas:'Electrónica y accesorios.'},
+  {id:3,nombre:'Suministros La Bodega',contacto:'María Fernanda Ortiz',telefono:'55 4455 6677',email:'contacto@labodega.mx',rfc:'SLB180310EF3',notas:'Pedido mínimo $2,000.'},
+  {id:4,nombre:'Café Sierra Alta',contacto:'Esteban Cruz',telefono:'228 112 3344',email:'hola@sierralta.mx',rfc:'CSA200905GH4',notas:'Café de origen, tostado semanal.'},
+  {id:5,nombre:'Papelera Central',contacto:'Diana Reyes',telefono:'55 2233 8899',email:'pedidos@papelcentral.mx',rfc:'PCE110715IJ5',notas:''}
+];
 const _hoursAgo=h=>new Date(Date.now()-h*3600e3).toISOString();
 const _normP=p=>Object.assign({},p,{precio:fmtMXN(p.precioCentavos),bajoStock:p.stock<=p.stockMinimo,creadoEn:_hoursAgo(720),actualizadoEn:_hoursAgo(2)});
 const _recalc=p=>{p.precio=fmtMXN(p.precioCentavos);p.bajoStock=p.stock<=p.stockMinimo;p.actualizadoEn=new Date().toISOString();return p;};
 function _seedDemo(){
   _dProducts=_DEMO_SEED.map(_normP);_dSeq=100;_dMovSeq=200;
+  _dProv=_DEMO_PROV.map(p=>Object.assign({activo:true,creadoEn:_hoursAgo(720),actualizadoEn:_hoursAgo(48)},p));_dProvSeq=100;
   _dMovs=[
     {productoId:1,sku:'CAF-1KG',tipo:'ENTRADA',cantidad:50,motivo:'Compra a proveedor',h:96},
     {productoId:1,sku:'CAF-1KG',tipo:'SALIDA',cantidad:8,motivo:'Venta de mostrador',h:30},
@@ -651,6 +688,11 @@ function _demoRoute(url,opts){
   if((m=path.match(/^\/api\/productos\/(\d+)$/))&&method==='PUT'){const p=_dProducts.find(x=>x.id===+m[1]);if(!p)return _json({title:'No encontrado'},404);const b=body();Object.assign(p,{nombre:b.nombre,descripcion:b.descripcion,precioCentavos:b.precioCentavos,stockMinimo:b.stockMinimo,categoria:b.categoria});_recalc(p);return _json(p);}
   if((m=path.match(/^\/api\/productos\/(\d+)$/))&&method==='DELETE'){_dProducts=_dProducts.filter(x=>x.id!==+m[1]);return _json(null,204);}
   if(path==='/api/demo/reset'&&method==='POST'){_seedDemo();return _json({mensaje:'Datos de demostración reiniciados'});}
+  if(path==='/api/proveedores'&&method==='GET')return _json({content:_dProv.slice(),page:{totalElements:_dProv.length,size:200,number:0}});
+  if((m=path.match(/^\/api\/proveedores\/(\d+)$/))&&method==='GET'){const pr=_dProv.find(x=>x.id===+m[1]);return pr?_json(pr):_json({title:'No encontrado'},404);}
+  if(path==='/api/proveedores'&&method==='POST'){const b=body();const np=Object.assign({id:_dProvSeq++,activo:true,creadoEn:new Date().toISOString(),actualizadoEn:new Date().toISOString()},b);_dProv.push(np);return _json(np,201);}
+  if((m=path.match(/^\/api\/proveedores\/(\d+)$/))&&method==='PUT'){const pr=_dProv.find(x=>x.id===+m[1]);if(!pr)return _json({title:'No encontrado'},404);Object.assign(pr,body(),{actualizadoEn:new Date().toISOString()});return _json(pr);}
+  if((m=path.match(/^\/api\/proveedores\/(\d+)$/))&&method==='DELETE'){_dProv=_dProv.filter(x=>x.id!==+m[1]);return _json(null,204);}
   return _json({title:'No disponible sin servidor',detail:path},404);
 }
 function enterDemo(){if(window.DEMO_MODE)return;window.DEMO_MODE=true;_seedIfEmpty();setStatus('demo','Modo demostración');}
@@ -667,7 +709,7 @@ window.fetch=async function(url,opts){
 };
 
 /* ROUTER */
-const TITLES={panel:'Panel',inventario:'Inventario',movimientos:'Movimientos',reportes:'Reportes',api:'API & Docs',config:'Configuración',contratar:'Contratar'};
+const TITLES={panel:'Panel',inventario:'Inventario',movimientos:'Movimientos',proveedores:'Proveedores',reportes:'Reportes',api:'API & Docs',config:'Configuración',contratar:'Contratar'};
 function go(v){
   if(!TITLES[v])v='panel';
   $$('.view').forEach(s=>s.classList.remove('active'));
@@ -677,6 +719,7 @@ function go(v){
   document.title=TITLES[v]+' · Stockly — Nemeles';
   if(v==='reportes')renderCharts();
   if(v==='movimientos')loadMovs();
+  if(v==='proveedores')loadProveedores();
   $('#sidebar').classList.remove('open');
   if(location.hash!=='#'+v)location.hash=v;
   window.scrollTo(0,0);saveUI();
@@ -890,6 +933,57 @@ function exportCSV(){
   PRODUCTS.forEach(p=>rows.push([p.sku,p.nombre,p.categoria||'',(p.precioCentavos/100).toFixed(2),p.stock,p.stockMinimo,p.bajoStock?'Por reponer':'En stock'].map(esc).join(',')));
   const csv='﻿'+rows.join('\r\n');
   const b=new Blob([csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='inventario.csv';a.click();URL.revokeObjectURL(a.href);toast('Inventario exportado a CSV','ok');}
+/* ===== PROVEEDORES (módulo de Operación) ===== */
+let PROVEEDORES=[],PROV_EDIT=null;
+async function loadProveedores(){
+  const tb=$('#provBody');if(!tb)return;tb.innerHTML='<tr><td colspan="5" style="padding:22px;text-align:center;color:var(--text-3)">Cargando…</td></tr>';
+  try{const r=await fetchT(API+'/api/proveedores?size=200').then(r=>r.json());PROVEEDORES=r.content||[];renderProveedores();}
+  catch(e){tb.innerHTML='<tr><td colspan="5" style="padding:22px;text-align:center;color:var(--text-3)">No se pudo cargar. <button class="btn btn-ghost btn-sm" onclick="loadProveedores()">Reintentar</button></td></tr>';}
+}
+function renderProveedores(){
+  const tb=$('#provBody');if(!tb)return;tb.innerHTML='';
+  const q=norm(($('#qProv')||{}).value||'');
+  const list=q?PROVEEDORES.filter(p=>norm((p.nombre||'')+' '+(p.contacto||'')).includes(q)):PROVEEDORES;
+  if(!list.length){tb.innerHTML='<tr><td colspan="5" style="padding:48px 24px;text-align:center;color:var(--text-3)"><div style="margin-bottom:14px;font-size:14px">'+(q?'Sin coincidencias.':'Aún no hay proveedores. Da de alta el primero.')+'</div><button class="btn '+(q?'btn-ghost':'btn-primary')+' btn-sm" id="provEmptyAct" type="button">'+(q?'Limpiar búsqueda':'+ Nuevo proveedor')+'</button></td></tr>';const ea=$('#provEmptyAct');if(ea)ea.onclick=()=>{if(q){$('#qProv').value='';renderProveedores();}else openProvCreate();};return;}
+  list.forEach(p=>{const tr=document.createElement('tr');tr.style.cursor='default';
+    const nm=document.createElement('div');nm.append(sp('pname',p.nombre));if(p.rfc)nm.append(document.createElement('br'),sp('sku',p.rfc));tr.appendChild(cell('Proveedor',nm));
+    tr.appendChild(cell('Contacto',document.createTextNode(p.contacto||'—')));
+    const tel=cell('Teléfono',document.createTextNode(p.telefono||'—'));tel.className='mono';tr.appendChild(tel);
+    tr.appendChild(cell('Email',document.createTextNode(p.email||'—')));
+    const acts=document.createElement('div');acts.className='rowact';
+    const eb=document.createElement('button');eb.className='ria';eb.title='Editar';eb.setAttribute('aria-label','Editar '+p.nombre);eb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';eb.onclick=()=>editProveedor(p);
+    const db=document.createElement('button');db.className='ria danger';db.title='Eliminar';db.setAttribute('aria-label','Eliminar '+p.nombre);db.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/></svg>';db.onclick=()=>deleteProveedor(p);
+    acts.append(eb,db);const ac=cell('Acciones',acts);ac.className='r';tr.appendChild(ac);
+    tb.appendChild(tr);});
+}
+function resetProvModal(){$('#pvRes').className='result';['pvNombre','pvContacto','pvTel','pvEmail','pvRfc','pvNotas'].forEach(i=>$('#'+i).value='');}
+function openProvCreate(){PROV_EDIT=null;resetProvModal();$('#provModalTitle').textContent='Nuevo proveedor';$('#pvSave').textContent='Crear proveedor';$('#provModalBg').classList.add('open');setTimeout(()=>$('#pvNombre').focus(),60);}
+function editProveedor(p){PROV_EDIT=p.id;resetProvModal();$('#provModalTitle').textContent='Editar proveedor';$('#pvSave').textContent='Guardar cambios';$('#pvNombre').value=p.nombre||'';$('#pvContacto').value=p.contacto||'';$('#pvTel').value=p.telefono||'';$('#pvEmail').value=p.email||'';$('#pvRfc').value=p.rfc||'';$('#pvNotas').value=p.notas||'';$('#provModalBg').classList.add('open');setTimeout(()=>$('#pvNombre').focus(),60);}
+async function saveProv(){
+  const nombre=$('#pvNombre').value.trim();if(!nombre){$('#pvRes').className='result err';$('#pvRes').textContent='El nombre es obligatorio.';return;}
+  const payload={nombre,contacto:$('#pvContacto').value.trim()||null,telefono:$('#pvTel').value.trim()||null,email:$('#pvEmail').value.trim()||null,rfc:$('#pvRfc').value.trim()||null,notas:$('#pvNotas').value.trim()||null};
+  await withLoading($('#pvSave'),async()=>{
+    try{let res;
+      if(PROV_EDIT){payload.activo=true;res=await fetchT(API+'/api/proveedores/'+PROV_EDIT,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});}
+      else res=await fetchT(API+'/api/proveedores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const body=await res.json().catch(()=>({}));
+      if(res.ok){$('#provModalBg').classList.remove('open');toast(PROV_EDIT?'✓ Proveedor actualizado':'✓ Proveedor creado','ok');await loadProveedores();}
+      else{$('#pvRes').className='result err';$('#pvRes').textContent=body.detail||body.title||'No se pudo guardar.';}
+    }catch(e){$('#pvRes').className='result err';$('#pvRes').textContent='Error de red.';}
+  });
+}
+async function deleteProveedor(p){
+  if(!await confirmDialog('Eliminar proveedor','¿Eliminar a "'+p.nombre+'"? Esta acción no se puede deshacer.','Eliminar'))return;
+  try{const res=await fetchT(API+'/api/proveedores/'+p.id,{method:'DELETE'});
+    if(res.status===204||res.ok){toast('✓ Proveedor eliminado','ok');await loadProveedores();}
+    else{const b=await res.json().catch(()=>({}));toast(b.detail||'No se pudo eliminar','err');}
+  }catch(e){toast('Error de red al eliminar.','err');}
+}
+if($('#newProvBtn'))$('#newProvBtn').onclick=openProvCreate;
+if($('#pvCancel'))$('#pvCancel').onclick=()=>$('#provModalBg').classList.remove('open');
+if($('#provModalBg'))$('#provModalBg').onclick=e=>{if(e.target===$('#provModalBg'))$('#provModalBg').classList.remove('open');};
+if($('#pvSave'))$('#pvSave').onclick=saveProv;
+if($('#qProv'))$('#qProv').addEventListener('input',debounce(renderProveedores,150));
 /* STATS (server-side, GET /api/stats) */
 async function loadStats(){try{const s=await fetchT(API+'/api/stats').then(r=>r.json());renderStats(s);}catch(e){}}
 function renderStats(s){
@@ -988,7 +1082,7 @@ $('#helpBg').onclick=e=>{if(e.target===$('#helpBg'))$('#helpBg').classList.remov
 document.addEventListener('keydown',e=>{
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#palette').classList.contains('open')?closePalette():openPalette();return;}
-  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#helpBg').classList.remove('open');if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
+  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#provModalBg').classList.remove('open');$('#helpBg').classList.remove('open');if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
   if(typing)return;
   if(e.key==='?'){e.preventDefault();openHelp();}
   else if(e.key==='/'){e.preventDefault();go('inventario');$('#q').focus();}
