@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Stockly: datos locales H2 y artefactos de ejecución (no versionar) ###
+/data/
+/data-verify/
+*.mv.db
+*.trace.db
