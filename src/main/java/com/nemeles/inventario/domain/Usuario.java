@@ -28,6 +28,10 @@ public class Usuario {
     @Column(nullable = false)
     private String passwordHash;
 
+    /** PIN de confirmación de movimientos (BCrypt). Opcional. */
+    @Column
+    private String pinHash;
+
     @Column(nullable = false, length = 120)
     private String nombre;
 
@@ -57,6 +61,8 @@ public class Usuario {
     public void setUsername(String username) { this.username = username; }
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getPinHash() { return pinHash; }
+    public void setPinHash(String pinHash) { this.pinHash = pinHash; }
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
     public Rol getRol() { return rol; }

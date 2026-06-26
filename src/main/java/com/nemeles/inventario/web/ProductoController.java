@@ -87,13 +87,13 @@ public class ProductoController {
     @PostMapping("/{id}/entrada")
     @Operation(summary = "Entrada de stock", description = "Suma unidades y deja registro de auditoría.")
     public ProductoResponse entrada(@PathVariable Long id, @Valid @RequestBody AjusteStockRequest req) {
-        return ProductoResponse.de(service.entrada(id, req.cantidad(), req.motivo()));
+        return ProductoResponse.de(service.entrada(id, req.cantidad(), req.motivo(), req.pin(), req.firma()));
     }
 
     @PostMapping("/{id}/salida")
     @Operation(summary = "Salida de stock", description = "Resta unidades. Devuelve 409 si no hay stock suficiente.")
     public ProductoResponse salida(@PathVariable Long id, @Valid @RequestBody AjusteStockRequest req) {
-        return ProductoResponse.de(service.salida(id, req.cantidad(), req.motivo()));
+        return ProductoResponse.de(service.salida(id, req.cantidad(), req.motivo(), req.pin(), req.firma()));
     }
 
     @GetMapping("/{id}/movimientos")

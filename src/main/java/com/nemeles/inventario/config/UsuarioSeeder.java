@@ -23,9 +23,16 @@ public class UsuarioSeeder implements CommandLineRunner {
         if (repo.count() > 0) {
             return;
         }
-        repo.save(new Usuario("admin", encoder.encode("admin123"), "Administrador", Usuario.Rol.ADMINISTRADOR));
-        repo.save(new Usuario("almacen", encoder.encode("almacen123"), "Encargado de Almacén", Usuario.Rol.ALMACEN));
-        repo.save(new Usuario("compras", encoder.encode("compras123"), "Encargado de Compras", Usuario.Rol.COMPRAS));
-        repo.save(new Usuario("ventas", encoder.encode("ventas123"), "Encargado de Ventas", Usuario.Rol.VENTAS));
+        String pin = encoder.encode("1234"); // PIN de ejemplo para todos (demo)
+        crear("admin", "admin123", "Administrador", Usuario.Rol.ADMINISTRADOR, pin);
+        crear("almacen", "almacen123", "Encargado de Almacén", Usuario.Rol.ALMACEN, pin);
+        crear("compras", "compras123", "Encargado de Compras", Usuario.Rol.COMPRAS, pin);
+        crear("ventas", "ventas123", "Encargado de Ventas", Usuario.Rol.VENTAS, pin);
+    }
+
+    private void crear(String username, String pass, String nombre, Usuario.Rol rol, String pinHash) {
+        Usuario u = new Usuario(username, encoder.encode(pass), nombre, rol);
+        u.setPinHash(pinHash);
+        repo.save(u);
     }
 }

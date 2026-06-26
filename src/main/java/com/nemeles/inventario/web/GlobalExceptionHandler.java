@@ -2,6 +2,7 @@ package com.nemeles.inventario.web;
 
 import com.nemeles.inventario.service.ConflictException;
 import com.nemeles.inventario.service.NotFoundException;
+import com.nemeles.inventario.service.PinInvalidoException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     public ProblemDetail conflicto(ConflictException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(PinInvalidoException.class)
+    public ProblemDetail pinInvalido(PinInvalidoException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
