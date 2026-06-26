@@ -305,6 +305,7 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
   .hamb{display:grid;place-items:center}
   table thead{display:none}table,tbody,tr,td{display:block;width:100%}
   tbody tr{padding:10px var(--s4)}tbody td{border:none;padding:4px 0;display:flex;justify-content:space-between}tbody td::before{content:attr(data-l);color:var(--text-3);font-size:12px}
+  .ria,.iconbtn{width:42px;height:42px}.ria svg,.iconbtn svg{width:18px;height:18px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 html[data-motion="off"] *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
@@ -324,7 +325,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
 </style>
 </head>
 <body>
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 <div class="app">
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
@@ -341,7 +342,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
       <a data-view="contratar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>Contratar</a>
     </nav>
     <div class="side-foot">
-      <div id="sideStatus" class="status waking"><span class="sdot"></span><span id="sideStatusTxt">…</span></div>
+      <div id="sideStatus" class="status waking" role="status" aria-live="polite"><span class="sdot" aria-hidden="true"></span><span id="sideStatusTxt">…</span></div>
       <button class="iconbtn" id="themeBtn" title="Tema claro/oscuro" aria-label="Cambiar tema claro u oscuro"><svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></button>
     </div>
   </aside>
@@ -388,7 +389,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
         <div style="display:flex;gap:var(--s2);align-items:center"><select id="catFilter" class="catsel"><option value="">Todas las categorías</option></select><button class="chip" id="lowChip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Solo bajo stock</button><button class="btn btn-ghost btn-sm" id="csvBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>CSV</button><button class="btn btn-primary btn-sm" id="newBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>Nuevo producto</button></div>
       </div>
       <div class="card" style="padding:0">
-        <table><thead><tr><th class="sortable" data-sort="sku">SKU</th><th class="sortable" data-sort="nombre">Producto</th><th class="r sortable" data-sort="precio">Precio</th><th class="r sortable" data-sort="stock">Stock</th><th class="r">Estado</th><th class="r">Acciones</th></tr></thead><tbody id="tbody"></tbody></table>
+        <table><thead><tr><th scope="col" class="sortable" data-sort="sku" aria-sort="none">SKU</th><th scope="col" class="sortable" data-sort="nombre" aria-sort="none">Producto</th><th scope="col" class="r sortable" data-sort="precio" aria-sort="none">Precio</th><th scope="col" class="r sortable" data-sort="stock" aria-sort="none">Stock</th><th scope="col" class="r">Estado</th><th scope="col" class="r">Acciones</th></tr></thead><tbody id="tbody"></tbody></table>
         <div class="pager"><button id="prev">← Anterior</button><span id="pginfo">—</span><button id="next">Siguiente →</button></div>
       </div>
       <p class="vtitle" style="margin-top:var(--s4)">Clic en un producto para ver su historial de movimientos (auditoría).</p>
@@ -663,7 +664,7 @@ function go(v){
   if(location.hash!=='#'+v)location.hash=v;
   window.scrollTo(0,0);
 }
-$$('[data-view]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();go(a.dataset.view);}));
+$$('[data-view]').forEach(a=>{if(a.tagName==='A'&&!a.getAttribute('href'))a.setAttribute('href','#'+a.dataset.view);a.addEventListener('click',e=>{e.preventDefault();go(a.dataset.view);});});
 window.addEventListener('hashchange',()=>go(location.hash.slice(1)));
 
 /* THEME */
@@ -717,7 +718,7 @@ function applyFilter(){
   arr.sort((a,b)=>cmp(a,b)*SORT.dir);
   FILTERED=arr;PAGE=0;renderTable();
 }
-function updateSortArrows(){$$('#view-inventario thead th.sortable').forEach(th=>{const old=th.querySelector('.sar');if(old)old.remove();if(th.dataset.sort===SORT.key){const a=document.createElement('span');a.className='sar';a.textContent=SORT.dir>0?' ▲':' ▼';th.appendChild(a);}});}
+function updateSortArrows(){$$('#view-inventario thead th.sortable').forEach(th=>{const old=th.querySelector('.sar');if(old)old.remove();const active=th.dataset.sort===SORT.key;th.setAttribute('aria-sort',active?(SORT.dir>0?'ascending':'descending'):'none');if(active){const a=document.createElement('span');a.className='sar';a.setAttribute('aria-hidden','true');a.textContent=SORT.dir>0?' ▲':' ▼';th.appendChild(a);}});}
 function renderTable(){
   const tb=$('#tbody');tb.innerHTML='';
   const pages=Math.max(1,Math.ceil(FILTERED.length/PER));if(PAGE>=pages)PAGE=pages-1;
@@ -738,14 +739,16 @@ function renderTable(){
     const eb=document.createElement('button');eb.className='ria';eb.title='Editar';eb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';eb.onclick=ev=>{ev.stopPropagation();editProduct(p);};
     const db=document.createElement('button');db.className='ria danger';db.title='Eliminar';db.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/></svg>';db.onclick=ev=>{ev.stopPropagation();deleteProduct(p);};
     acts.append(eb,db);const ac=cell('Acciones',acts);ac.className='r';tr.appendChild(ac);
-    tr.onclick=()=>toggleMovs(tr,p.id);tb.appendChild(tr);
+    tr.tabIndex=0;tr.setAttribute('role','button');tr.setAttribute('aria-expanded','false');tr.setAttribute('aria-label','Ver historial de '+p.nombre);
+    tr.onclick=()=>toggleMovs(tr,p.id);tr.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target===tr){e.preventDefault();toggleMovs(tr,p.id);}};tb.appendChild(tr);
   });
   $('#pginfo').textContent=`Página ${PAGE+1} de ${pages} · ${FILTERED.length} productos`;
   $('#prev').disabled=PAGE===0;$('#next').disabled=PAGE>=pages-1;
 }
 function cell(l,n){const td=document.createElement('td');td.dataset.l=l;td.appendChild(n);return td;}
 async function toggleMovs(tr,id){
-  const nx=tr.nextElementSibling;if(nx&&nx.classList.contains('movrow')){nx.remove();return;}
+  const nx=tr.nextElementSibling;if(nx&&nx.classList.contains('movrow')){nx.remove();tr.setAttribute('aria-expanded','false');return;}
+  tr.setAttribute('aria-expanded','true');
   const row=document.createElement('tr');row.className='movrow';const td=document.createElement('td');td.colSpan=6;td.className='movs';td.textContent='Cargando historial…';row.appendChild(td);tr.after(row);
   try{const mv=await fetchT(API+'/api/productos/'+id+'/movimientos').then(r=>r.json());td.textContent='';
     if(!mv.length){td.textContent='Sin movimientos.';return;}
@@ -882,7 +885,7 @@ function renderCharts(){
 }
 /* wires */
 $('#q').addEventListener('input',debounce(applyFilter,150));
-$$('#view-inventario thead th.sortable').forEach(th=>th.onclick=()=>{const k=th.dataset.sort;if(SORT.key===k)SORT.dir*=-1;else{SORT.key=k;SORT.dir=1;}updateSortArrows();applyFilter();});
+$$('#view-inventario thead th.sortable').forEach(th=>{th.tabIndex=0;th.setAttribute('role','button');const sort=()=>{const k=th.dataset.sort;if(SORT.key===k)SORT.dir*=-1;else{SORT.key=k;SORT.dir=1;}updateSortArrows();applyFilter();};th.onclick=sort;th.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sort();}};});
 $('#lowChip').onclick=()=>{LOWONLY=!LOWONLY;$('#lowChip').classList.toggle('on',LOWONLY);applyFilter();};
 $('#catFilter').onchange=()=>{CATFILTER=$('#catFilter').value;applyFilter();};
 updateSortArrows();
@@ -981,6 +984,8 @@ function pref(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
 setTheme(pref('theme','dark'));
 setDensity(pref('density','comfortable'));
 setMotion(pref('motion','on'));
+/* SVGs decorativos: ocultarlos a lectores de pantalla (los con aria-label/role se respetan). */
+$$('svg:not([role]):not([aria-label])').forEach(s=>s.setAttribute('aria-hidden','true'));
 go(location.hash.slice(1)||'panel');
 /* Probar el backend; si no responde, entrar en modo demostración antes de cargar. */
 (async()=>{try{const h=await _origFetch('/actuator/health',{cache:'no-store'});if(!h.ok)enterDemo();}catch(e){enterDemo();}loadAll();})();
