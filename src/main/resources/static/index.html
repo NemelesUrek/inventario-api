@@ -348,6 +348,31 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
 .userbadge .uname{font-weight:var(--w-semi)}
 .userbadge .urol{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
 .userbadge .uavatar{width:32px;height:32px;border-radius:50%;background:var(--brand-ghost);color:var(--brand);display:grid;place-items:center;font-weight:var(--w-bold);font-size:13px;flex:none}
+/* ===== ESCÁNER de código de barras / QR ===== */
+.scan-bg .modal.scan-modal{max-width:440px;width:100%;padding:0;overflow:hidden}
+.scan-head{display:flex;align-items:center;justify-content:space-between;padding:var(--s4) var(--s5);border-bottom:1px solid var(--border)}
+.icon-btn{display:grid;place-items:center;width:32px;height:32px;border:none;background:transparent;color:var(--text-3);border-radius:var(--r-md);cursor:pointer;transition:background var(--d-fast) var(--ease-out),color var(--d-fast) var(--ease-out)}
+.icon-btn:hover{background:var(--surface-3);color:var(--text-1)} .icon-btn svg{width:18px;height:18px}
+.scan-stage{position:relative;aspect-ratio:4/3;background:#000;overflow:hidden}
+.scan-stage video{width:100%;height:100%;object-fit:cover;display:block}
+.scan-frame{position:absolute;inset:14% 12%;border-radius:var(--r-lg);box-shadow:0 0 0 100vmax rgba(4,8,18,.55)}
+.scan-frame .c{position:absolute;width:26px;height:26px;border:3px solid var(--brand)}
+.scan-frame .c.tl{top:-2px;left:-2px;border-right:none;border-bottom:none;border-top-left-radius:var(--r-md)}
+.scan-frame .c.tr{top:-2px;right:-2px;border-left:none;border-bottom:none;border-top-right-radius:var(--r-md)}
+.scan-frame .c.bl{bottom:-2px;left:-2px;border-right:none;border-top:none;border-bottom-left-radius:var(--r-md)}
+.scan-frame .c.br{bottom:-2px;right:-2px;border-left:none;border-top:none;border-bottom-right-radius:var(--r-md)}
+.scan-laser{position:absolute;left:8%;right:8%;top:6%;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--brand),transparent);box-shadow:0 0 12px 2px var(--brand-glow);animation:scanSweep var(--d-bar) var(--ease-in-out) infinite alternate}
+@keyframes scanSweep{from{top:6%}to{top:94%}}
+.scan-flash{position:absolute;inset:0;background:var(--brand);opacity:0;pointer-events:none}
+.scan-flash.hit{animation:scanHit 420ms var(--ease-out)}
+@keyframes scanHit{0%{opacity:0}25%{opacity:.55}100%{opacity:0}}
+.scan-hint{position:absolute;left:0;right:0;bottom:var(--s4);text-align:center;color:#fff;font-size:12.5px;text-shadow:0 1px 4px rgba(0,0,0,.6);padding:0 var(--s5)}
+.scan-stage .torch{position:absolute;top:var(--s3);right:var(--s3);background:rgba(0,0,0,.4);color:#fff}
+.scan-stage .torch.on{background:var(--brand);color:var(--brand-ink)}
+.scan-manual{padding:var(--s5)} .scan-manual label{display:block;font-size:12px;color:var(--text-3);margin-bottom:var(--s2);font-weight:var(--w-med)}
+.scan-input-row{display:flex;gap:var(--s2)} .scan-input-row .inp{flex:1}
+.scan-tip{margin-top:var(--s3);font-size:12px;color:var(--text-4);line-height:1.45}
+@media (prefers-reduced-motion:reduce){.scan-laser{animation:none;top:50%}}
 </style>
 </head>
 <body>
@@ -402,7 +427,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
         <div class="card">
           <h3 style="font-size:16px;margin-bottom:var(--s4)">Registrar movimiento</h3>
           <p class="vtitle" style="margin:0 0 var(--s4)">Registra una entrada o salida; el stock y su historial se actualizan al instante.</p>
-          <div class="form-row"><label>Producto</label><select id="fProd"></select></div>
+          <div class="form-row"><label>Producto</label><div style="display:flex;gap:var(--s2)"><select id="fProd" style="flex:1"></select><button class="iconbtn" id="scanForMov" type="button" title="Escanear código" aria-label="Escanear código de producto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M6 12h12"/></svg></button></div></div>
           <div class="form-row"><label>Acción</label><div class="toggle"><button id="tIn" class="sel-in">Entrada (+)</button><button id="tOut">Salida (−)</button></div></div>
           <div style="display:flex;gap:var(--s3)"><div class="form-row" style="flex:1"><label>Cantidad</label><input class="inp" id="fCant" type="number" min="1" value="1"></div><div class="form-row" style="flex:2"><label>Motivo</label><input class="inp" id="fMot" value="Ajuste manual"></div></div>
           <button class="btn btn-primary" id="fGo" style="width:100%;justify-content:center">Ejecutar acción</button>
@@ -414,7 +439,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
     <!-- VIEW: INVENTARIO -->
     <section class="view" id="view-inventario">
       <p class="vtitle">Catálogo completo. Busca, da de alta productos y gestiona el stock.</p>
-      <div class="section-h first"><div class="search" style="flex:1;max-width:360px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="q" placeholder="Buscar por nombre o SKU…"></div>
+      <div class="section-h first"><div class="search" style="flex:1;max-width:360px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="q" placeholder="Buscar por nombre o SKU…"></div><button class="iconbtn" id="scanForSearch" type="button" title="Escanear código" aria-label="Buscar por código escaneado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M6 12h12"/></svg></button>
         <div style="display:flex;gap:var(--s2);align-items:center"><select id="catFilter" class="catsel"><option value="">Todas las categorías</option></select><button class="chip" id="lowChip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Solo bajo stock</button><button class="btn btn-ghost btn-sm" id="csvBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>CSV</button><button class="btn btn-primary btn-sm" id="newBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>Nuevo producto</button></div>
       </div>
       <div class="card" style="padding:0">
@@ -605,6 +630,32 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
   <div class="result" id="pvRes"></div>
   <div style="display:flex;gap:var(--s3);margin-top:var(--s4)"><button class="btn btn-ghost" id="pvCancel" style="flex:1;justify-content:center">Cancelar</button><button class="btn btn-primary" id="pvSave" style="flex:1;justify-content:center">Crear proveedor</button></div>
 </div></div></div>
+
+<!-- ===== ESCÁNER de código de barras / QR ===== -->
+<div class="modal-bg scan-bg" id="scanBg" role="dialog" aria-modal="true" aria-label="Escanear código">
+  <div class="modal scan-modal">
+    <div class="scan-head">
+      <h3 style="margin:0">Escanear código</h3>
+      <button class="icon-btn" id="scanClose" type="button" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="scan-stage" id="scanStage" hidden>
+      <video id="scanVideo" playsinline muted></video>
+      <div class="scan-frame"><span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span></div>
+      <div class="scan-laser"></div>
+      <div class="scan-flash" id="scanFlash"></div>
+      <button class="icon-btn torch" id="scanTorch" type="button" hidden aria-label="Linterna"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2h6l-1 7 3 1-7 12 1-8H7z"/></svg></button>
+      <div class="scan-hint">Apunta al código de barras o QR</div>
+    </div>
+    <div class="scan-manual">
+      <label for="scanInput">Código (o usa un lector USB)</label>
+      <div class="scan-input-row">
+        <input class="inp" id="scanInput" placeholder="Escribe o escanea el código…" autocomplete="off">
+        <button class="btn btn-ghost btn-sm" id="scanCamBtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Cámara</button>
+      </div>
+      <p class="scan-tip" id="scanTip">Conecta un lector USB y escanea, o usa la cámara del dispositivo.</p>
+    </div>
+  </div>
+</div>
 
 <!-- COMMAND PALETTE -->
 <div class="pal-bg" id="palette"><div class="pal" role="dialog" aria-modal="true" aria-label="Paleta de comandos">
@@ -1125,6 +1176,34 @@ async function doLogin(e){
 }
 async function logout(){try{await _origFetch('/api/auth/logout',{method:'POST'});}catch(e){}CURRENT_USER=null;toast('Sesión cerrada','info');showLogin();}
 if($('#loginForm'))$('#loginForm').addEventListener('submit',doLogin);
+/* ===== ESCÁNER de código de barras / QR (frontend puro: cámara + lector USB/manual) ===== */
+function resolverCodigo(code){const c=(code||'').trim().toUpperCase();if(!c)return null;
+  return PRODUCTS.find(p=>(p.sku||'').toUpperCase()===c)
+      || PRODUCTS.find(p=>(p.codigoBarras||'').toUpperCase()===c)
+      || PRODUCTS.find(p=>(p.sku||'').toUpperCase().includes(c)) || null;}
+const Scan=(()=>{let stream=null,detector=null,track=null,raf=0,onHit=null,torchOn=false;
+  const FORMATS=['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf','qr_code','data_matrix','codabar'];
+  async function soporta(){if(!('BarcodeDetector'in window))return false;try{const f=await BarcodeDetector.getSupportedFormats();return f&&f.length>0;}catch(e){return false;}}
+  async function abrirCamara(){const sup=await BarcodeDetector.getSupportedFormats();detector=new BarcodeDetector({formats:FORMATS.filter(f=>sup.includes(f))});
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
+    const v=$('#scanVideo');v.srcObject=stream;await v.play();track=stream.getVideoTracks()[0];
+    const caps=track.getCapabilities?track.getCapabilities():{};$('#scanTorch').hidden=!('torch'in caps);$('#scanStage').hidden=false;loop();}
+  function loop(){raf=requestAnimationFrame(async()=>{if(!detector)return;try{const codes=await detector.detect($('#scanVideo'));if(codes&&codes.length)return exito(codes[0].rawValue);}catch(e){}loop();});}
+  function exito(v){const f=$('#scanFlash');f.classList.remove('hit');void f.offsetWidth;f.classList.add('hit');if(navigator.vibrate)navigator.vibrate(60);beep();const cb=onHit;cerrar();if(cb)cb(v);}
+  async function torch(){if(!track)return;torchOn=!torchOn;try{await track.applyConstraints({advanced:[{torch:torchOn}]});$('#scanTorch').classList.toggle('on',torchOn);}catch(e){torchOn=false;toast('La linterna no está disponible.','err');}}
+  function cerrar(){cancelAnimationFrame(raf);raf=0;detector=null;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}track=null;torchOn=false;const s=$('#scanStage');if(s)s.hidden=true;const t=$('#scanTorch');if(t)t.classList.remove('on');$('#scanBg').classList.remove('open');}
+  function beep(){try{const a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.type='square';o.frequency.value=880;o.connect(g);g.connect(a.destination);g.gain.setValueAtTime(.06,a.currentTime);o.start();g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+.12);o.stop(a.currentTime+.13);}catch(e){}}
+  async function abrir(cb){onHit=cb;$('#scanBg').classList.add('open');const i=$('#scanInput');i.value='';setTimeout(()=>i.focus(),60);const puede=await soporta();$('#scanCamBtn').hidden=!puede;
+    $('#scanTip').textContent=puede?'Conecta un lector USB y escanea, o usa la cámara del dispositivo.':'Conecta un lector USB y escanea, o teclea el código (este navegador no permite cámara para escanear).';}
+  function bind(){
+    $('#scanInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const v=$('#scanInput').value;if(v.trim()){if(navigator.vibrate)navigator.vibrate(40);const cb=onHit;cerrar();if(cb)cb(v);}}});
+    $('#scanCamBtn').addEventListener('click',()=>abrirCamara().catch(err=>toast('No se pudo abrir la cámara: '+(err.name||'error'),'err')));
+    $('#scanTorch').addEventListener('click',torch);$('#scanClose').addEventListener('click',cerrar);
+    $('#scanBg').addEventListener('click',e=>{if(e.target===$('#scanBg'))cerrar();});}
+  return {abrir,cerrar,bind};})();
+Scan.bind();
+if($('#scanForMov'))$('#scanForMov').onclick=()=>Scan.abrir(raw=>{const p=resolverCodigo(raw);if(!p)return toast('Código no reconocido: '+raw,'err');go('panel');$('#fProd').value=p.id;$('#fCant').focus();toast('Producto: '+p.nombre,'ok');});
+if($('#scanForSearch'))$('#scanForSearch').onclick=()=>Scan.abrir(raw=>{const p=resolverCodigo(raw);if(p){go('inventario');$('#q').value=p.sku;$('#q').dispatchEvent(new Event('input'));}else toast('Sin coincidencias para '+raw,'err');});
 /* STATS (server-side, GET /api/stats) */
 async function loadStats(){try{const s=await fetchT(API+'/api/stats').then(r=>r.json());renderStats(s);}catch(e){}}
 function renderStats(s){
@@ -1223,7 +1302,7 @@ $('#helpBg').onclick=e=>{if(e.target===$('#helpBg'))$('#helpBg').classList.remov
 document.addEventListener('keydown',e=>{
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#palette').classList.contains('open')?closePalette():openPalette();return;}
-  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#provModalBg').classList.remove('open');$('#helpBg').classList.remove('open');if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
+  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#provModalBg').classList.remove('open');$('#helpBg').classList.remove('open');if(typeof Scan!=='undefined')Scan.cerrar();if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
   if(typing)return;
   if(e.key==='?'){e.preventDefault();openHelp();}
   else if(e.key==='/'){e.preventDefault();go('inventario');$('#q').focus();}
