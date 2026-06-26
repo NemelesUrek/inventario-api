@@ -286,7 +286,9 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
 .kbd-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-soft);font-size:14px}
 .kbd-row:last-child{border:none}.kbd-row>span:first-child{color:var(--text-2)}.kbd-row kbd{margin-left:4px}
 /* toast / skeleton / anim */
-#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;transition:.3s;background:var(--surface-3);border:1px solid var(--border-strong);color:var(--text);padding:12px 18px;border-radius:var(--r-md);font-size:14px;box-shadow:var(--sh-lg);z-index:100;pointer-events:none}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;transition:.3s;display:inline-flex;align-items:center;background:var(--surface-3);border:1px solid var(--border-strong);color:var(--text);padding:12px 18px;border-radius:var(--r-md);font-size:14px;box-shadow:var(--sh-lg);z-index:100;pointer-events:none}
+.toast-act{pointer-events:auto;margin-left:14px;background:none;border:none;color:var(--brand);font-weight:var(--w-semi);font-size:13.5px;font-family:inherit;cursor:pointer;padding:3px 8px;border-radius:var(--r-sm);white-space:nowrap}
+.toast-act:hover{background:var(--brand-ghost)}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.ok{border-left:3px solid var(--ok)}#toast.err{border-left:3px solid var(--danger)}#toast.info{border-left:3px solid var(--accent)}
 .sk{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;color:transparent!important}
@@ -560,7 +562,9 @@ const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
 const fmtMXN=c=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(c/100);
 const SVGNS='http://www.w3.org/2000/svg';
 function svg(t,a){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
-function toast(m,type){const t=$('#toast');t.textContent=m;t.className=(type||'')+' show';clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+function toast(m,type,action){const t=$('#toast');t.textContent='';const s=document.createElement('span');s.textContent=m;t.appendChild(s);
+  if(action){const b=document.createElement('button');b.type='button';b.className='toast-act';b.textContent=action.label;b.onclick=()=>{clearTimeout(t._t);t.classList.remove('show');action.fn();};t.appendChild(b);}
+  t.className=(type||'')+' show';clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),action?(action.ms||6000):2600);}
 function setStatus(s,txt){if(window.DEMO_MODE&&s==='live'){s='demo';txt='Modo demostración';}['#sideStatus'].forEach(id=>{const e=$(id);if(e){e.className='status '+s;}});$('#sideStatusTxt').textContent=txt;}
 function fetchT(u,o={},ms=60000){const c=new AbortController();const id=setTimeout(()=>c.abort(),ms);return fetch(u,{...o,signal:c.signal}).finally(()=>clearTimeout(id));}
 function sp(c,t){const s=document.createElement('span');s.className=c;s.textContent=t;return s;}
@@ -728,8 +732,13 @@ function renderTable(){
   const tb=$('#tbody');tb.innerHTML='';
   const pages=Math.max(1,Math.ceil(FILTERED.length/PER));if(PAGE>=pages)PAGE=pages-1;
   const slice=FILTERED.slice(PAGE*PER,PAGE*PER+PER);
-  if(!slice.length){const msg=LOWONLY?'No hay productos bajo el mínimo. 🎉':($('#q').value.trim()?'Sin coincidencias para tu búsqueda.':'No hay productos todavía. Crea el primero.');
-    tb.innerHTML='<tr><td colspan="6" style="padding:34px;text-align:center;color:var(--text-3)"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.5;margin-bottom:8px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><div>'+msg+'</div></td></tr>';}
+  if(!slice.length){
+    const q=$('#q').value.trim();const filtering=LOWONLY||CATFILTER||q;
+    const msg=(LOWONLY&&!CATFILTER&&!q)?'Ningún producto está bajo el mínimo. Todo en orden.':(filtering?'Sin coincidencias con los filtros actuales.':'Aún no hay productos. Crea el primero para empezar.');
+    const act=filtering?'<button class="btn btn-ghost btn-sm" id="emptyAct" type="button">Limpiar filtros</button>':'<button class="btn btn-primary btn-sm" id="emptyAct" type="button">+ Nuevo producto</button>';
+    tb.innerHTML='<tr><td colspan="6" style="padding:48px 24px;text-align:center;color:var(--text-3)"><svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true" style="opacity:.4;margin-bottom:12px"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><div style="margin-bottom:14px;font-size:14px">'+msg+'</div>'+act+'</td></tr>';
+    const ea=$('#emptyAct');if(ea)ea.onclick=()=>{if(filtering){$('#q').value='';CATFILTER='';LOWONLY=false;const lc=$('#lowChip');if(lc)lc.classList.remove('on');const cf=$('#catFilter');if(cf)cf.value='';applyFilter();}else openCreate();};
+  }
   slice.forEach(p=>{
     const tr=document.createElement('tr');if(p.bajoStock)tr.classList.add('low');tr.dataset.id=p.id;
     tr.appendChild(cell('SKU',sp('sku',p.sku)));
@@ -791,7 +800,7 @@ async function doAction(){
         const tr=$(`tr[data-id="${id}"]`);if(tr){tr.classList.add('flash');setTimeout(()=>tr.classList.remove('flash'),700);}
         toast('✓ '+(ACTION==='entrada'?'Entrada':'Salida')+' registrada','ok');
       }else{r.className='result err';r.textContent=body.detail||body.title||('No se pudo registrar el movimiento.');toast(body.detail||'Operación rechazada','err');}
-    }catch(e){r.className='result err';r.textContent='No se pudo completar la operación.';toast('No se pudo completar.','err');}
+    }catch(e){r.className='result err';r.textContent='No se pudo completar la operación.';toast('No se pudo completar la operación.','err',{label:'Reintentar',fn:()=>doAction()});}
   });
 }
 async function refresh(keepSel){const [pr,bs]=await Promise.all([fetchT(API+'/api/productos?page=0&size=200').then(r=>r.json()),fetchT(API+'/api/productos/bajo-stock').then(r=>r.json())]);PRODUCTS=pr.content||[];renderKPIs(pr,bs);applyFilter();renderPanelAlerts(bs);fillSelect();fillCategories();if(keepSel)$('#fProd').value=keepSel;if($('#view-reportes').classList.contains('active'))renderCharts();if($('#view-movimientos').classList.contains('active'))loadMovs();}
@@ -818,12 +827,22 @@ $('#nSave').onclick=async()=>{
   }catch(e){$('#nRes').className='result err';$('#nRes').textContent='Error de red.';}
   btn.disabled=false;
 };
-async function deleteProduct(p){
-  if(!await confirmDialog('Eliminar producto',`¿Seguro que quieres eliminar "${p.nombre}" (${p.sku})? Esta acción no se puede deshacer.`,'Eliminar'))return;
-  try{const res=await fetchT(API+'/api/productos/'+p.id,{method:'DELETE'});
-    if(res.status===204||res.ok){toast('✓ Producto eliminado','ok');await refresh();}
-    else{const b=await res.json().catch(()=>({}));toast(b.detail||('No se pudo eliminar ('+res.status+')'),'err');}
-  }catch(e){toast('Error de red al eliminar.','err');}
+/* Borrado optimista con "Deshacer": se quita al instante; el DELETE real se
+   difiere ~6s y se cancela si el usuario deshace (mismo id, sin re-crear). */
+let _pendingDelete=null;
+function commitDelete(pd){
+  if(!pd||pd.committed)return;pd.committed=true;clearTimeout(pd.timer);if(_pendingDelete===pd)_pendingDelete=null;
+  fetchT(API+'/api/productos/'+pd.p.id,{method:'DELETE'}).then(res=>{
+    if(!(res.status===204||res.ok))return res.json().catch(()=>({})).then(b=>{PRODUCTS.splice(Math.min(pd.idx,PRODUCTS.length),0,pd.p);renderLocal();toast(b.detail||'No se pudo eliminar; lo restauré.','err');});
+  }).catch(()=>{PRODUCTS.splice(Math.min(pd.idx,PRODUCTS.length),0,pd.p);renderLocal();toast('Sin conexión; no se eliminó.','err');});
+}
+function deleteProduct(p){
+  const idx=PRODUCTS.findIndex(x=>x.id===p.id);if(idx<0)return;
+  if(_pendingDelete)commitDelete(_pendingDelete);
+  const snap=PRODUCTS[idx];PRODUCTS.splice(idx,1);renderLocal();
+  const pd={p:snap,idx,committed:false};_pendingDelete=pd;
+  pd.timer=setTimeout(()=>commitDelete(pd),6000);
+  toast('Eliminado: '+p.nombre,'ok',{label:'Deshacer',ms:6000,fn:()=>{clearTimeout(pd.timer);pd.committed=true;if(_pendingDelete===pd)_pendingDelete=null;PRODUCTS.splice(Math.min(idx,PRODUCTS.length),0,snap);renderLocal();toast('Restaurado: '+p.nombre,'info');}});
 }
 /* MOVIMIENTOS (auditoría global) */
 async function loadMovs(){
