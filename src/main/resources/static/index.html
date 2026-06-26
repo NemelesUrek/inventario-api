@@ -310,6 +310,25 @@ kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--surface-3);bo
   tbody tr{padding:10px var(--s4)}tbody td{border:none;padding:4px 0;display:flex;justify-content:space-between}tbody td::before{content:attr(data-l);color:var(--text-3);font-size:12px}
   .ria,.iconbtn{width:42px;height:42px}.ria svg,.iconbtn svg{width:18px;height:18px}
   .inp,select,.search input,#q,.pal-search input{font-size:16px}
+  /* topbar compacta en móvil */
+  .topbar{padding:0 var(--s4);gap:var(--s2)}
+  .topbar h1{font-size:17px}
+  .kbtn kbd{display:none}.kbtn{padding:8px 10px}
+  .topbar a[data-view="contratar"]{display:none}
+  /* KPIs que no se desborden */
+  .grid-kpi{gap:var(--s3)}
+  .kpi .val{font-size:23px}
+  .card{padding:var(--s4)}
+  .view{padding:var(--s4)}
+  /* barras de herramientas que envuelven bien */
+  .section-h{flex-wrap:wrap}
+  .section-h>div{flex-wrap:wrap;gap:var(--s2)}
+  .chip{white-space:nowrap}
+  .seg{flex-wrap:wrap}
+  /* modales con margen seguro */
+  .modal-bg,.pal-bg{padding:14px}
+  .pinModal,.modal{max-width:100%}
+  .pin-key{height:54px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* ===== Impresión: conteo/reporte limpio para el almacén o el contador ===== */
