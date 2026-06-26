@@ -429,6 +429,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
       <a data-view="proveedores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Proveedores</a>
       <a data-view="reportes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M8 14l3-4 3 3 4-6"/></svg>Reportes</a>
       <a data-view="auditoria"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l3 2"/></svg>Auditoría</a>
+      <a data-view="usuarios"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-1.5-1.5"/></svg>Usuarios</a>
       <div class="sec">Plataforma</div>
       <a data-view="api"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>API &amp; Docs</a>
       <a data-view="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H23a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Configuración</a>
@@ -540,6 +541,18 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
       </div>
     </section>
 
+    <!-- VIEW: USUARIOS Y ROLES -->
+    <section class="view" id="view-usuarios">
+      <p class="vtitle">Tu equipo: da de alta trabajadores y asígnales un rol. Solo el Administrador gestiona usuarios.</p>
+      <div class="section-h first">
+        <div class="search" style="flex:1;max-width:360px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="qUser" placeholder="Buscar por usuario o nombre…"></div>
+        <button class="btn btn-primary btn-sm" id="newUserBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>Nuevo usuario</button>
+      </div>
+      <div class="card" style="padding:0">
+        <table><thead><tr><th scope="col">Usuario</th><th scope="col">Nombre</th><th scope="col">Rol</th><th scope="col">Estado</th><th scope="col" class="r">Acciones</th></tr></thead><tbody id="userBody"></tbody></table>
+      </div>
+    </section>
+
     <!-- VIEW: API -->
     <section class="view" id="view-api">
       <p class="vtitle">Una API REST documentada, lista para conectar con cualquier sistema.</p>
@@ -625,6 +638,24 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
     </footer>
   </div>
 </div>
+
+<!-- MODAL crear/editar usuario -->
+<div class="modal-bg" id="userModalBg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="userModalTitle"><h3 id="userModalTitle">Nuevo usuario</h3><div class="body">
+  <div style="display:flex;gap:var(--s3)">
+    <div class="form-row" style="flex:1" id="rowUserName"><label>Usuario *</label><input class="inp" id="uUser" placeholder="ej. juan" autocomplete="off"></div>
+    <div class="form-row" style="flex:1"><label>Nombre completo *</label><input class="inp" id="uNombre" placeholder="Juan Pérez"></div>
+  </div>
+  <div style="display:flex;gap:var(--s3)">
+    <div class="form-row" style="flex:1"><label>Rol</label><select id="uRol"><option value="ADMINISTRADOR">Administrador</option><option value="ALMACEN">Almacén</option><option value="COMPRAS">Compras</option><option value="VENTAS">Ventas</option></select></div>
+    <div class="form-row" style="flex:1"><label>Estado</label><select id="uActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+  </div>
+  <div style="display:flex;gap:var(--s3)">
+    <div class="form-row" style="flex:1"><label id="lblPass">Contraseña *</label><input class="inp" id="uPass" type="password" autocomplete="new-password" placeholder="mínimo 6"></div>
+    <div class="form-row" style="flex:1"><label>PIN (opcional)</label><input class="inp" id="uPin" inputmode="numeric" placeholder="4 a 8 dígitos"></div>
+  </div>
+  <div class="result" id="uRes"></div>
+  <div style="display:flex;gap:var(--s3);margin-top:var(--s4)"><button class="btn btn-ghost" id="uCancel" style="flex:1;justify-content:center">Cancelar</button><button class="btn btn-primary" id="uSave" style="flex:1;justify-content:center">Crear usuario</button></div>
+</div></div></div>
 
 <!-- LOGIN -->
 <div class="login-bg" id="loginBg" role="dialog" aria-modal="true" aria-label="Iniciar sesión">
@@ -789,7 +820,7 @@ const _DEMO_SEED=[
   {id:9,sku:'LAM-LED',nombre:'Lámpara LED de escritorio',descripcion:'Regulable, brazo articulado',precioCentavos:32900,stock:27,stockMinimo:8,categoria:'Hogar'},
   {id:10,sku:'PWB-20K',nombre:'Power bank 20 000 mAh',descripcion:'Carga rápida, doble USB-C',precioCentavos:45900,stock:31,stockMinimo:12,categoria:'Electrónica'}
 ];
-let _dProducts=[],_dMovs=[],_dSeq=100,_dMovSeq=200,_dProv=[],_dProvSeq=100,_dAud=[],_dAudSeq=500;
+let _dProducts=[],_dMovs=[],_dSeq=100,_dMovSeq=200,_dProv=[],_dProvSeq=100,_dAud=[],_dAudSeq=500,_dUsers=[],_dUserSeq=10;
 const _DEMO_PROV=[
   {id:1,nombre:'Distribuidora del Norte',contacto:'Laura Méndez',telefono:'',email:'',rfc:'DNO120101AB1',notas:'Entrega en 48 h en zona metropolitana.'},
   {id:2,nombre:'Importaciones Pacífico',contacto:'Jorge Ramírez',telefono:'',email:'',rfc:'IPA150620CD2',notas:'Electrónica y accesorios.'},
@@ -826,6 +857,12 @@ function _seedDemo(){
     {accion:'CREAR',entidad:'PROVEEDOR',entidadId:4,descripcion:'Alta de proveedor Café Sierra Alta',h:5},
     {accion:'ENTRADA',entidad:'PRODUCTO',entidadId:4,descripcion:'Entrada +80 de CUA-PRO (stock 120)',h:3}
   ].map(a=>({id:_dAudSeq++,accion:a.accion,entidad:a.entidad,entidadId:a.entidadId,descripcion:a.descripcion,usuario:'sistema',fecha:_hoursAgo(a.h)}));
+  _dUsers=[
+    {id:1,username:'admin',nombre:'Administrador',rol:'ADMINISTRADOR',activo:true,tienePin:true,creadoEn:_hoursAgo(720)},
+    {id:2,username:'almacen',nombre:'Encargado de Almacén',rol:'ALMACEN',activo:true,tienePin:true,creadoEn:_hoursAgo(700)},
+    {id:3,username:'compras',nombre:'Encargado de Compras',rol:'COMPRAS',activo:true,tienePin:true,creadoEn:_hoursAgo(680)},
+    {id:4,username:'ventas',nombre:'Encargado de Ventas',rol:'VENTAS',activo:false,tienePin:false,creadoEn:_hoursAgo(660)}
+  ];_dUserSeq=10;
 }
 function _seedIfEmpty(){if(!_dProducts.length)_seedDemo();}
 function _demoStats(){
@@ -866,6 +903,10 @@ function _demoRoute(url,opts){
   if(path==='/api/proveedores'&&method==='POST'){const b=body();const np=Object.assign({id:_dProvSeq++,activo:true,creadoEn:new Date().toISOString(),actualizadoEn:new Date().toISOString()},b);_dProv.push(np);_audit('CREAR','PROVEEDOR',np.id,'Alta de proveedor '+np.nombre);return _json(np,201);}
   if((m=path.match(/^\/api\/proveedores\/(\d+)$/))&&method==='PUT'){const pr=_dProv.find(x=>x.id===+m[1]);if(!pr)return _json({title:'No encontrado'},404);Object.assign(pr,body(),{actualizadoEn:new Date().toISOString()});_audit('ACTUALIZAR','PROVEEDOR',pr.id,'Actualizó proveedor '+pr.nombre);return _json(pr);}
   if((m=path.match(/^\/api\/proveedores\/(\d+)$/))&&method==='DELETE'){const pid=+m[1];const pr=_dProv.find(x=>x.id===pid);_dProv=_dProv.filter(x=>x.id!==pid);if(pr)_audit('ELIMINAR','PROVEEDOR',pid,'Eliminó proveedor '+pr.nombre);return _json(null,204);}
+  if(path==='/api/usuarios'&&method==='GET')return _json(_dUsers.slice());
+  if(path==='/api/usuarios'&&method==='POST'){const b=body();if(_dUsers.some(u=>u.username.toLowerCase()===(b.username||'').toLowerCase()))return _json({title:'Duplicado',detail:'Ya existe un usuario con ese nombre.'},409);const nu={id:_dUserSeq++,username:b.username,nombre:b.nombre,rol:b.rol,activo:true,tienePin:!!b.pin,creadoEn:new Date().toISOString()};_dUsers.push(nu);_audit('CREAR','USUARIO',nu.id,'Alta de usuario '+nu.username+' ('+nu.rol+')');return _json(nu,201);}
+  if((m=path.match(/^\/api\/usuarios\/(\d+)$/))&&method==='PUT'){const u=_dUsers.find(x=>x.id===+m[1]);if(!u)return _json({title:'No encontrado'},404);const b=body();const adminsAct=_dUsers.filter(x=>x.rol==='ADMINISTRADOR'&&x.activo).length,eraAA=u.rol==='ADMINISTRADOR'&&u.activo,seraAA=b.rol==='ADMINISTRADOR'&&(b.activo!=null?b.activo:u.activo);if(eraAA&&!seraAA&&adminsAct<=1)return _json({title:'Conflicto',detail:'Debe quedar al menos un administrador activo.'},409);u.nombre=b.nombre;u.rol=b.rol;if(b.activo!=null)u.activo=b.activo;if(b.pin)u.tienePin=true;_audit('ACTUALIZAR','USUARIO',u.id,'Actualizó al usuario '+u.username);return _json(u);}
+  if((m=path.match(/^\/api\/usuarios\/(\d+)$/))&&method==='DELETE'){const u=_dUsers.find(x=>x.id===+m[1]);if(!u)return _json(null,204);if(u.username==='admin')return _json({title:'Conflicto',detail:'No puedes eliminar tu propia cuenta.'},409);const adminsAct=_dUsers.filter(x=>x.rol==='ADMINISTRADOR'&&x.activo).length;if(u.rol==='ADMINISTRADOR'&&u.activo&&adminsAct<=1)return _json({title:'Conflicto',detail:'Debe quedar al menos un administrador.'},409);_dUsers=_dUsers.filter(x=>x.id!==+m[1]);_audit('ELIMINAR','USUARIO',+m[1],'Eliminó al usuario '+u.username);return _json(null,204);}
   return _json({title:'No disponible sin servidor',detail:path},404);
 }
 function enterDemo(){if(window.DEMO_MODE)return;window.DEMO_MODE=true;_seedIfEmpty();setStatus('demo','Modo demostración');}
@@ -876,7 +917,7 @@ window.fetch=async function(url,opts){
   try{
     const r=await _origFetch(url,opts);
     /* 401/403: el backend existe pero falta sesión -> pedir login (no caer a demo) */
-    if(path.includes('/api/')&&(r.status===401||r.status===403)&&!path.includes('/api/auth/')){if(window.showLogin)window.showLogin();return r;}
+    if(path.includes('/api/')&&r.status===401&&!path.includes('/api/auth/')){if(window.showLogin)window.showLogin();return r;}
     /* backend ausente (p. ej. servidor estático que devuelve 404 HTML): caer a demo */
     if(path.includes('/api/')&&!r.ok&&r.status!==401&&r.status!==403&&!((r.headers.get('content-type')||'').includes('json'))){enterDemo();return _demoRoute(url,opts||{});}
     return r;
@@ -884,7 +925,7 @@ window.fetch=async function(url,opts){
 };
 
 /* ROUTER */
-const TITLES={panel:'Panel',inventario:'Inventario',movimientos:'Movimientos',proveedores:'Proveedores',reportes:'Reportes',auditoria:'Auditoría',api:'API & Docs',config:'Configuración',contratar:'Contratar'};
+const TITLES={panel:'Panel',inventario:'Inventario',movimientos:'Movimientos',proveedores:'Proveedores',reportes:'Reportes',auditoria:'Auditoría',usuarios:'Usuarios y roles',api:'API & Docs',config:'Configuración',contratar:'Contratar'};
 function go(v){
   if(!TITLES[v])v='panel';
   $$('.view').forEach(s=>s.classList.remove('active'));
@@ -896,6 +937,7 @@ function go(v){
   if(v==='movimientos')loadMovs();
   if(v==='proveedores')loadProveedores();
   if(v==='auditoria')loadAuditoria();
+  if(v==='usuarios')loadUsuarios();
   $('#sidebar').classList.remove('open');
   if(location.hash!=='#'+v)location.hash=v;
   window.scrollTo(0,0);saveUI();
@@ -1247,6 +1289,58 @@ function renderAuditoria(){
 }
 $$('#audFilter button').forEach(b=>b.onclick=()=>{$$('#audFilter button').forEach(x=>x.classList.remove('on'));b.classList.add('on');AUDFILTER=b.dataset.f;renderAuditoria();});
 if($('#audReload'))$('#audReload').onclick=loadAuditoria;
+/* ===== USUARIOS Y ROLES (gestión por el admin) ===== */
+let USUARIOS=[],USER_EDIT=null;
+const ROL_LABEL={ADMINISTRADOR:'Administrador',ALMACEN:'Almacén',COMPRAS:'Compras',VENTAS:'Ventas'};
+async function loadUsuarios(){
+  const tb=$('#userBody');if(!tb)return;tb.innerHTML='<tr><td colspan="5" style="padding:22px;text-align:center;color:var(--text-3)">Cargando…</td></tr>';
+  try{const r=await fetchT(API+'/api/usuarios').then(r=>r.json());USUARIOS=Array.isArray(r)?r:(r.content||[]);renderUsuarios();}
+  catch(e){tb.innerHTML='<tr><td colspan="5" style="padding:22px;text-align:center;color:var(--text-3)">No se pudo cargar. <button class="btn btn-ghost btn-sm" onclick="loadUsuarios()">Reintentar</button></td></tr>';}
+}
+function renderUsuarios(){
+  const tb=$('#userBody');if(!tb)return;tb.innerHTML='';
+  const q=norm(($('#qUser')||{}).value||'');
+  const list=q?USUARIOS.filter(u=>norm((u.username||'')+' '+(u.nombre||'')).includes(q)):USUARIOS;
+  if(!list.length){tb.innerHTML='<tr><td colspan="5" style="padding:48px 24px;text-align:center;color:var(--text-3)"><div style="margin-bottom:14px;font-size:14px">'+(q?'Sin coincidencias.':'Aún no hay usuarios.')+'</div><button class="btn '+(q?'btn-ghost':'btn-primary')+' btn-sm" id="userEmptyAct" type="button">'+(q?'Limpiar búsqueda':'+ Nuevo usuario')+'</button></td></tr>';const ea=$('#userEmptyAct');if(ea)ea.onclick=()=>{if(q){$('#qUser').value='';renderUsuarios();}else openUserCreate();};return;}
+  list.forEach(u=>{const tr=document.createElement('tr');tr.style.cursor='default';
+    const un=document.createElement('div');un.append(sp('pname',u.username));if(u.tienePin)un.append(sp('cattag','PIN'));tr.appendChild(cell('Usuario',un));
+    tr.appendChild(cell('Nombre',document.createTextNode(u.nombre||'—')));
+    tr.appendChild(cell('Rol',sp('cattag',ROL_LABEL[u.rol]||u.rol)));
+    const est=document.createElement('span');est.className='badge '+(u.activo?'ok':'low');est.append(Object.assign(document.createElement('span'),{className:'bd'}),document.createTextNode(u.activo?'Activo':'Inactivo'));tr.appendChild(cell('Estado',est));
+    const acts=document.createElement('div');acts.className='rowact';
+    const eb=document.createElement('button');eb.className='ria';eb.title='Editar';eb.setAttribute('aria-label','Editar '+u.username);eb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';eb.onclick=()=>editUsuario(u);
+    const db=document.createElement('button');db.className='ria danger';db.title='Eliminar';db.setAttribute('aria-label','Eliminar '+u.username);db.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6"/></svg>';db.onclick=()=>deleteUsuario(u);
+    acts.append(eb,db);const ac=cell('Acciones',acts);ac.className='r';tr.appendChild(ac);
+    tb.appendChild(tr);});
+}
+function resetUserModal(){$('#uRes').className='result';['uUser','uNombre','uPass','uPin'].forEach(i=>$('#'+i).value='');$('#uRol').value='ALMACEN';$('#uActivo').value='true';}
+function openUserCreate(){USER_EDIT=null;resetUserModal();$('#userModalTitle').textContent='Nuevo usuario';$('#uSave').textContent='Crear usuario';$('#rowUserName').style.display='';$('#lblPass').textContent='Contraseña *';$('#userModalBg').classList.add('open');setTimeout(()=>$('#uUser').focus(),60);}
+function editUsuario(u){USER_EDIT=u.id;resetUserModal();$('#userModalTitle').textContent='Editar usuario';$('#uSave').textContent='Guardar cambios';$('#rowUserName').style.display='none';$('#uNombre').value=u.nombre||'';$('#uRol').value=u.rol;$('#uActivo').value=String(u.activo);$('#lblPass').textContent='Contraseña (vacío = sin cambio)';$('#userModalBg').classList.add('open');setTimeout(()=>$('#uNombre').focus(),60);}
+async function saveUser(){
+  const nombre=$('#uNombre').value.trim();if(!nombre){$('#uRes').className='result err';$('#uRes').textContent='El nombre es obligatorio.';return;}
+  const rol=$('#uRol').value,activo=$('#uActivo').value==='true',pass=$('#uPass').value,pin=$('#uPin').value.trim();
+  await withLoading($('#uSave'),async()=>{
+    try{let res;
+      if(USER_EDIT){const payload={nombre,rol,activo};if(pass)payload.password=pass;if(pin)payload.pin=pin;res=await fetchT(API+'/api/usuarios/'+USER_EDIT,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});}
+      else{const username=$('#uUser').value.trim();if(!username){$('#uRes').className='result err';$('#uRes').textContent='El usuario es obligatorio.';return;}if(pass.length<6){$('#uRes').className='result err';$('#uRes').textContent='La contraseña debe tener al menos 6 caracteres.';return;}const payload={username,nombre,rol,password:pass};if(pin)payload.pin=pin;res=await fetchT(API+'/api/usuarios',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});}
+      const body=await res.json().catch(()=>({}));
+      if(res.ok){$('#userModalBg').classList.remove('open');toast(USER_EDIT?'✓ Usuario actualizado':'✓ Usuario creado','ok');await loadUsuarios();}
+      else{$('#uRes').className='result err';$('#uRes').textContent=body.detail||body.title||'No se pudo guardar.';}
+    }catch(e){$('#uRes').className='result err';$('#uRes').textContent='Error de red.';}
+  });
+}
+async function deleteUsuario(u){
+  if(!await confirmDialog('Eliminar usuario','¿Eliminar a "'+u.username+'"? Esta acción no se puede deshacer.','Eliminar'))return;
+  try{const res=await fetchT(API+'/api/usuarios/'+u.id,{method:'DELETE'});
+    if(res.status===204||res.ok){toast('✓ Usuario eliminado','ok');await loadUsuarios();}
+    else{const b=await res.json().catch(()=>({}));toast(b.detail||'No se pudo eliminar','err');}
+  }catch(e){toast('Error de red al eliminar.','err');}
+}
+if($('#newUserBtn'))$('#newUserBtn').onclick=openUserCreate;
+if($('#uCancel'))$('#uCancel').onclick=()=>$('#userModalBg').classList.remove('open');
+if($('#userModalBg'))$('#userModalBg').onclick=e=>{if(e.target===$('#userModalBg'))$('#userModalBg').classList.remove('open');};
+if($('#uSave'))$('#uSave').onclick=saveUser;
+if($('#qUser'))$('#qUser').addEventListener('input',debounce(renderUsuarios,150));
 /* ===== SESIÓN / ROLES ===== */
 let CURRENT_USER=null;
 const PERMS={
@@ -1273,6 +1367,7 @@ function applyRoleGating(){
   show('#newBtn',can('producto.crear'));
   show('#newProvBtn',can('proveedor.crear'));
   show('#cfgReset',rolActual()==='ADMINISTRADOR');
+  show('.nav a[data-view="usuarios"]', !CURRENT_USER || rolActual()==='ADMINISTRADOR');
   const mov=$('#fGo');if(mov&&mov.closest('.card'))mov.closest('.card').style.display=can('stock.mover')?'':'none';
   if(typeof applyFilter==='function')applyFilter();
   if($('#provBody'))renderProveedores();
@@ -1416,7 +1511,7 @@ $('#helpBg').onclick=e=>{if(e.target===$('#helpBg'))$('#helpBg').classList.remov
 document.addEventListener('keydown',e=>{
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#palette').classList.contains('open')?closePalette():openPalette();return;}
-  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#provModalBg').classList.remove('open');$('#mvConfirmBg').classList.remove('open');$('#helpBg').classList.remove('open');if(typeof Scan!=='undefined')Scan.cerrar();if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
+  if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#provModalBg').classList.remove('open');$('#userModalBg').classList.remove('open');$('#mvConfirmBg').classList.remove('open');$('#helpBg').classList.remove('open');if(typeof Scan!=='undefined')Scan.cerrar();if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
   if(typing)return;
   if(e.key==='?'){e.preventDefault();openHelp();}
   else if(e.key==='/'){e.preventDefault();go('inventario');$('#q').focus();}
