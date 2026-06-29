@@ -85,6 +85,19 @@ Suite con JUnit 5 + MockMvc (creación 201, 404, validación 400, **409 por stoc
 ## Stack
 Java 17 · Spring Boot 3.5 (Web, Data JPA, Validation) · H2 / HikariCP · springdoc-openapi (Swagger UI) · Maven · JUnit 5 · Docker.
 
+## 🔒 Seguridad
+La app pasó una **auditoría de seguridad interna** (revisión de código + pruebas de ataque) sobre autenticación, autorización (RBAC), inyección SQL, manejo de archivos, configuración, validación y dependencias. Endurecimiento aplicado y **verificado atacando una instancia local**:
+
+- **Autenticación** con contraseñas y PIN cifrados (BCrypt) y **control de acceso por roles** en el servidor.
+- **Anti fuerza bruta**: bloqueo temporal por usuario (5 intentos / 15 min → `429`).
+- **Cabeceras de seguridad** (HSTS, Referrer-Policy) y **cookie de sesión** `HttpOnly` + `SameSite=Strict` (`Secure` sobre HTTPS).
+- **Secretos por variables de entorno** (`DB_PASSWORD`, `KEYSTORE_PASSWORD`), sin claves en el código.
+- **Subida de archivos** validada por contenido real (magic bytes), servida con `Content-Disposition: attachment` + `nosniff`; acceso a recursos acotado (anti-IDOR).
+- **Sin inyección SQL** (JPA parametrizado) ni path traversal (nombres de archivo aleatorios).
+- **Dependencias parcheadas** (Spring Boot 3.5.4 / Tomcat 10.1.43, sin CVEs conocidas).
+
+Resultado: **0 vulnerabilidades críticas o altas** tras la verificación. Swagger queda restringido a administrador por defecto; para una demo pública se habilita con `DOCS_PUBLIC=true`.
+
 ## Deploy (Render, gratis)
 1. Sube este repo a GitHub.
 2. En [render.com](https://render.com) → **New → Web Service** → conecta el repo → Render detecta el `Dockerfile` solo (o usa **Blueprint** con `render.yaml`).
