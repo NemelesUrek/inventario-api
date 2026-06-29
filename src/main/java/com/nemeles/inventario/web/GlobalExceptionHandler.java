@@ -5,12 +5,16 @@ import com.nemeles.inventario.service.NotFoundException;
 import com.nemeles.inventario.service.PinInvalidoException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 /**
  * Traduce las excepciones a respuestas JSON consistentes (RFC-7807 ProblemDetail).
@@ -42,5 +46,18 @@ public class GlobalExceptionHandler {
         }
         pd.setProperty("errores", errores);
         return pd;
+    }
+
+    /** JSON malformado, tipo de parámetro inválido o propiedad de orden inexistente -> 400 genérico. */
+    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
+            PropertyReferenceException.class})
+    public ProblemDetail malaPeticion(Exception ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Petición mal formada.");
+    }
+
+    /** Subida que excede el límite multipart -> 413 (en vez de un 500 genérico). */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ProblemDetail demasiadoGrande(MaxUploadSizeExceededException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.PAYLOAD_TOO_LARGE, "El archivo supera el tamaño permitido.");
     }
 }

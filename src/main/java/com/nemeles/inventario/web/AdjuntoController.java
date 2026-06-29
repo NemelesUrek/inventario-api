@@ -9,6 +9,7 @@ import java.net.URI;
 import java.util.List;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -55,9 +56,12 @@ public class AdjuntoController {
     @GetMapping("/{adjId}")
     @Operation(summary = "Servir la imagen de un adjunto (autenticado)")
     public ResponseEntity<Resource> ver(@PathVariable Long movId, @PathVariable Long adjId) {
-        AdjuntoMovimiento a = service.obtener(adjId);
+        AdjuntoMovimiento a = service.obtener(movId, adjId);
         byte[] bytes = service.leerBytes(a);
+        // Se sirve como descarga (attachment) y con nosniff para que el navegador nunca interprete el contenido inline.
         return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + a.getNombreAlmacenado() + "\"")
+                .header("X-Content-Type-Options", "nosniff")
                 .contentType(MediaType.parseMediaType(a.getContentType()))
                 .body(new ByteArrayResource(bytes));
     }
@@ -66,6 +70,6 @@ public class AdjuntoController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Eliminar un adjunto")
     public void eliminar(@PathVariable Long movId, @PathVariable Long adjId) {
-        service.eliminar(adjId);
+        service.eliminar(movId, adjId);
     }
 }
