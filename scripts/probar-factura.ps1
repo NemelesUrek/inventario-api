@@ -26,7 +26,7 @@ $body = @'
   "pais": "MX",
   "comprobante": {
     "pais": "MX", "tipo": "I", "moneda": "MXN", "formaPago": "01", "metodoPago": "PUE",
-    "emisor": { "lugarExpedicion": "26015" },
+    "emisor": { "lugarExpedicion": "42501" },
     "receptor": {
       "identificadorFiscal": "URE180429TM6",
       "nombre": "UNIVERSIDAD ROBOTICA ESPANOLA",
