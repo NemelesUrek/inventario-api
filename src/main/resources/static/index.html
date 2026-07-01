@@ -434,6 +434,23 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
 .phone-note{margin-top:var(--s3);font-size:12px;color:var(--text-3);line-height:1.55}
 .phone-note.warn{color:#d68a2e}
 .phone-note .mono{background:var(--surface-3);padding:1px 5px;border-radius:4px;font-size:11px}
+/* ============ FACTURACIÓN (CFDI) ============ */
+.badge-soft{font-family:'JetBrains Mono';font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-pill);padding:2px 8px;margin-left:6px;vertical-align:middle;font-weight:500}
+.totrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:14px;color:var(--text-2);border-bottom:1px solid var(--border-soft)}
+.totrow .mono{color:var(--text-1)}
+.totrow.tot{border-bottom:none;border-top:1px solid var(--border);margin-top:4px;padding-top:12px;font-weight:var(--w-semi);font-size:16px;color:var(--text-1)}
+.totrow.tot .mono{color:var(--brand);font-weight:var(--w-bold);font-size:18px}
+.fbadge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:var(--w-semi);padding:3px 9px;border-radius:var(--r-pill);border:1px solid transparent;white-space:nowrap}
+.fbadge.ok{color:var(--ok);background:var(--ok-bg);border-color:var(--brand-line)}
+.fbadge.bad{color:var(--danger);background:var(--danger-bg)}
+.fbadge.wait{color:var(--warn);background:var(--warn-bg)}
+.facline-inp{background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:5px 7px;color:var(--text-1);font:inherit;font-size:13px;width:100%;min-width:60px}
+.facline-inp:hover{border-color:var(--border)}
+.facline-inp:focus{outline:none;border-color:var(--brand-line);background:var(--surface-2)}
+.facline-inp.r{text-align:right;font-variant-numeric:tabular-nums}
+#facLines td{padding:4px 8px;vertical-align:middle}
+.linkx{background:none;border:none;color:var(--text-3);cursor:pointer;padding:4px;border-radius:var(--r-sm);display:inline-flex}
+.linkx:hover{color:var(--danger);background:var(--danger-bg)}
 </style>
 </head>
 <body>
@@ -447,6 +464,7 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
       <a data-view="panel" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Panel</a>
       <a data-view="inventario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7zM3 7l9 4 9-4M12 11v10"/></svg>Inventario</a>
       <a data-view="movimientos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Movimientos</a>
+      <a data-view="facturacion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Facturación</a>
       <a data-view="proveedores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Proveedores</a>
       <a data-view="reportes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M8 14l3-4 3 3 4-6"/></svg>Reportes</a>
       <a data-view="auditoria"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l3 2"/></svg>Auditoría</a>
@@ -535,6 +553,72 @@ tbody tr{transition:background var(--d-fast) var(--ease-out-soft)}
       </div>
       <div class="card" style="padding:0">
         <table><thead><tr><th scope="col">Tipo</th><th scope="col">Producto</th><th scope="col" class="r">Cantidad</th><th scope="col" class="r">Stock final</th><th scope="col">Motivo</th><th scope="col" class="r">Cuándo</th><th scope="col" class="r">Documentos</th></tr></thead><tbody id="movBody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- VIEW: FACTURACIÓN -->
+    <section class="view" id="view-facturacion">
+      <p class="vtitle">Emite comprobantes fiscales <b>CFDI 4.0</b> (México) desde tu inventario. Motor neutro por país vía PAC — hoy México (Facturama); Colombia, Chile, Argentina y España quedan listos para sumar.</p>
+      <div class="grid-2">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s2)"><h3 style="font-size:16px">Mis datos fiscales<span class="badge-soft">Emisor</span></h3><span class="mono" id="emisorState" style="font-size:11px;color:var(--ok)"></span></div>
+          <p class="vtitle" style="margin:0 0 var(--s4)">Se guardan en este equipo y se reutilizan en cada factura.</p>
+          <div class="form-row"><label>RFC del emisor</label><input class="inp mono" id="emRfc" maxlength="13" placeholder="XAXX010101000" style="text-transform:uppercase"></div>
+          <div class="form-row"><label>Razón social / nombre</label><input class="inp" id="emNombre" placeholder="Tu nombre o Empresa S.A. de C.V."></div>
+          <div style="display:flex;gap:var(--s3)">
+            <div class="form-row" style="flex:2"><label>Régimen fiscal</label><select id="emRegimen" class="catsel"></select></div>
+            <div class="form-row" style="flex:1"><label>CP expedición</label><input class="inp mono" id="emCp" maxlength="5" inputmode="numeric" placeholder="06000"></div>
+          </div>
+          <button class="btn btn-ghost" id="emSave" style="width:100%;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Guardar datos del emisor</button>
+        </div>
+        <div class="card">
+          <h3 style="font-size:16px;margin-bottom:var(--s2)">Datos del cliente<span class="badge-soft">Receptor</span></h3>
+          <p class="vtitle" style="margin:0 0 var(--s4)">A quién se le factura. Cópialos de su Constancia de Situación Fiscal.</p>
+          <div class="form-row"><label>RFC del receptor</label><input class="inp mono" id="rcRfc" maxlength="13" placeholder="XAXX010101000" style="text-transform:uppercase"></div>
+          <div class="form-row"><label>Nombre / razón social</label><input class="inp" id="rcNombre" placeholder="Tal como aparece en su constancia"></div>
+          <div style="display:flex;gap:var(--s3)">
+            <div class="form-row" style="flex:1"><label>CP fiscal</label><input class="inp mono" id="rcCp" maxlength="5" inputmode="numeric" placeholder="06000"></div>
+            <div class="form-row" style="flex:2"><label>Régimen fiscal</label><select id="rcRegimen" class="catsel"></select></div>
+          </div>
+          <div class="form-row"><label>Uso del CFDI</label><select id="rcUso" class="catsel"></select></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:var(--s5)">
+        <div class="section-h first">
+          <h3 style="font-size:16px">Conceptos</h3>
+          <div style="display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap"><select id="facAddProd" class="catsel" style="min-width:230px"><option value="">+ Agregar producto del inventario…</option></select><button class="btn btn-ghost btn-sm" id="facAddManual" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>Concepto manual</button></div>
+        </div>
+        <div class="card" style="padding:0;margin-top:var(--s3)">
+          <table><thead><tr><th scope="col">Descripción</th><th scope="col">ClaveProdServ</th><th scope="col">Unidad</th><th scope="col" class="r">Cantidad</th><th scope="col" class="r">Valor unitario</th><th scope="col" class="r">Importe</th><th scope="col" class="r" style="width:36px"></th></tr></thead><tbody id="facLines"></tbody></table>
+        </div>
+        <div class="grid-2" style="margin-top:var(--s5)">
+          <div>
+            <div style="display:flex;gap:var(--s3)">
+              <div class="form-row" style="flex:1"><label>Tipo de comprobante</label><select id="facTipo" class="catsel"><option value="I">Ingreso (venta)</option><option value="E">Egreso (nota de crédito)</option></select></div>
+              <div class="form-row" style="flex:1"><label>Moneda</label><select id="facMoneda" class="catsel"><option>MXN</option><option>USD</option></select></div>
+            </div>
+            <div style="display:flex;gap:var(--s3)">
+              <div class="form-row" style="flex:1"><label>Forma de pago</label><select id="facForma" class="catsel"></select></div>
+              <div class="form-row" style="flex:1"><label>Método de pago</label><select id="facMetodo" class="catsel"><option value="PUE">PUE — una sola exhibición</option><option value="PPD">PPD — parcialidades/diferido</option></select></div>
+            </div>
+            <div class="form-row"><label>IVA trasladado</label><div class="seg" id="facIva"><button data-v="16" class="on">16%</button><button data-v="8">8% frontera</button><button data-v="0">Exento 0%</button></div></div>
+          </div>
+          <div class="card" style="background:var(--surface-2)">
+            <div class="totrow"><span>Subtotal</span><span class="mono" id="facSub">$0.00</span></div>
+            <div class="totrow"><span id="facIvaLbl">IVA 16%</span><span class="mono" id="facImp">$0.00</span></div>
+            <div class="totrow tot"><span>Total</span><span class="mono" id="facTot">$0.00</span></div>
+            <button class="btn btn-primary" id="facEmit" style="width:100%;justify-content:center;margin-top:var(--s4)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M5 12l5 5L20 7"/></svg>Emitir factura (CFDI)</button>
+            <div class="result" id="facRes"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:var(--s5)">
+        <div class="section-h first"><h3 style="font-size:16px">Facturas emitidas</h3><span class="mono" id="facHistCount" style="font-size:12px;color:var(--text-3)">—</span></div>
+        <div class="card" style="padding:0;margin-top:var(--s3)">
+          <table><thead><tr><th scope="col">Fecha</th><th scope="col">Cliente</th><th scope="col">Folio fiscal (UUID)</th><th scope="col" class="r">Total</th><th scope="col">Estado</th><th scope="col" class="r" style="width:90px"></th></tr></thead><tbody id="facHistBody"></tbody></table>
+        </div>
       </div>
     </section>
 
@@ -645,8 +729,8 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
         <div class="card sc"><h3><span class="si"><svg viewBox="0 0 24 24" width="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>Conectado a lo que ya usas</h3><p>Tu tienda en línea, tu POS o tu app pueden leer y actualizar los datos solos, vía API.</p></div>
       </div>
       <div class="intg">
-        <span class="itag on"><span class="t">listo</span>Inventario + alertas</span><span class="itag on"><span class="t">listo</span>Auditoría</span><span class="itag on"><span class="t">listo</span>API REST + OpenAPI</span><span class="itag on"><span class="t">listo</span>Export CSV</span>
-        <span class="itag soon"><span class="t">a medida</span>E-commerce (Shopify/WooCommerce)</span><span class="itag soon"><span class="t">a medida</span>Webhooks · Zapier/Make</span><span class="itag soon"><span class="t">a medida</span>POS · Facturación · Multi-sucursal</span>
+        <span class="itag on"><span class="t">listo</span>Inventario + alertas</span><span class="itag on"><span class="t">listo</span>Auditoría</span><span class="itag on"><span class="t">listo</span>API REST + OpenAPI</span><span class="itag on"><span class="t">listo</span>Export CSV</span><span class="itag on"><span class="t">listo</span>Facturación CFDI 4.0 (México)</span>
+        <span class="itag soon"><span class="t">a medida</span>E-commerce (Shopify/WooCommerce)</span><span class="itag soon"><span class="t">a medida</span>Webhooks · Zapier/Make</span><span class="itag soon"><span class="t">a medida</span>POS · Multi-sucursal</span>
       </div>
       <div class="ctaband" style="margin-top:var(--s8);text-align:center">
         <h2 style="font-size:26px">Esto mismo, a la medida de tu inventario</h2>
@@ -971,7 +1055,7 @@ window.fetch=async function(url,opts){
 };
 
 /* ROUTER */
-const TITLES={panel:'Panel',inventario:'Inventario',movimientos:'Movimientos',proveedores:'Proveedores',reportes:'Reportes',auditoria:'Auditoría',usuarios:'Usuarios y roles',api:'API & Docs',config:'Configuración',contratar:'Contratar'};
+const TITLES={panel:'Panel',inventario:'Inventario',movimientos:'Movimientos',facturacion:'Facturación',proveedores:'Proveedores',reportes:'Reportes',auditoria:'Auditoría',usuarios:'Usuarios y roles',api:'API & Docs',config:'Configuración',contratar:'Contratar'};
 function go(v){
   if(!TITLES[v])v='panel';
   $$('.view').forEach(s=>s.classList.remove('active'));
@@ -980,6 +1064,7 @@ function go(v){
   $('#viewTitle').textContent=TITLES[v];
   document.title=TITLES[v]+' · Stockly — Nemeles';
   if(v==='reportes')renderCharts();
+  if(v==='facturacion')initFacturacion();
   if(v==='movimientos')loadMovs();
   if(v==='proveedores')loadProveedores();
   if(v==='auditoria')loadAuditoria();
@@ -1550,7 +1635,7 @@ const PERMS={
   ADMINISTRADOR:['*'],
   ALMACEN:['producto.crear','producto.editar','stock.mover'],
   COMPRAS:['proveedor.crear','proveedor.editar','stock.mover'],
-  VENTAS:['stock.mover']
+  VENTAS:['stock.mover','factura.emitir']
 };
 function rolActual(){return (CURRENT_USER&&CURRENT_USER.roles&&CURRENT_USER.roles[0])||'';}
 /* Sin sesión (modo demo/sandbox) todo está permitido; con sesión, manda el rol. */
@@ -1572,6 +1657,8 @@ function applyRoleGating(){
   show('#cfgReset',rolActual()==='ADMINISTRADOR');
   show('.nav a[data-view="usuarios"]', !CURRENT_USER || rolActual()==='ADMINISTRADOR');
   const mov=$('#fGo');if(mov&&mov.closest('.card'))mov.closest('.card').style.display=can('stock.mover')?'':'none';
+  show('.nav a[data-view="facturacion"]', can('factura.emitir'));
+  show('#facEmit', can('factura.emitir'));
   if(typeof applyFilter==='function')applyFilter();
   if($('#provBody'))renderProveedores();
 }
@@ -1648,6 +1735,127 @@ function renderCharts(){
     const arr=Object.entries(map).sort((a,b)=>b[1]-a[1]);const mx=Math.max(1,...arr.map(x=>x[1]));
     arr.forEach(([n,v])=>{const row=document.createElement('div');row.className='barrow';const tr=document.createElement('div');tr.className='track';const fi=document.createElement('i');fi.style.background='linear-gradient(90deg,var(--warm),var(--warm-2))';fi.style.width='0';setTimeout(()=>fi.style.width=(v/mx*100)+'%',60);tr.appendChild(fi);row.append(sp('nm',n),tr,sp('vv',fmtMXN(v)));cc.appendChild(row);});}
 }
+/* ====================== FACTURACIÓN (CFDI 4.0 · México) ====================== */
+const SAT_REGIMEN=[['612','612 · Persona física con actividad empresarial y profesional'],['626','626 · Régimen Simplificado de Confianza (RESICO)'],['621','621 · Incorporación Fiscal'],['605','605 · Sueldos y salarios'],['606','606 · Arrendamiento'],['608','608 · Demás ingresos'],['601','601 · General de Ley Personas Morales'],['603','603 · Personas Morales con Fines no Lucrativos'],['616','616 · Sin obligaciones fiscales']];
+const SAT_USO=[['G01','G01 · Adquisición de mercancías'],['G03','G03 · Gastos en general'],['I04','I04 · Equipo de cómputo y accesorios'],['I01','I01 · Construcciones'],['S01','S01 · Sin efectos fiscales'],['CP01','CP01 · Pagos']];
+const SAT_FORMA=[['03','03 · Transferencia electrónica'],['01','01 · Efectivo'],['04','04 · Tarjeta de crédito'],['28','28 · Tarjeta de débito'],['02','02 · Cheque nominativo'],['99','99 · Por definir']];
+const ESTADO_TXT={ACEPTADO:'✓ Timbrada',PENDIENTE:'Pendiente',RECHAZADO:'Rechazada',CANCELADO:'Cancelada',ERROR_COMUNICACION:'Error de comunicación'};
+let FAC_LINES=[],FAC_IVA=16,_facInit=false;
+const fmtMoney=n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n||0);
+const r2=n=>Math.round((n||0)*100)/100;
+const facEsc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const RFC_RE=/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/;
+function fillSel(sel,arr,val){const e=$(sel);if(!e)return;e.innerHTML='';arr.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;e.appendChild(o);});if(val)e.value=val;}
+function emisorGet(){try{return JSON.parse(localStorage.getItem('stockly.emisor')||'{}');}catch(e){return {};}}
+function emisorSave(){const d={rfc:$('#emRfc').value.trim().toUpperCase(),nombre:$('#emNombre').value.trim(),regimen:$('#emRegimen').value,cp:$('#emCp').value.trim()};try{localStorage.setItem('stockly.emisor',JSON.stringify(d));}catch(e){}$('#emisorState').textContent='✓ guardado';setTimeout(()=>$('#emisorState').textContent='',2200);toast('Datos del emisor guardados','ok');}
+function facHistGet(){try{return JSON.parse(localStorage.getItem('stockly.facturas')||'[]');}catch(e){return [];}}
+function facHistSave(arr){try{localStorage.setItem('stockly.facturas',JSON.stringify(arr.slice(0,100)));}catch(e){}}
+function initFacturacion(){
+  if(!_facInit){
+    fillSel('#emRegimen',SAT_REGIMEN,'612');fillSel('#rcRegimen',SAT_REGIMEN,'616');
+    fillSel('#rcUso',SAT_USO,'G03');fillSel('#facForma',SAT_FORMA,'03');
+    const e=emisorGet();if(e.rfc)$('#emRfc').value=e.rfc;if(e.nombre)$('#emNombre').value=e.nombre;if(e.regimen)$('#emRegimen').value=e.regimen;if(e.cp)$('#emCp').value=e.cp;
+    $('#emSave').onclick=emisorSave;
+    $('#facAddManual').onclick=()=>facAddLine({descripcion:'',clave:'01010101',unidad:'H87',cantidad:1,valor:0});
+    $('#facAddProd').onchange=()=>{const id=+$('#facAddProd').value;if(id){const p=PRODUCTS.find(x=>x.id===id);if(p)facAddLine({descripcion:p.nombre,clave:'01010101',unidad:'H87',cantidad:1,valor:(p.precioCentavos||0)/100});}$('#facAddProd').value='';};
+    $('#facIva').querySelectorAll('button').forEach(b=>b.onclick=()=>{FAC_IVA=+b.dataset.v;$('#facIva').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));$('#facIvaLbl').textContent='IVA '+FAC_IVA+'%';facTotals();});
+    $('#facEmit').onclick=()=>withLoading($('#facEmit'),emitirFactura);
+    _facInit=true;
+  }
+  const sel=$('#facAddProd');if(sel){sel.innerHTML='<option value="">+ Agregar producto del inventario…</option>';PRODUCTS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.sku+' · '+p.nombre;sel.appendChild(o);});}
+  if(!FAC_LINES.length)facAddLine({descripcion:'',clave:'01010101',unidad:'H87',cantidad:1,valor:0});
+  else renderFacLines();
+  renderFacHist();
+}
+function facAddLine(l){FAC_LINES.push(Object.assign({_id:'l'+(FAC_LINES.length)+'_'+($('#facLines')?$('#facLines').children.length:0)+'_'+Math.round(performance.now())},l));renderFacLines();}
+function facDelLine(id){FAC_LINES=FAC_LINES.filter(l=>l._id!==id);renderFacLines();}
+function renderFacLines(){
+  const tb=$('#facLines');if(!tb)return;tb.innerHTML='';
+  if(!FAC_LINES.length){tb.innerHTML='<tr><td colspan="7" style="padding:18px;text-align:center;color:var(--text-3)">Agrega un producto del inventario o un concepto manual.</td></tr>';facTotals();return;}
+  FAC_LINES.forEach(l=>{
+    const tr=document.createElement('tr');
+    const mk=(val,key,num)=>{const td=document.createElement('td');if(num)td.className='r';const i=document.createElement('input');i.className='facline-inp'+(num?' r':'');i.value=val;if(num){i.type='number';i.min='0';i.step=key==='cantidad'?'1':'0.01';}i.oninput=()=>{l[key]=num?(parseFloat(i.value)||0):i.value;if(key==='cantidad'||key==='valor'){const c=tr.querySelector('[data-imp]');if(c)c.textContent=fmtMoney(l.cantidad*l.valor);}facTotals();};td.appendChild(i);return td;};
+    tr.appendChild(mk(l.descripcion,'descripcion',false));
+    tr.appendChild(mk(l.clave,'clave',false));
+    tr.appendChild(mk(l.unidad,'unidad',false));
+    tr.appendChild(mk(l.cantidad,'cantidad',true));
+    tr.appendChild(mk(l.valor,'valor',true));
+    const imp=document.createElement('td');imp.className='r mono';imp.dataset.imp='1';imp.textContent=fmtMoney(l.cantidad*l.valor);tr.appendChild(imp);
+    const del=document.createElement('td');del.className='r';const b=document.createElement('button');b.className='linkx';b.type='button';b.title='Quitar concepto';b.setAttribute('aria-label','Quitar concepto');b.innerHTML='<svg viewBox="0 0 24 24" width="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';b.onclick=()=>facDelLine(l._id);del.appendChild(b);tr.appendChild(del);
+    tb.appendChild(tr);
+  });
+  facTotals();
+}
+function facTotals(){const sub=FAC_LINES.reduce((a,l)=>a+(l.cantidad*l.valor),0),imp=sub*FAC_IVA/100,tot=sub+imp;const s=$('#facSub'),i=$('#facImp'),t=$('#facTot');if(s)s.textContent=fmtMoney(sub);if(i)i.textContent=fmtMoney(imp);if(t)t.textContent=fmtMoney(tot);return {sub,imp,tot};}
+function simulateTimbre(){const hx=n=>{let s='';for(let i=0;i<n;i++)s+='0123456789ABCDEF'[Math.floor(Math.random()*16)];return s;};const uuid=hx(8)+'-'+hx(4)+'-4'+hx(3)+'-'+'89AB'[Math.floor(Math.random()*4)]+hx(3)+'-'+hx(12);return {estado:'ACEPTADO',identificadorFiscal:uuid,xmlBase64:null,pdfBase64:null,sello:hx(64),cadenaQr:'https://verificacfdi.facturaelectronica.sat.gob.mx/?id='+uuid,mensajeError:null};}
+async function emitirFactura(){
+  const res=$('#facRes');res.className='result';res.textContent='';
+  if(!can('factura.emitir')){res.classList.add('err');res.textContent='Tu rol no puede emitir comprobantes.';return;}
+  const em={rfc:$('#emRfc').value.trim().toUpperCase(),nombre:$('#emNombre').value.trim(),regimen:$('#emRegimen').value,cp:$('#emCp').value.trim()};
+  const rc={rfc:$('#rcRfc').value.trim().toUpperCase(),nombre:$('#rcNombre').value.trim(),cp:$('#rcCp').value.trim(),regimen:$('#rcRegimen').value,uso:$('#rcUso').value};
+  const errs=[];
+  if(!RFC_RE.test(em.rfc))errs.push('RFC del emisor inválido');
+  if(!em.nombre)errs.push('falta la razón social del emisor');
+  if(!/^\d{5}$/.test(em.cp))errs.push('CP de expedición inválido');
+  if(!RFC_RE.test(rc.rfc))errs.push('RFC del receptor inválido');
+  if(!rc.nombre)errs.push('falta el nombre del receptor');
+  if(!/^\d{5}$/.test(rc.cp))errs.push('CP fiscal del receptor inválido');
+  const lines=FAC_LINES.filter(l=>(l.descripcion||'').trim()&&l.cantidad>0&&l.valor>0);
+  if(!lines.length)errs.push('agrega al menos un concepto con cantidad y valor');
+  if(errs.length){res.classList.add('err');res.textContent='Revisa: '+errs.join(' · ');return;}
+  const t=facTotals();
+  const comprobante={pais:'MX',tipo:$('#facTipo').value,
+    emisor:{identificadorFiscal:em.rfc,nombre:em.nombre,regimenFiscal:em.regimen,lugarExpedicion:em.cp},
+    receptor:{identificadorFiscal:rc.rfc,nombre:rc.nombre,codigoPostal:rc.cp,regimenFiscal:rc.regimen,usoCfdi:rc.uso},
+    lineas:lines.map(l=>({claveProdServ:(l.clave||'01010101').trim(),claveUnidad:(l.unidad||'H87').trim(),unidad:(l.unidad||'H87').trim()==='E48'?'Unidad de servicio':'Pieza',descripcion:l.descripcion.trim(),cantidad:r2(l.cantidad),valorUnitario:r2(l.valor),importe:r2(l.cantidad*l.valor)})),
+    subtotal:r2(t.sub),impuestos:r2(t.imp),total:r2(t.tot),moneda:$('#facMoneda').value,formaPago:$('#facForma').value,metodoPago:$('#facMetodo').value,fecha:null};
+  let result,simulated=false;
+  try{
+    const r=await _origFetch('/api/facturas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pais:'MX',comprobante})});
+    if(r.status===401){showLogin();res.classList.add('err');res.textContent='Inicia sesión para emitir.';return;}
+    if(r.status===404||r.status===405){result=simulateTimbre();simulated=true;}
+    else{const ct=r.headers.get('content-type')||'';result=ct.includes('json')?await r.json():(()=>{simulated=true;return simulateTimbre();})();}
+  }catch(e){result=simulateTimbre();simulated=true;}
+  if(window.DEMO_MODE){result=simulateTimbre();simulated=true;}
+  renderFacResult(result,simulated,comprobante,rc);
+}
+function _mkbtn(label,fn){const b=document.createElement('button');b.type='button';b.className='btn btn-ghost btn-sm';b.textContent=label;b.onclick=fn;return b;}
+function _dlB64(b64,mime,name){try{const bin=atob(b64),arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);const url=URL.createObjectURL(new Blob([arr],{type:mime})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);}catch(e){toast('No se pudo descargar el archivo','err');}}
+function renderFacResult(result,simulated,comprobante,rc){
+  const res=$('#facRes');res.className='result';res.innerHTML='';
+  const est=(result&&result.estado)||'ERROR_COMUNICACION',ok=est==='ACEPTADO';
+  const head=document.createElement('div');head.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+  const badge=document.createElement('span');badge.className='fbadge '+(ok?'ok':(est==='PENDIENTE'?'wait':'bad'));badge.textContent=ESTADO_TXT[est]||est;head.appendChild(badge);
+  if(simulated){const s=document.createElement('span');s.className='badge-soft';s.textContent='Simulación';s.title='Comprobante de demostración. Conecta tu PAC (Facturama) y un CSD real para timbrar de verdad.';head.appendChild(s);}
+  res.appendChild(head);
+  if(ok){
+    res.classList.add('ok');
+    const uuid=result.identificadorFiscal||'';
+    const u=document.createElement('div');u.style.cssText='margin-top:10px;font-size:13px;color:var(--text-2)';u.innerHTML='Folio fiscal (UUID): <span class="mono" style="color:var(--text-1)">'+facEsc(uuid)+'</span>';res.appendChild(u);
+    const acts=document.createElement('div');acts.style.cssText='display:flex;gap:var(--s2);margin-top:12px;flex-wrap:wrap';
+    acts.appendChild(_mkbtn('Copiar UUID',()=>{if(navigator.clipboard)navigator.clipboard.writeText(uuid);toast('✓ UUID copiado','ok');}));
+    if(result.xmlBase64)acts.appendChild(_mkbtn('Descargar XML',()=>_dlB64(result.xmlBase64,'application/xml','factura_'+uuid+'.xml')));
+    if(result.pdfBase64)acts.appendChild(_mkbtn('Descargar PDF',()=>_dlB64(result.pdfBase64,'application/pdf','factura_'+uuid+'.pdf')));
+    res.appendChild(acts);
+    const hist=facHistGet();hist.unshift({fecha:new Date().toISOString(),rfc:rc.rfc,nombre:rc.nombre,uuid,total:comprobante.total,sim:!!simulated});facHistSave(hist);renderFacHist();
+    toast('✓ Factura emitida'+(simulated?' (simulada)':''),'ok');
+    FAC_LINES=[];renderFacLines();
+  }else{
+    res.classList.add('err');
+    const m=document.createElement('div');m.style.cssText='margin-top:10px;font-size:13px';m.textContent=(result&&result.mensajeError)?result.mensajeError:'No se pudo timbrar. Revisa las credenciales del PAC o los datos fiscales.';res.appendChild(m);
+  }
+}
+function renderFacHist(){
+  const tb=$('#facHistBody');if(!tb)return;const hist=facHistGet();
+  const cnt=$('#facHistCount');if(cnt)cnt.textContent=hist.length?(hist.length+(hist.length===1?' factura':' facturas')):'—';
+  tb.innerHTML='';
+  if(!hist.length){tb.innerHTML='<tr><td colspan="6" style="padding:18px;text-align:center;color:var(--text-3)">Aún no has emitido facturas.</td></tr>';return;}
+  hist.forEach(h=>{const tr=document.createElement('tr');const d=new Date(h.fecha);
+    const fecha=isNaN(d)?'—':(d.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}));
+    tr.innerHTML='<td>'+fecha+'</td><td><div>'+facEsc(h.nombre)+'</div><div class="mono" style="font-size:11px;color:var(--text-3)">'+facEsc(h.rfc)+'</div></td><td class="mono" style="font-size:11px">'+facEsc(h.uuid)+'</td><td class="r mono">'+fmtMoney(h.total)+'</td><td><span class="fbadge ok">✓ Timbrada</span>'+(h.sim?' <span class="badge-soft">sim</span>':'')+'</td>';
+    const td=document.createElement('td');td.className='r';td.appendChild(_mkbtn('Copiar',()=>{if(navigator.clipboard)navigator.clipboard.writeText(h.uuid);toast('✓ UUID copiado','ok');}));tr.appendChild(td);
+    tb.appendChild(tr);});
+}
 /* wires */
 $('#q').addEventListener('input',debounce(applyFilter,150));
 $$('#view-inventario thead th.sortable').forEach(th=>{th.tabIndex=0;th.setAttribute('role','button');const sort=()=>{const k=th.dataset.sort;if(SORT.key===k)SORT.dir*=-1;else{SORT.key=k;SORT.dir=1;}updateSortArrows();applyFilter();};th.onclick=sort;th.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sort();}};});
@@ -1666,6 +1874,7 @@ function paletteCommands(){
     {t:'Ir a Panel',c:'Navegar',i:PIC.nav,run:()=>go('panel')},
     {t:'Ir a Inventario',c:'Navegar',i:PIC.nav,run:()=>go('inventario')},
     {t:'Ir a Movimientos',c:'Navegar',i:PIC.nav,run:()=>go('movimientos')},
+    {t:'Ir a Facturación',c:'Navegar',i:PIC.nav,run:()=>go('facturacion')},
     {t:'Ir a Reportes',c:'Navegar',i:PIC.nav,run:()=>go('reportes')},
     {t:'Ir a API & Docs',c:'Navegar',i:PIC.nav,run:()=>go('api')},
     {t:'Ir a Contratar',c:'Navegar',i:PIC.nav,run:()=>go('contratar')},
