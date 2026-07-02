@@ -1,96 +1,102 @@
-# 📦 API de Control de Inventario
+🇬🇧 English | [🇪🇸 Español](README.es.md)
+
+# 📦 Inventory Control API
 
 [![CI](https://github.com/NemelesUrek/inventario-api/actions/workflows/maven.yml/badge.svg)](https://github.com/NemelesUrek/inventario-api/actions/workflows/maven.yml)
 ![Java](https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F?logo=springboot&logoColor=white)
 
-API REST para gestionar productos y stock, con **auditoría de cada movimiento** y **alertas de reposición**. Backend en **Java + Spring Boot**, probado y desplegable.
+REST API to manage products and stock, with **an audit trail for every movement** and **restock alerts**. Backend in **Java + Spring Boot**, tested and deployable.
 
-> **▶ App en vivo:** **https://inventario-api-h6b3.onrender.com**
-> **▶ API interactiva (Swagger):** **https://inventario-api-h6b3.onrender.com/swagger-ui/index.html**
-> *(pruébalas en el navegador, sin instalar nada. Free tier: la primera petición tras inactividad puede tardar ~50 s en despertar.)*
+> **▶ Live app:** **https://inventario-api-h6b3.onrender.com** *(free tier — first load takes ~50 s)*
+> **▶ Interactive API (Swagger):** **https://inventario-api-h6b3.onrender.com/swagger-ui/index.html**
+> *(try them right in the browser, nothing to install)*
 
 ---
 
-## El problema
-En una tienda o almacén, el stock se descuadra fácil: dos ventas a la vez, un ajuste mal hecho, o nadie sabe *cuándo reponer*. Y si el dinero se maneja con decimales, aparecen errores de centavos.
+## The problem
+In a store or warehouse, stock counts drift easily: two sales at the same time, a bad adjustment, or nobody knows *when to restock*. And if money is handled with floating-point decimals, cent-level errors creep in.
 
-## La solución
-- **API REST limpia**: CRUD de productos + entradas/salidas de stock, con búsqueda, paginación y códigos HTTP correctos (`201`, `404`, `409`).
-- **Operaciones transaccionales**: cada cambio de stock se guarda junto a su registro de auditoría dentro de una transacción (o ambos, o ninguno).
-- **Auditoría append-only**: todo movimiento queda registrado (tipo, cantidad, stock resultante, motivo, fecha).
-- **Alertas de reposición**: endpoint que lista los productos en o por debajo de su mínimo.
-- **Dinero en centavos** (`long`), nunca en coma flotante → sin errores de redondeo.
-- **Errores consistentes** en formato RFC-7807 (`ProblemDetail`).
+## The solution
+- **Clean REST API**: product CRUD + stock in/out operations, with search, pagination and correct HTTP status codes (`201`, `404`, `409`).
+- **Transactional operations**: every stock change is saved together with its audit record inside a single transaction (both or neither).
+- **Append-only audit trail**: every movement is recorded (type, quantity, resulting stock, reason, timestamp).
+- **Restock alerts**: an endpoint that lists products at or below their minimum stock level.
+- **Money stored in cents** (`long`), never in floating point → no rounding errors.
+- **Consistent errors** in RFC-7807 format (`ProblemDetail`).
 
-## La app (interfaz en vivo)
-Además de la API, el proyecto incluye una **aplicación web** (HTML/CSS/JS sin librerías) que la consume en el mismo origen:
-- **Panel** con KPIs (valor del inventario en $MXN, unidades, alertas).
-- **Inventario**: alta, edición y baja de productos, búsqueda, paginación, semáforo de stock y export CSV.
-- **Movimientos**: auditoría global con filtros (entradas/salidas).
-- **Reportes**: gráficas SVG propias + métricas agregadas en el servidor (`/api/stats`).
-- **Paleta de comandos** (Ctrl/Cmd + K), tema claro/oscuro y densidad ajustable.
+## The app (live UI)
+Besides the API, the project includes a **web application** (plain HTML/CSS/JS, no libraries) that consumes it from the same origin:
+- **Dashboard** with KPIs (inventory value in $MXN, units, alerts).
+- **Inventory**: create, edit and delete products, search, pagination, stock traffic-light indicator and CSV export.
+- **Movements**: global audit feed with filters (stock in/out).
+- **Reports**: hand-rolled SVG charts + server-side aggregated metrics (`/api/stats`).
+- **Command palette** (Ctrl/Cmd + K), light/dark theme and adjustable density.
 
 ---
 
 ## Endpoints
 
-| Método | Ruta | Descripción |
+| Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/productos?buscar=&page=&size=` | Listar (búsqueda + paginación) |
-| `GET` | `/api/productos/{id}` | Obtener un producto |
-| `POST` | `/api/productos` | Crear (201 + `Location`; 409 si SKU duplicado) |
-| `PUT` | `/api/productos/{id}` | Actualizar datos |
-| `DELETE` | `/api/productos/{id}` | Eliminar (204) |
-| `POST` | `/api/productos/{id}/entrada` | Entrada de stock (+ auditoría) |
-| `POST` | `/api/productos/{id}/salida` | Salida de stock (**409** si no alcanza) |
-| `GET` | `/api/productos/{id}/movimientos` | Historial de movimientos |
-| `GET` | `/api/productos/bajo-stock` | Alertas de reposición |
-| `GET` | `/api/movimientos` | Auditoría global (últimos movimientos) |
-| `GET` | `/api/stats` | Resumen agregado del inventario (server-side) |
+| `GET` | `/api/productos?buscar=&page=&size=` | List (search + pagination) |
+| `GET` | `/api/productos/{id}` | Get a single product |
+| `POST` | `/api/productos` | Create (201 + `Location`; 409 on duplicate SKU) |
+| `PUT` | `/api/productos/{id}` | Update product data |
+| `DELETE` | `/api/productos/{id}` | Delete (204) |
+| `POST` | `/api/productos/{id}/entrada` | Stock in (+ audit record) |
+| `POST` | `/api/productos/{id}/salida` | Stock out (**409** if not enough stock) |
+| `GET` | `/api/productos/{id}/movimientos` | Movement history per product |
+| `GET` | `/api/productos/bajo-stock` | Restock alerts |
+| `GET` | `/api/movimientos` | Global audit feed (latest movements) |
+| `GET` | `/api/stats` | Aggregated inventory summary (server-side) |
 
-Documentación interactiva en **`/swagger-ui.html`** · spec OpenAPI en **`/v3/api-docs`**.
+Interactive docs at **`/swagger-ui.html`** · OpenAPI spec at **`/v3/api-docs`**.
 
-## Pruébala (curl)
+## Try it (curl)
 ```bash
 BASE=http://localhost:8080
 
-# Crear
+# Create
 curl -s -X POST $BASE/api/productos -H "Content-Type: application/json" \
   -d '{"sku":"LAP-900","nombre":"Laptop 14\"","precioCentavos":1299900,"stockInicial":5,"stockMinimo":2}'
 
-# Salida que excede el stock -> 409
+# Stock out exceeding available stock -> 409
 curl -s -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
   -d '{"cantidad":999,"motivo":"Venta"}'
 
-# Alertas de stock bajo
+# Low-stock alerts
 curl -s $BASE/api/productos/bajo-stock
 ```
 
 ---
 
-## Correr en local
-Requiere **JDK 17+**. La base de datos es **H2 en memoria** (no instalas nada).
+## Run locally
+Requires **JDK 17+**. The database is **in-memory H2** (nothing to install).
 ```bash
 ./mvnw spring-boot:run
-# luego abre http://localhost:8080
+# then open http://localhost:8080
 ```
 
-## Pruebas
+## Tests
 ```bash
 ./mvnw test
 ```
-Suite con JUnit 5 + MockMvc (creación 201, 404, validación 400, **409 por stock insuficiente**). Validadas en **CI (GitHub Actions)** en cada push.
+Suite with JUnit 5 + MockMvc (creation 201, 404, validation 400, **409 on insufficient stock**). Validated in **CI (GitHub Actions)** on every push.
 
 ## Stack
 Java 17 · Spring Boot 3.5 (Web, Data JPA, Validation) · H2 / HikariCP · springdoc-openapi (Swagger UI) · Maven · JUnit 5 · Docker.
 
-## Deploy (Render, gratis)
-1. Sube este repo a GitHub.
-2. En [render.com](https://render.com) → **New → Web Service** → conecta el repo → Render detecta el `Dockerfile` solo (o usa **Blueprint** con `render.yaml`).
-3. Plan **Free**. Render asigna el puerto vía `$PORT` (ya configurado). Health check: `/actuator/health`.
-4. Copia la URL pública al README y a tus propuestas.
+## Active development branches
+- **`security/hardening`** — session login with RBAC roles, brute-force guard, suppliers module and file attachments. Attack-tested, CI green, pending merge.
+- **`feature/efactura`** — CFDI 4.0 electronic invoicing for Mexico via a PAC sandbox (work in progress).
+
+## Deploy (Render, free)
+1. Push this repo to GitHub.
+2. On [render.com](https://render.com) → **New → Web Service** → connect the repo → Render auto-detects the `Dockerfile` (or use **Blueprint** with `render.yaml`).
+3. **Free** plan. Render assigns the port via `$PORT` (already configured). Health check: `/actuator/health`.
+4. Copy the public URL into your README and proposals.
 
 ---
 
-**Autor:** Nemeles — Backend Engineer (Java · Spring Boot · REST APIs · SQL). GitHub: **NemelesUrek**.
+**Author:** Nemeles — Backend Engineer (Java · Spring Boot · REST APIs · SQL). GitHub: **NemelesUrek**.
