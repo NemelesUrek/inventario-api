@@ -7,3 +7,7 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /actuator/health
     autoDeploy: true
+    envVars:
+      # Demo pública: Swagger accesible sin login (por defecto es solo-admin).
+      - key: DOCS_PUBLIC
+        value: "true"
