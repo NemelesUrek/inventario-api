@@ -1199,7 +1199,11 @@ function openCreate(){EDIT_ID=null;resetModal();$('#modalTitle').textContent='Nu
 function editProduct(p){EDIT_ID=p.id;resetModal();$('#modalTitle').textContent='Editar producto';$('#nSave').textContent='Guardar cambios';$('#rowSku').style.display='none';$('#rowStock').style.display='none';$('#nNom').value=p.nombre;$('#nDesc').value=p.descripcion||'';$('#nCat').value=p.categoria||'';$('#nCodigo').value=p.codigoBarras||'';$('#nPrecio').value=(p.precioCentavos/100).toFixed(2);$('#nMin').value=p.stockMinimo;if(p.tieneFoto)mostrarFoto(API+'/api/productos/'+p.id+'/foto');$('#modalBg').classList.add('open');validateModal();setTimeout(()=>$('#nNom').focus(),60);}
 ['nNom','nSku','nPrecio'].forEach(id=>{const e=$('#'+id);if(e)e.addEventListener('input',validateModal);});
 $('#newBtn').onclick=openCreate;$('#nCancel').onclick=()=>$('#modalBg').classList.remove('open');
-$('#modalBg').onclick=e=>{if(e.target===$('#modalBg'))$('#modalBg').classList.remove('open');};
+/* Cerrar al hacer clic en el FONDO del modal, pero NO cuando el clic viene de
+   seleccionar texto (mousedown dentro de un campo, arrastrar y soltar sobre el
+   fondo): solo cierra si el mousedown Y el click ocurrieron sobre el propio fondo. */
+function cerrarEnFondo(bg,cerrar){if(!bg)return;let d=false;bg.onmousedown=e=>{d=(e.target===bg);};bg.onclick=e=>{const ok=(e.target===bg&&d);d=false;if(ok)cerrar();};}
+cerrarEnFondo($('#modalBg'),()=>$('#modalBg').classList.remove('open'));
 /* Escanear el código de barras dentro del modal (rellena el campo). */
 $('#nScanCode').onclick=()=>Scan.abrir(raw=>{$('#nCodigo').value=(raw||'').trim();toast('Código capturado','ok');});
 /* Foto: elegir/ tomar, previsualizar, quitar. */
@@ -1352,7 +1356,7 @@ async function deleteProveedor(p){
 }
 if($('#newProvBtn'))$('#newProvBtn').onclick=openProvCreate;
 if($('#pvCancel'))$('#pvCancel').onclick=()=>$('#provModalBg').classList.remove('open');
-if($('#provModalBg'))$('#provModalBg').onclick=e=>{if(e.target===$('#provModalBg'))$('#provModalBg').classList.remove('open');};
+cerrarEnFondo($('#provModalBg'),()=>$('#provModalBg').classList.remove('open'));
 if($('#pvSave'))$('#pvSave').onclick=saveProv;
 if($('#qProv'))$('#qProv').addEventListener('input',debounce(renderProveedores,150));
 /* ===== AUDITORÍA (bitácora, solo lectura) ===== */
@@ -1427,7 +1431,7 @@ async function deleteUsuario(u){
 }
 if($('#newUserBtn'))$('#newUserBtn').onclick=openUserCreate;
 if($('#uCancel'))$('#uCancel').onclick=()=>$('#userModalBg').classList.remove('open');
-if($('#userModalBg'))$('#userModalBg').onclick=e=>{if(e.target===$('#userModalBg'))$('#userModalBg').classList.remove('open');};
+cerrarEnFondo($('#userModalBg'),()=>$('#userModalBg').classList.remove('open'));
 if($('#uSave'))$('#uSave').onclick=saveUser;
 if($('#qUser'))$('#qUser').addEventListener('input',debounce(renderUsuarios,150));
 /* ===== FOTOS DE MERCANCÍA (adjuntos por movimiento) ===== */
@@ -1463,7 +1467,7 @@ async function deleteFoto(a){
   dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])uploadFoto(e.dataTransfer.files[0]);};
 })();
 if($('#fotosClose'))$('#fotosClose').onclick=closeFotos;
-if($('#fotosBg'))$('#fotosBg').onclick=e=>{if(e.target===$('#fotosBg'))closeFotos();};
+cerrarEnFondo($('#fotosBg'),closeFotos);
 if($('#lightbox'))$('#lightbox').onclick=()=>$('#lightbox').classList.remove('open');
 /* ===== ABRIR EN EL TELÉFONO (LAN + QR) ===== */
 /* QR: codificador propio 100% offline (modo byte, nivel M; algoritmo ISO/IEC 18004). */
@@ -1588,7 +1592,7 @@ async function openPhone(){
 }
 if($('#phoneBtn'))$('#phoneBtn').onclick=openPhone;
 if($('#phoneClose'))$('#phoneClose').onclick=function(){$('#phoneBg').classList.remove('open');};
-if($('#phoneBg'))$('#phoneBg').onclick=function(e){if(e.target===$('#phoneBg'))$('#phoneBg').classList.remove('open');};
+cerrarEnFondo($('#phoneBg'),()=>$('#phoneBg').classList.remove('open'));
 if($('#phoneCopy'))$('#phoneCopy').onclick=function(){var u=$('#phoneUrl').textContent;if(navigator.clipboard)navigator.clipboard.writeText(u).then(function(){toast('✓ URL copiada','ok');},function(){toast(u,'info');});else toast(u,'info');};
 /* ===== SESIÓN / ROLES ===== */
 let CURRENT_USER=null;
@@ -1673,7 +1677,7 @@ const Scan=(()=>{let stream=null,detector=null,zx=null,track=null,raf=0,onHit=nu
     $('#scanInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const v=$('#scanInput').value;if(v.trim()){if(navigator.vibrate)navigator.vibrate(40);const cb=onHit;cerrar();if(cb)cb(v);}}});
     $('#scanCamBtn').addEventListener('click',()=>abrirCamara().catch(err=>{toast('No se pudo abrir la cámara: '+(err&&err.message?err.message:(err&&err.name)||'error'),'err');}));
     $('#scanTorch').addEventListener('click',torch);$('#scanClose').addEventListener('click',cerrar);
-    $('#scanBg').addEventListener('click',e=>{if(e.target===$('#scanBg'))cerrar();});}
+    cerrarEnFondo($('#scanBg'),cerrar);}
   return {abrir,cerrar,bind};})();
 Scan.bind();
 if($('#scanForMov'))$('#scanForMov').onclick=()=>Scan.abrir(raw=>{const p=resolverCodigo(raw);if(!p)return toast('Código no reconocido: '+raw,'err');go('panel');$('#fProd').value=p.id;$('#fCant').focus();toast('Producto: '+p.nombre,'ok');});
@@ -1758,7 +1762,7 @@ function moveSel(d){const items=$$('#palList .pal-item');if(!items.length)return
 function runSel(){const c=PALF[PALSEL];if(c){c.run();closePalette();}}
 $('#palInput').addEventListener('input',e=>renderPalette(e.target.value));
 $('#palInput').addEventListener('keydown',e=>{if(e.key==='ArrowDown'){e.preventDefault();moveSel(1);}else if(e.key==='ArrowUp'){e.preventDefault();moveSel(-1);}else if(e.key==='Enter'){e.preventDefault();runSel();}});
-$('#palette').onclick=e=>{if(e.target===$('#palette'))closePalette();};
+cerrarEnFondo($('#palette'),closePalette);
 $('#palBtn').onclick=openPalette;
 /* CONFIRM DIALOG */
 function confirmDialog(title,msg,yesLabel){return new Promise(res=>{
@@ -1766,12 +1770,12 @@ function confirmDialog(title,msg,yesLabel){return new Promise(res=>{
   $('#confirmBg').classList.add('open');setTimeout(()=>$('#confirmNo').focus(),40);
   const done=v=>{$('#confirmBg').classList.remove('open');res(v);};
   $('#confirmYes').onclick=()=>done(true);$('#confirmNo').onclick=()=>done(false);
-  $('#confirmBg').onclick=e=>{if(e.target===$('#confirmBg'))done(false);};
+  cerrarEnFondo($('#confirmBg'),()=>done(false));
 });}
 /* HELP / ATAJOS */
 function openHelp(){$('#helpBg').classList.add('open');setTimeout(()=>$('#helpClose').focus(),40);}
 $('#helpClose').onclick=()=>$('#helpBg').classList.remove('open');
-$('#helpBg').onclick=e=>{if(e.target===$('#helpBg'))$('#helpBg').classList.remove('open');};
+cerrarEnFondo($('#helpBg'),()=>$('#helpBg').classList.remove('open'));
 /* SHORTCUTS GLOBALES */
 /* ¿Hay alguna ventana/modal/overlay abierto? Si es así, los atajos de UNA tecla
    (n, t, /, ?) NO deben dispararse aunque el foco no esté en un input (evita que
