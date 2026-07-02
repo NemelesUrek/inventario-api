@@ -15,6 +15,7 @@ public class InventarioApiApplication {
 
 	public static void main(String[] args) {
 		prepararCarpetaDeDatosEscritorio();
+		prepararHttpsEscritorio();
 		SpringApplication.run(InventarioApiApplication.class, args);
 	}
 
@@ -40,6 +41,47 @@ public class InventarioApiApplication {
 			return;
 		}
 		System.setProperty("app.data.dir", dir.toString());
+	}
+
+	/**
+	 * Modo escritorio: prepara el HTTPS local para la cámara del teléfono. Los navegadores
+	 * solo permiten la cámara en HTTPS (o localhost), así que el escáner por celular necesita
+	 * un certificado. Si no existe el keystore, lo genera UNA vez con el keytool del runtime
+	 * embebido (self-signed, uso local). Si queda listo, publica {@code app.https.port} y
+	 * {@link com.nemeles.inventario.config.DesktopHttpsConfig} abre el conector 8443.
+	 */
+	private static void prepararHttpsEscritorio() {
+		if (!Boolean.getBoolean("app.desktop")) {
+			return;
+		}
+		Path data = Paths.get(System.getProperty("app.data.dir", "./data"));
+		Path ks = data.resolve("stockly-https.p12");
+		if (!Files.exists(ks)) {
+			boolean win = System.getProperty("os.name", "").toLowerCase().contains("win");
+			Path keytool = Paths.get(System.getProperty("java.home"), "bin", win ? "keytool.exe" : "keytool");
+			if (!Files.exists(keytool)) {
+				return; // sin keytool no hay cert: la app sigue normal por HTTP
+			}
+			try {
+				Process p = new ProcessBuilder(keytool.toString(), "-genkeypair",
+						"-alias", "stockly", "-keyalg", "RSA", "-keysize", "2048", "-validity", "3650",
+						"-storetype", "PKCS12", "-keystore", ks.toString(),
+						"-storepass", "stockly", "-keypass", "stockly",
+						"-dname", "CN=Stockly, OU=NemelesRP, O=Nemeles, C=MX",
+						"-ext", "SAN=dns:localhost,ip:127.0.0.1")
+						.redirectErrorStream(true).start();
+				if (!p.waitFor(60, java.util.concurrent.TimeUnit.SECONDS)) {
+					p.destroyForcibly();
+					return;
+				}
+			} catch (Exception e) {
+				return;
+			}
+		}
+		if (Files.exists(ks)) {
+			System.setProperty("app.https.port", "8443");
+			System.setProperty("app.https.keystore", ks.toString());
+		}
 	}
 
 }

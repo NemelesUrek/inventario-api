@@ -1521,13 +1521,18 @@ var QR=(function(){
   }
   return {svg:svg,encode:encode};
 })();
-function phoneUrlFor(ip){return location.protocol+'//'+ip+(location.port?':'+location.port:'')+location.pathname;}
+var PHONE_HTTPS_PORT=null; /* modo escritorio: puerto https (8443) que informa /api/red/info */
+function phoneUrlFor(ip){
+  if(PHONE_HTTPS_PORT)return 'https://'+ip+':'+PHONE_HTTPS_PORT+location.pathname;
+  return location.protocol+'//'+ip+(location.port?':'+location.port:'')+location.pathname;
+}
 function buildPhoneQR(url,demo){
   try{$('#qrBox').innerHTML=QR.svg(url);}catch(e){$('#qrBox').innerHTML='<span style="color:#900;font-size:11px">URL muy larga</span>';}
   $('#phoneUrl').textContent=url;
   var note=$('#phoneNote');
-  if(location.protocol==='http:'){note.className='phone-note warn';note.innerHTML='Para usar la <b>cámara del teléfono</b> hace falta HTTPS. Genera el certificado con <span class="mono">scripts\\generar-https.ps1</span>, arranca con <span class="mono">--spring.profiles.active=https</span> y abre <span class="mono">https://&lt;IP&gt;:8443</span>. Sin HTTPS igual abres la app y usas el lector manual.';}
+  if(url.indexOf('https:')===0){note.className='phone-note';note.textContent='Conéctate a la misma WiFi en el teléfono, escanea el QR y acepta el aviso de certificado una vez. Con eso ya puedes usar la cámara del teléfono como escáner.';}
   else if(demo){note.className='phone-note';note.textContent='Escanea para abrir esta demo en tu teléfono.';}
+  else if(location.protocol==='http:'){note.className='phone-note warn';note.innerHTML='Este enlace abre la app en el teléfono, pero la <b>cámara</b> solo funciona por HTTPS. En la app de escritorio el enlace https se genera solo; si arrancaste el jar a mano, genera el certificado con <span class="mono">scripts\\generar-https.ps1</span> y usa <span class="mono">https://&lt;IP&gt;:8443</span>.';}
   else{note.className='phone-note';note.textContent='Conéctate a la misma WiFi en el teléfono, escanea el QR y acepta el aviso de certificado una vez.';}
 }
 async function openPhone(){
@@ -1535,7 +1540,7 @@ async function openPhone(){
   var sel=$('#phoneIp');sel.style.display='none';
   if(window.DEMO_MODE){buildPhoneQR(location.href,true);return;}
   var ips=[];
-  try{var r=await fetchT(API+'/api/red/info');var j=await r.json();ips=j.ips||[];}catch(e){}
+  try{var r=await fetchT(API+'/api/red/info');var j=await r.json();ips=j.ips||[];PHONE_HTTPS_PORT=j.httpsPort||null;}catch(e){}
   if(ips.length>1){sel.style.display='';sel.innerHTML=ips.map(function(ip){return '<option>'+ip+'</option>';}).join('');sel.onchange=function(){buildPhoneQR(phoneUrlFor(sel.value),false);};}
   if(ips.length){buildPhoneQR(phoneUrlFor(ips[0]),false);}
   else{buildPhoneQR(location.href,false);var n=$('#phoneNote');n.className='phone-note warn';n.textContent='No detecté una IP de red local. Verifica que el equipo esté conectado a WiFi o Ethernet.';}
@@ -1593,23 +1598,39 @@ function resolverCodigo(code){const c=(code||'').trim().toUpperCase();if(!c)retu
   return PRODUCTS.find(p=>(p.sku||'').toUpperCase()===c)
       || PRODUCTS.find(p=>(p.codigoBarras||'').toUpperCase()===c)
       || PRODUCTS.find(p=>(p.sku||'').toUpperCase().includes(c)) || null;}
-const Scan=(()=>{let stream=null,detector=null,track=null,raf=0,onHit=null,torchOn=false;
+const Scan=(()=>{let stream=null,detector=null,zx=null,track=null,raf=0,onHit=null,torchOn=false;
   const FORMATS=['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf','qr_code','data_matrix','codabar'];
-  async function soporta(){if(!('BarcodeDetector'in window))return false;try{const f=await BarcodeDetector.getSupportedFormats();return f&&f.length>0;}catch(e){return false;}}
-  async function abrirCamara(){const sup=await BarcodeDetector.getSupportedFormats();detector=new BarcodeDetector({formats:FORMATS.filter(f=>sup.includes(f))});
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
-    const v=$('#scanVideo');v.srcObject=stream;await v.play();track=stream.getVideoTracks()[0];
-    const caps=track.getCapabilities?track.getCapabilities():{};$('#scanTorch').hidden=!('torch'in caps);$('#scanStage').hidden=false;loop();}
+  /* La cámara solo existe en contexto seguro (HTTPS o localhost). Decodificador en cascada:
+     BarcodeDetector nativo si está; si no, ZXing offline (vendor/zxing.min.js, cargado bajo demanda). */
+  function hayCamara(){return !!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);}
+  async function nativoOk(){if(!('BarcodeDetector'in window))return false;try{const f=await BarcodeDetector.getSupportedFormats();return f&&f.length>0;}catch(e){return false;}}
+  function cargarZXing(){return window.ZXing?Promise.resolve():new Promise((res,rej)=>{const s=document.createElement('script');s.src='vendor/zxing.min.js';s.onload=()=>window.ZXing?res():rej(new Error('ZXing no cargó'));s.onerror=()=>rej(new Error('No se pudo cargar el lector de códigos'));document.head.appendChild(s);});}
+  async function abrirCamara(){
+    if(!hayCamara()){toast(location.protocol==='http:'?'La cámara requiere HTTPS: usa el botón "Teléfono" y abre el enlace https en el celular.':'Este navegador no permite usar la cámara.','err');return;}
+    const v=$('#scanVideo');
+    if(await nativoOk()){
+      const sup=await BarcodeDetector.getSupportedFormats();detector=new BarcodeDetector({formats:FORMATS.filter(f=>sup.includes(f))});
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
+      v.srcObject=stream;await v.play();loop();
+    }else{
+      await cargarZXing();
+      zx=new ZXing.BrowserMultiFormatReader();
+      await zx.decodeFromConstraints({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}},v,(res,err)=>{if(res)exito(res.getText());});
+      stream=v.srcObject||null;
+    }
+    track=stream?stream.getVideoTracks()[0]:null;
+    const caps=track&&track.getCapabilities?track.getCapabilities():{};$('#scanTorch').hidden=!('torch'in caps);$('#scanStage').hidden=false;
+  }
   function loop(){raf=requestAnimationFrame(async()=>{if(!detector)return;try{const codes=await detector.detect($('#scanVideo'));if(codes&&codes.length)return exito(codes[0].rawValue);}catch(e){}loop();});}
   function exito(v){const f=$('#scanFlash');f.classList.remove('hit');void f.offsetWidth;f.classList.add('hit');if(navigator.vibrate)navigator.vibrate(60);beep();const cb=onHit;cerrar();if(cb)cb(v);}
   async function torch(){if(!track)return;torchOn=!torchOn;try{await track.applyConstraints({advanced:[{torch:torchOn}]});$('#scanTorch').classList.toggle('on',torchOn);}catch(e){torchOn=false;toast('La linterna no está disponible.','err');}}
-  function cerrar(){cancelAnimationFrame(raf);raf=0;detector=null;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}track=null;torchOn=false;const s=$('#scanStage');if(s)s.hidden=true;const t=$('#scanTorch');if(t)t.classList.remove('on');$('#scanBg').classList.remove('open');}
+  function cerrar(){cancelAnimationFrame(raf);raf=0;detector=null;if(zx){try{zx.reset();}catch(e){}zx=null;}if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}const v=$('#scanVideo');if(v)v.srcObject=null;track=null;torchOn=false;const s=$('#scanStage');if(s)s.hidden=true;const t=$('#scanTorch');if(t)t.classList.remove('on');$('#scanBg').classList.remove('open');}
   function beep(){try{const a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.type='square';o.frequency.value=880;o.connect(g);g.connect(a.destination);g.gain.setValueAtTime(.06,a.currentTime);o.start();g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+.12);o.stop(a.currentTime+.13);}catch(e){}}
-  async function abrir(cb){onHit=cb;$('#scanBg').classList.add('open');const i=$('#scanInput');i.value='';setTimeout(()=>i.focus(),60);const puede=await soporta();$('#scanCamBtn').hidden=!puede;
-    $('#scanTip').textContent=puede?'Conecta un lector USB y escanea, o usa la cámara del dispositivo.':'Conecta un lector USB y escanea, o teclea el código (este navegador no permite cámara para escanear).';}
+  async function abrir(cb){onHit=cb;$('#scanBg').classList.add('open');const i=$('#scanInput');i.value='';setTimeout(()=>i.focus(),60);const puede=hayCamara();$('#scanCamBtn').hidden=!puede;
+    $('#scanTip').textContent=puede?'Conecta un lector USB y escanea, o usa la cámara del dispositivo.':'Conecta un lector USB y escanea, o teclea el código. Para escanear con la cámara: botón "Teléfono" → abre el enlace https en el celular.';}
   function bind(){
     $('#scanInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const v=$('#scanInput').value;if(v.trim()){if(navigator.vibrate)navigator.vibrate(40);const cb=onHit;cerrar();if(cb)cb(v);}}});
-    $('#scanCamBtn').addEventListener('click',()=>abrirCamara().catch(err=>toast('No se pudo abrir la cámara: '+(err.name||'error'),'err')));
+    $('#scanCamBtn').addEventListener('click',()=>abrirCamara().catch(err=>{toast('No se pudo abrir la cámara: '+(err&&err.message?err.message:(err&&err.name)||'error'),'err');}));
     $('#scanTorch').addEventListener('click',torch);$('#scanClose').addEventListener('click',cerrar);
     $('#scanBg').addEventListener('click',e=>{if(e.target===$('#scanBg'))cerrar();});}
   return {abrir,cerrar,bind};})();

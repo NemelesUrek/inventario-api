@@ -22,6 +22,20 @@ INICIAR SESION (usuarios de ejemplo)
    El administrador puede crear mas usuarios y asignarles rol desde
    la seccion "Usuarios".
 
+ESCANEAR CODIGOS CON LA CAMARA DE TU TELEFONO (gratis, sin comprar lector)
+--------------------------------------------------------------------------
+1. Conecta el telefono a la MISMA red WiFi que la computadora.
+2. En Stockly (en la PC) pulsa el boton "Telefono" y escanea el QR
+   que aparece (el enlace empieza con https://...:8443).
+3. El telefono mostrara UNA VEZ un aviso de "conexion no privada"
+   (es normal: el certificado lo genera tu propia PC). Toca
+   "Avanzado" y luego "Continuar/Acceder de todos modos".
+4. Inicia sesion y usa el boton "Escanear" -> "Camara". Ya puedes
+   leer codigos de barras y QR con la camara del celular.
+
+   Nota: tambien funciona un lector USB de codigo de barras en la PC
+   (escribe el codigo como si fuera un teclado), pero NO es necesario.
+
 PARA CERRAR LA APP
 ------------------
    Cierra la ventana negra. Con eso Stockly se apaga.

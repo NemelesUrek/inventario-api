@@ -52,6 +52,12 @@ public class RedController {
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("ips", ips);
+        // Modo escritorio con certificado listo: el front arma el enlace https://IP:8443
+        // (la cámara del teléfono solo funciona en HTTPS).
+        Integer httpsPort = Integer.getInteger("app.https.port");
+        if (httpsPort != null) {
+            out.put("httpsPort", httpsPort);
+        }
         return out;
     }
 }
