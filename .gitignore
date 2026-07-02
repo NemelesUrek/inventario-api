@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Stockly: datos locales H2 y artefactos de ejecución (no versionar) ###
+/data/
+/data-verify/
+*.mv.db
+*.trace.db
+# Keystore HTTPS self-signed (se genera localmente, NUNCA versionar)
+*.p12
+stockly-https.p12

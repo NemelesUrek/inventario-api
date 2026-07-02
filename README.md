@@ -10,7 +10,7 @@ REST API to manage products and stock, with **an audit trail for every movement*
 
 > **▶ Live app:** **https://inventario-api-h6b3.onrender.com** *(free tier — first load takes ~50 s)*
 > **▶ Interactive API (Swagger):** **https://inventario-api-h6b3.onrender.com/swagger-ui/index.html**
-> *(try them right in the browser, nothing to install)*
+> *(try them right in the browser, nothing to install — demo login: `admin` / `admin123`)*
 
 ---
 
@@ -87,15 +87,28 @@ Suite with JUnit 5 + MockMvc (creation 201, 404, validation 400, **409 on insuff
 ## Stack
 Java 17 · Spring Boot 3.5 (Web, Data JPA, Validation) · H2 / HikariCP · springdoc-openapi (Swagger UI) · Maven · JUnit 5 · Docker.
 
+## 🔒 Security
+The app passed an **internal security audit** (code review + attack testing) covering authentication, authorization (RBAC), SQL injection, file handling, configuration, validation and dependencies. Hardening was applied and **verified by attacking a local instance**:
+
+- **Authentication** with BCrypt-hashed passwords and PINs, plus **role-based access control** enforced on the server.
+- **Brute-force protection**: temporary per-user lockout (5 attempts / 15 min → `429`).
+- **Security headers** (HSTS, Referrer-Policy) and a **session cookie** that is `HttpOnly` + `SameSite=Strict` (`Secure` over HTTPS).
+- **Secrets via environment variables** (`DB_PASSWORD`, `KEYSTORE_PASSWORD`), none hard-coded.
+- **File uploads** validated by real content (magic bytes), served with `Content-Disposition: attachment` + `nosniff`; resource access scoped (anti-IDOR).
+- **No SQL injection** (parameterized JPA) or path traversal (random file names).
+- **Patched dependencies** (Spring Boot 3.5.4 / Tomcat 10.1.43, no known CVEs).
+
+Result: **0 critical or high vulnerabilities** after verification. Swagger is admin-only by default; for a public demo it is enabled with `DOCS_PUBLIC=true`.
+
 ## Active development branches
-- **`security/hardening`** — session login with RBAC roles, brute-force guard, suppliers module and file attachments. Attack-tested, CI green, pending merge.
 - **`feature/efactura`** — CFDI 4.0 electronic invoicing for Mexico via a PAC sandbox (work in progress).
 
 ## Deploy (Render, free)
 1. Push this repo to GitHub.
 2. On [render.com](https://render.com) → **New → Web Service** → connect the repo → Render auto-detects the `Dockerfile` (or use **Blueprint** with `render.yaml`).
 3. **Free** plan. Render assigns the port via `$PORT` (already configured). Health check: `/actuator/health`.
-4. Copy the public URL into your README and proposals.
+4. To keep the public Swagger demo reachable, set the env var **`DOCS_PUBLIC=true`** (otherwise `/swagger-ui` is admin-only).
+5. Copy the public URL into your README and proposals.
 
 ---
 

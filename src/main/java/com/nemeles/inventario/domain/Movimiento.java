@@ -47,6 +47,13 @@ public class Movimiento {
     @Column(nullable = false, updatable = false)
     private Instant fecha = Instant.now();
 
+    /** Confirmación del movimiento (PIN / firma). Opcional. */
+    @Column(length = 80)
+    private String confirmadoPor;
+    private Instant confirmadoEn;
+    @Column(length = 20)
+    private String metodoConfirmacion;
+
     protected Movimiento() {
         // requerido por JPA
     }
@@ -68,4 +75,10 @@ public class Movimiento {
     public int getStockResultante() { return stockResultante; }
     public String getMotivo() { return motivo; }
     public Instant getFecha() { return fecha; }
+    public String getConfirmadoPor() { return confirmadoPor; }
+    public void setConfirmadoPor(String confirmadoPor) { this.confirmadoPor = confirmadoPor; }
+    public Instant getConfirmadoEn() { return confirmadoEn; }
+    public void setConfirmadoEn(Instant confirmadoEn) { this.confirmadoEn = confirmadoEn; }
+    public String getMetodoConfirmacion() { return metodoConfirmacion; }
+    public void setMetodoConfirmacion(String metodoConfirmacion) { this.metodoConfirmacion = metodoConfirmacion; }
 }

@@ -8,7 +8,7 @@ API REST para gestionar productos y stock, con **auditoría de cada movimiento**
 
 > **▶ App en vivo:** **https://inventario-api-h6b3.onrender.com**
 > **▶ API interactiva (Swagger):** **https://inventario-api-h6b3.onrender.com/swagger-ui/index.html**
-> *(pruébalas en el navegador, sin instalar nada. Free tier: la primera petición tras inactividad puede tardar ~50 s en despertar.)*
+> *(pruébalas en el navegador, sin instalar nada. Acceso demo: `admin` / `admin123`. Free tier: la primera petición tras inactividad puede tardar ~50 s en despertar.)*
 
 ---
 
@@ -85,11 +85,25 @@ Suite con JUnit 5 + MockMvc (creación 201, 404, validación 400, **409 por stoc
 ## Stack
 Java 17 · Spring Boot 3.5 (Web, Data JPA, Validation) · H2 / HikariCP · springdoc-openapi (Swagger UI) · Maven · JUnit 5 · Docker.
 
+## 🔒 Seguridad
+La app pasó una **auditoría de seguridad interna** (revisión de código + pruebas de ataque) sobre autenticación, autorización (RBAC), inyección SQL, manejo de archivos, configuración, validación y dependencias. Endurecimiento aplicado y **verificado atacando una instancia local**:
+
+- **Autenticación** con contraseñas y PIN cifrados (BCrypt) y **control de acceso por roles** en el servidor.
+- **Anti fuerza bruta**: bloqueo temporal por usuario (5 intentos / 15 min → `429`).
+- **Cabeceras de seguridad** (HSTS, Referrer-Policy) y **cookie de sesión** `HttpOnly` + `SameSite=Strict` (`Secure` sobre HTTPS).
+- **Secretos por variables de entorno** (`DB_PASSWORD`, `KEYSTORE_PASSWORD`), sin claves en el código.
+- **Subida de archivos** validada por contenido real (magic bytes), servida con `Content-Disposition: attachment` + `nosniff`; acceso a recursos acotado (anti-IDOR).
+- **Sin inyección SQL** (JPA parametrizado) ni path traversal (nombres de archivo aleatorios).
+- **Dependencias parcheadas** (Spring Boot 3.5.4 / Tomcat 10.1.43, sin CVEs conocidas).
+
+Resultado: **0 vulnerabilidades críticas o altas** tras la verificación. Swagger queda restringido a administrador por defecto; para una demo pública se habilita con `DOCS_PUBLIC=true`.
+
 ## Deploy (Render, gratis)
 1. Sube este repo a GitHub.
 2. En [render.com](https://render.com) → **New → Web Service** → conecta el repo → Render detecta el `Dockerfile` solo (o usa **Blueprint** con `render.yaml`).
 3. Plan **Free**. Render asigna el puerto vía `$PORT` (ya configurado). Health check: `/actuator/health`.
-4. Copia la URL pública al README y a tus propuestas.
+4. Para mantener la demo pública de Swagger accesible, define la variable de entorno **`DOCS_PUBLIC=true`** (si no, `/swagger-ui` queda solo para administrador).
+5. Copia la URL pública al README y a tus propuestas.
 
 ---
 
