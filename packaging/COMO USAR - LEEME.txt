@@ -3,9 +3,23 @@
   App para Windows (no necesita instalar Java)
 ========================================
 
-COMO ABRIR
-----------
-1. Abre esta carpeta "Stockly".
+TIENES DOS FORMAS DE USARLO (elige una):
+
+  A) INSTALADOR (recomendado):  Stockly-Instalador-2.0.msi
+     - Doble clic, sigue el asistente (Siguiente -> Siguiente).
+     - Crea acceso directo en el Escritorio y en el menu Inicio.
+     - Queda en "Agregar o quitar programas" para desinstalar limpio.
+     - Al instalar, Windows pedira permiso de administrador (normal).
+
+  B) PORTABLE (sin instalar):  Stockly-Portable.zip  /  carpeta "Stockly"
+     - Descomprime y haz doble clic en Stockly.exe. No instala nada.
+     - Puedes moverlo a donde quieras (ej. C:\Stockly) o a una USB.
+
+------------------------------------------------------------
+
+COMO ABRIR (version portable)
+-----------------------------
+1. Abre la carpeta "Stockly".
 2. Haz doble clic en  Stockly.exe
 3. Se abre una ventana negra (es el motor de la app; dejala abierta)
    y enseguida se abre tu navegador con Stockly.
