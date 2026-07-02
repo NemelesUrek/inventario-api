@@ -66,10 +66,17 @@ public class ProductoService {
         }
     }
 
+    private static String normalizarCodigo(String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            return null;
+        }
+        return codigo.trim();
+    }
+
     @Transactional(readOnly = true)
     public Page<Producto> listar(String buscar, Pageable pageable) {
         if (StringUtils.hasText(buscar)) {
-            return productos.findByNombreContainingIgnoreCaseOrSkuContainingIgnoreCase(buscar, buscar, pageable);
+            return productos.buscar(buscar, pageable);
         }
         return productos.findAll(pageable);
     }
@@ -115,11 +122,13 @@ public class ProductoService {
 
     @Transactional
     public Producto crear(String sku, String nombre, String descripcion,
-                          long precioCentavos, int stockInicial, int stockMinimo, String categoria) {
+                          long precioCentavos, int stockInicial, int stockMinimo, String categoria, String codigoBarras) {
         if (productos.existsBySkuIgnoreCase(sku)) {
             throw new ConflictException("Ya existe un producto con el SKU '" + sku + "'");
         }
-        Producto p = productos.save(new Producto(sku, nombre, descripcion, precioCentavos, stockInicial, stockMinimo, categoria));
+        Producto nuevo = new Producto(sku, nombre, descripcion, precioCentavos, stockInicial, stockMinimo, categoria);
+        nuevo.setCodigoBarras(normalizarCodigo(codigoBarras));
+        Producto p = productos.save(nuevo);
         if (stockInicial > 0) {
             movimientos.save(new Movimiento(p, Movimiento.Tipo.ENTRADA, stockInicial, "Alta inicial"));
         }
@@ -128,8 +137,9 @@ public class ProductoService {
     }
 
     @Transactional
-    public Producto actualizar(Long id, String nombre, String descripcion, long precioCentavos, int stockMinimo, String categoria) {
+    public Producto actualizar(Long id, String nombre, String descripcion, long precioCentavos, int stockMinimo, String categoria, String codigoBarras) {
         Producto p = obtener(id);
+        p.setCodigoBarras(normalizarCodigo(codigoBarras));
         p.setNombre(nombre);
         p.setDescripcion(descripcion);
         p.setPrecioCentavos(precioCentavos);

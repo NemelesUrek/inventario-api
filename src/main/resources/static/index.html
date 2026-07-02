@@ -719,6 +719,20 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
   <div class="form-row"><label>Nombre</label><input class="inp" id="nNom" placeholder="Laptop 14&quot;"></div>
   <div class="form-row"><label>Descripción</label><input class="inp" id="nDesc" placeholder="Opcional"></div>
   <div class="form-row"><label>Categoría</label><input class="inp" id="nCat" list="catList" placeholder="Opcional (p. ej. Hogar)"><datalist id="catList"></datalist></div>
+  <div class="form-row"><label>Código de barras</label>
+    <div style="display:flex;gap:var(--s3)">
+      <input class="inp" id="nCodigo" placeholder="Opcional — tecléalo o escanéalo" style="flex:1">
+      <button class="btn btn-ghost" id="nScanCode" type="button" style="white-space:nowrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Escanear</button>
+    </div>
+  </div>
+  <div class="form-row"><label>Foto del producto</label>
+    <div style="display:flex;gap:var(--s3);align-items:center">
+      <div class="thumb" id="nFotoThumb" style="display:none;width:56px;height:56px"><img id="nFotoImg" alt="Foto del producto"></div>
+      <input type="file" id="nFotoFile" accept="image/*" style="display:none">
+      <button class="btn btn-ghost btn-sm" id="nFotoBtn" type="button">Agregar foto</button>
+      <button class="btn btn-ghost btn-sm" id="nFotoDel" type="button" style="display:none">Quitar</button>
+    </div>
+  </div>
   <div style="display:flex;gap:var(--s3)">
     <div class="form-row" style="flex:1"><label>Precio ($)</label><input class="inp" id="nPrecio" type="number" step="0.01" min="0" value="0"></div>
     <div class="form-row" style="flex:1" id="rowStock"><label>Stock inicial</label><input class="inp" id="nStock" type="number" min="0" value="0"></div>
@@ -828,7 +842,7 @@ curl -X POST $BASE/api/productos/1/salida -H "Content-Type: application/json" \
 <script>
 const API='';
 let PRODUCTS=[], FILTERED=[], PAGE=0, PER=10, ACTION='entrada';
-let MOVS=[], MOVFILTER='all', EDIT_ID=null;
+let MOVS=[], MOVFILTER='all', EDIT_ID=null, NEW_PHOTO=null, REMOVE_PHOTO=false;
 let SORT={key:'nombre',dir:1}, LOWONLY=false, CATFILTER='';
 const nameOf=pid=>{const p=PRODUCTS.find(x=>x.id===pid);return p?p.nombre:null;};
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
@@ -1061,7 +1075,10 @@ function renderTable(){
   slice.forEach(p=>{
     const tr=document.createElement('tr');if(p.bajoStock)tr.classList.add('low');tr.dataset.id=p.id;
     tr.appendChild(cell('SKU',sp('sku',p.sku)));
-    const prod=document.createElement('div');prod.append(sp('pname',p.nombre));if(p.categoria)prod.append(sp('cattag',p.categoria));prod.append(document.createElement('br'),sp('pdesc',p.descripcion||''));tr.appendChild(cell('Producto',prod));
+    const txt=document.createElement('div');txt.append(sp('pname',p.nombre));if(p.categoria)txt.append(sp('cattag',p.categoria));txt.append(document.createElement('br'),sp('pdesc',p.descripcion||''));
+    let prod=txt;
+    if(p.tieneFoto){prod=document.createElement('div');prod.style.cssText='display:flex;gap:10px;align-items:center';const im=document.createElement('img');im.src=API+'/api/productos/'+p.id+'/foto';im.alt=p.nombre;im.loading='lazy';im.style.cssText='width:40px;height:40px;border-radius:var(--r-md);object-fit:cover;border:1px solid var(--border);cursor:zoom-in;flex:0 0 auto';im.onclick=ev=>{ev.stopPropagation();$('#lightboxImg').src=im.src;$('#lightbox').classList.add('open');};prod.append(im,txt);}
+    tr.appendChild(cell('Producto',prod));
     const pc=cell('Precio',document.createTextNode(p.precio));pc.className='r tnum';tr.appendChild(pc);
     const sc=document.createElement('div');sc.className='stockcell';const sn=sp('tnum',String(p.stock));sn.style.fontWeight='600';
     const bar=document.createElement('div');bar.className='sbar';const fi=document.createElement('i');const pct=p.stockMinimo>0?Math.min(100,p.stock/(p.stockMinimo*3)*100):100;fi.style.width=pct+'%';if(p.bajoStock)fi.style.background='var(--danger)';bar.appendChild(fi);sc.append(sn,bar);
@@ -1171,28 +1188,52 @@ function lowStockLocal(){return PRODUCTS.filter(p=>p.bajoStock);}
 /* Re-render desde el estado local, sin volver a pedir todo el catálogo (UI optimista). */
 function renderLocal(keepSel){const bs=lowStockLocal();renderKPIs({content:PRODUCTS,page:{totalElements:PRODUCTS.length}},bs);applyFilter();renderPanelAlerts(bs);fillSelect();fillCategories();if(keepSel)$('#fProd').value=keepSel;if($('#view-reportes').classList.contains('active'))renderCharts();if($('#view-movimientos').classList.contains('active'))loadMovs();}
 /* MODAL crear/editar + eliminar */
-function resetModal(){$('#nRes').className='result';['nSku','nNom','nDesc','nCat'].forEach(i=>$('#'+i).value='');$('#nPrecio').value='0';$('#nStock').value='0';$('#nMin').value='0';}
+function resetModal(){$('#nRes').className='result';['nSku','nNom','nDesc','nCat','nCodigo'].forEach(i=>$('#'+i).value='');$('#nPrecio').value='0';$('#nStock').value='0';$('#nMin').value='0';NEW_PHOTO=null;REMOVE_PHOTO=false;$('#nFotoFile').value='';mostrarFoto(null);}
+/* Miniatura de la foto en el modal: url = dataURL local, URL del backend, o null (sin foto). */
+function mostrarFoto(url){const th=$('#nFotoThumb'),img=$('#nFotoImg'),del=$('#nFotoDel'),btn=$('#nFotoBtn');
+  if(url){img.src=url;th.style.display='';del.style.display='';btn.textContent='Cambiar foto';}
+  else{img.removeAttribute('src');th.style.display='none';del.style.display='none';btn.textContent='Agregar foto';}}
 /* Validación en vivo: deshabilita Guardar hasta que los campos obligatorios sean válidos. */
 function validateModal(){const creating=$('#rowSku').style.display!=='none';const okNom=$('#nNom').value.trim().length>0;const okSku=!creating||$('#nSku').value.trim().length>0;const okPre=parseFloat($('#nPrecio').value||'0')>=0;$('#nSave').disabled=!(okNom&&okSku&&okPre);}
 function openCreate(){EDIT_ID=null;resetModal();$('#modalTitle').textContent='Nuevo producto';$('#nSave').textContent='Crear producto';$('#rowSku').style.display='';$('#rowStock').style.display='';$('#modalBg').classList.add('open');validateModal();setTimeout(()=>$('#nSku').focus(),60);}
-function editProduct(p){EDIT_ID=p.id;resetModal();$('#modalTitle').textContent='Editar producto';$('#nSave').textContent='Guardar cambios';$('#rowSku').style.display='none';$('#rowStock').style.display='none';$('#nNom').value=p.nombre;$('#nDesc').value=p.descripcion||'';$('#nCat').value=p.categoria||'';$('#nPrecio').value=(p.precioCentavos/100).toFixed(2);$('#nMin').value=p.stockMinimo;$('#modalBg').classList.add('open');validateModal();setTimeout(()=>$('#nNom').focus(),60);}
+function editProduct(p){EDIT_ID=p.id;resetModal();$('#modalTitle').textContent='Editar producto';$('#nSave').textContent='Guardar cambios';$('#rowSku').style.display='none';$('#rowStock').style.display='none';$('#nNom').value=p.nombre;$('#nDesc').value=p.descripcion||'';$('#nCat').value=p.categoria||'';$('#nCodigo').value=p.codigoBarras||'';$('#nPrecio').value=(p.precioCentavos/100).toFixed(2);$('#nMin').value=p.stockMinimo;if(p.tieneFoto)mostrarFoto(API+'/api/productos/'+p.id+'/foto');$('#modalBg').classList.add('open');validateModal();setTimeout(()=>$('#nNom').focus(),60);}
 ['nNom','nSku','nPrecio'].forEach(id=>{const e=$('#'+id);if(e)e.addEventListener('input',validateModal);});
 $('#newBtn').onclick=openCreate;$('#nCancel').onclick=()=>$('#modalBg').classList.remove('open');
 $('#modalBg').onclick=e=>{if(e.target===$('#modalBg'))$('#modalBg').classList.remove('open');};
+/* Escanear el código de barras dentro del modal (rellena el campo). */
+$('#nScanCode').onclick=()=>Scan.abrir(raw=>{$('#nCodigo').value=(raw||'').trim();toast('Código capturado','ok');});
+/* Foto: elegir/ tomar, previsualizar, quitar. */
+$('#nFotoBtn').onclick=()=>$('#nFotoFile').click();
+$('#nFotoFile').onchange=()=>{const f=$('#nFotoFile').files[0];if(!f)return;if(f.size>8*1024*1024){toast('La imagen supera 8 MB.','err');$('#nFotoFile').value='';return;}NEW_PHOTO=f;REMOVE_PHOTO=false;mostrarFoto(URL.createObjectURL(f));};
+$('#nFotoDel').onclick=()=>{NEW_PHOTO=null;$('#nFotoFile').value='';if(EDIT_ID)REMOVE_PHOTO=true;mostrarFoto(null);};
 $('#nSave').onclick=async()=>{
   const nombre=$('#nNom').value.trim();if(!nombre){$('#nRes').className='result err';$('#nRes').textContent='El nombre es obligatorio.';return;}
-  const precioCentavos=Math.round(parseFloat($('#nPrecio').value||'0')*100),stockMinimo=parseInt($('#nMin').value)||0,descripcion=$('#nDesc').value.trim(),categoria=$('#nCat').value.trim()||null;
+  const precioCentavos=Math.round(parseFloat($('#nPrecio').value||'0')*100),stockMinimo=parseInt($('#nMin').value)||0,descripcion=$('#nDesc').value.trim(),categoria=$('#nCat').value.trim()||null,codigoBarras=$('#nCodigo').value.trim()||null;
   const btn=$('#nSave');btn.disabled=true;
   try{let res;
-    if(EDIT_ID){res=await fetchT(API+'/api/productos/'+EDIT_ID,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,descripcion,precioCentavos,stockMinimo,categoria})});}
+    if(EDIT_ID){res=await fetchT(API+'/api/productos/'+EDIT_ID,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,descripcion,precioCentavos,stockMinimo,categoria,codigoBarras})});}
     else{const sku=$('#nSku').value.trim();if(!sku){$('#nRes').className='result err';$('#nRes').textContent='El SKU es obligatorio.';btn.disabled=false;return;}
-      res=await fetchT(API+'/api/productos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sku,nombre,descripcion,precioCentavos,stockInicial:parseInt($('#nStock').value)||0,stockMinimo,categoria})});}
+      res=await fetchT(API+'/api/productos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sku,nombre,descripcion,precioCentavos,stockInicial:parseInt($('#nStock').value)||0,stockMinimo,categoria,codigoBarras})});}
     const body=await res.json();
-    if(res.ok){$('#modalBg').classList.remove('open');toast(EDIT_ID?'✓ Producto actualizado':'✓ Producto creado','ok');await refresh();go('inventario');}
+    if(res.ok){
+      const pid=EDIT_ID||body.id;
+      const fotoErr=await guardarFoto(pid);
+      $('#modalBg').classList.remove('open');
+      toast((EDIT_ID?'✓ Producto actualizado':'✓ Producto creado')+(fotoErr?' (la foto no se pudo guardar)':''),fotoErr?'info':'ok');
+      await refresh();go('inventario');
+    }
     else{$('#nRes').className='result err';$('#nRes').textContent=body.detail||body.title||'No se pudo guardar.';}
   }catch(e){$('#nRes').className='result err';$('#nRes').textContent='Error de red.';}
   btn.disabled=false;
 };
+/* Aplica el cambio de foto (subir o quitar) tras crear/actualizar. Devuelve true si falló. */
+async function guardarFoto(pid){
+  try{
+    if(NEW_PHOTO){const fd=new FormData();fd.append('file',NEW_PHOTO);const r=await fetchT(API+'/api/productos/'+pid+'/foto',{method:'POST',body:fd});return !r.ok;}
+    if(REMOVE_PHOTO&&EDIT_ID){const r=await fetchT(API+'/api/productos/'+pid+'/foto',{method:'DELETE'});return !r.ok;}
+  }catch(e){return true;}
+  return false;
+}
 /* Borrado optimista con "Deshacer": se quita al instante; el DELETE real se
    difiere ~6s y se cancela si el usuario deshace (mismo id, sin re-crear). */
 let _pendingDelete=null;
@@ -1636,7 +1677,7 @@ const Scan=(()=>{let stream=null,detector=null,zx=null,track=null,raf=0,onHit=nu
   return {abrir,cerrar,bind};})();
 Scan.bind();
 if($('#scanForMov'))$('#scanForMov').onclick=()=>Scan.abrir(raw=>{const p=resolverCodigo(raw);if(!p)return toast('Código no reconocido: '+raw,'err');go('panel');$('#fProd').value=p.id;$('#fCant').focus();toast('Producto: '+p.nombre,'ok');});
-if($('#scanForSearch'))$('#scanForSearch').onclick=()=>Scan.abrir(raw=>{const p=resolverCodigo(raw);if(p){go('inventario');$('#q').value=p.sku;$('#q').dispatchEvent(new Event('input'));}else toast('Sin coincidencias para '+raw,'err');});
+if($('#scanForSearch'))$('#scanForSearch').onclick=()=>Scan.abrir(raw=>{const p=resolverCodigo(raw);if(p){go('inventario');$('#q').value=p.sku;$('#q').dispatchEvent(new Event('input'));}else if(can('producto.crear')){go('inventario');openCreate();$('#nCodigo').value=(raw||'').trim();toast('Código nuevo: regístralo como producto','info');setTimeout(()=>$('#nNom').focus(),80);}else toast('Sin coincidencias para '+raw,'err');});
 /* STATS (server-side, GET /api/stats) */
 async function loadStats(){try{const s=await fetchT(API+'/api/stats').then(r=>r.json());renderStats(s);}catch(e){}}
 function renderStats(s){

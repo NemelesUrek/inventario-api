@@ -11,8 +11,14 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     boolean existsBySkuIgnoreCase(String sku);
 
-    Page<Producto> findByNombreContainingIgnoreCaseOrSkuContainingIgnoreCase(
-            String nombre, String sku, Pageable pageable);
+    /** Búsqueda por nombre, SKU o código de barras (escáner). */
+    @Query("""
+            select p from Producto p
+            where lower(p.nombre) like lower(concat('%', :q, '%'))
+               or lower(p.sku) like lower(concat('%', :q, '%'))
+               or lower(coalesce(p.codigoBarras, '')) like lower(concat('%', :q, '%'))
+            """)
+    Page<Producto> buscar(String q, Pageable pageable);
 
     /** Productos cuyo stock cayó al mínimo o por debajo (alerta de reposición). */
     @Query("select p from Producto p where p.stock <= p.stockMinimo order by p.stock asc")

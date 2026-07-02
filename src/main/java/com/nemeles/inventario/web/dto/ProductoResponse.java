@@ -15,6 +15,8 @@ public record ProductoResponse(
         int stockMinimo,
         boolean bajoStock,
         String categoria,
+        String codigoBarras,
+        boolean tieneFoto,
         Instant creadoEn,
         Instant actualizadoEn
 ) {
@@ -23,7 +25,8 @@ public record ProductoResponse(
                 p.getId(), p.getSku(), p.getNombre(), p.getDescripcion(),
                 p.getPrecioCentavos(), formatear(p.getPrecioCentavos()),
                 p.getStock(), p.getStockMinimo(), p.isBajoStock(),
-                p.getCategoria(), p.getCreadoEn(), p.getActualizadoEn());
+                p.getCategoria(), p.getCodigoBarras(), p.getFotoNombre() != null,
+                p.getCreadoEn(), p.getActualizadoEn());
     }
 
     private static String formatear(long centavos) {

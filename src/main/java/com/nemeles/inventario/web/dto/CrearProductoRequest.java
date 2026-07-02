@@ -13,6 +13,7 @@ public record CrearProductoRequest(
         @PositiveOrZero @Max(100_000_000) long precioCentavos,
         @PositiveOrZero @Max(1_000_000) int stockInicial,
         @PositiveOrZero @Max(1_000_000) int stockMinimo,
-        @Size(max = 80) String categoria
+        @Size(max = 80) String categoria,
+        @Size(max = 64) String codigoBarras
 ) {
 }

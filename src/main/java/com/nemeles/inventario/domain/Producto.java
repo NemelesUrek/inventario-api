@@ -46,6 +46,14 @@ public class Producto {
     @Column(length = 80)
     private String categoria;
 
+    /** Código de barras / QR opcional (EAN, UPC, etc.); se captura tecleando o con el escáner. */
+    @Column(length = 64)
+    private String codigoBarras;
+
+    /** Nombre del archivo de la foto del producto en disco (data/productos), o null si no tiene. */
+    @Column(length = 100)
+    private String fotoNombre;
+
     @Column(nullable = false, updatable = false)
     private Instant creadoEn = Instant.now();
 
@@ -91,6 +99,10 @@ public class Producto {
     public void setStockMinimo(int stockMinimo) { this.stockMinimo = stockMinimo; }
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
+    public String getCodigoBarras() { return codigoBarras; }
+    public void setCodigoBarras(String codigoBarras) { this.codigoBarras = codigoBarras; }
+    public String getFotoNombre() { return fotoNombre; }
+    public void setFotoNombre(String fotoNombre) { this.fotoNombre = fotoNombre; }
     public Instant getCreadoEn() { return creadoEn; }
     public Instant getActualizadoEn() { return actualizadoEn; }
 }
