@@ -40,3 +40,9 @@ build/
 # Keystore HTTPS self-signed (se genera localmente, NUNCA versionar)
 *.p12
 stockly-https.p12
+
+# Artefactos de empaquetado de escritorio (jpackage)
+/build/
+/dist/
+/jp-input/
+/jp-out/

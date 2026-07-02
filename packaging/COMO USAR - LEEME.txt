@@ -1,0 +1,48 @@
+========================================
+  STOCKLY - Control de inventario
+  App para Windows (no necesita instalar Java)
+========================================
+
+COMO ABRIR
+----------
+1. Abre esta carpeta "Stockly".
+2. Haz doble clic en  Stockly.exe
+3. Se abre una ventana negra (es el motor de la app; dejala abierta)
+   y enseguida se abre tu navegador con Stockly.
+   Si el navegador no abre solo, entra manualmente a:
+       http://localhost:18080
+
+INICIAR SESION (usuarios de ejemplo)
+------------------------------------
+   Administrador:   admin    / admin123
+   Almacen:         almacen  / almacen123
+   Compras:         compras  / compras123
+   Ventas:          ventas   / ventas123
+
+   El administrador puede crear mas usuarios y asignarles rol desde
+   la seccion "Usuarios".
+
+PARA CERRAR LA APP
+------------------
+   Cierra la ventana negra. Con eso Stockly se apaga.
+
+DONDE SE GUARDAN TUS DATOS
+--------------------------
+   En tu carpeta de usuario:
+       %LOCALAPPDATA%\Stockly\data
+   (normalmente  C:\Users\TU_USUARIO\AppData\Local\Stockly\data)
+
+   Para respaldar, copia esa carpeta. Para empezar de cero, borrala
+   con la app cerrada.
+
+NOTAS
+-----
+ - La primera vez, Windows (SmartScreen) puede avisar que es una app
+   de origen desconocido, porque no esta firmada con un certificado de
+   pago. Es normal: haz clic en "Mas informacion" y luego en
+   "Ejecutar de todos modos".
+ - Funciona 100%% sin internet.
+ - Puedes mover toda la carpeta "Stockly" a donde quieras (por ejemplo
+   C:\Stockly) y crear un acceso directo a Stockly.exe en el Escritorio.
+
+Hecho por Nemeles.
