@@ -1773,11 +1773,15 @@ function openHelp(){$('#helpBg').classList.add('open');setTimeout(()=>$('#helpCl
 $('#helpClose').onclick=()=>$('#helpBg').classList.remove('open');
 $('#helpBg').onclick=e=>{if(e.target===$('#helpBg'))$('#helpBg').classList.remove('open');};
 /* SHORTCUTS GLOBALES */
+/* ¿Hay alguna ventana/modal/overlay abierto? Si es así, los atajos de UNA tecla
+   (n, t, /, ?) NO deben dispararse aunque el foco no esté en un input (evita que
+   al teclear un nombre con "n"/"t" se reinicie el formulario). Solo Escape/Tab siguen. */
+function overlayAbierto(){return !!document.querySelector('#modalBg.open,#provModalBg.open,#userModalBg.open,#mvConfirmBg.open,#fotosBg.open,#lightbox.open,#phoneBg.open,#helpBg.open,#palette.open,#confirmBg.open,#scanBg.open');}
 document.addEventListener('keydown',e=>{
-  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||'');
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#palette').classList.contains('open')?closePalette():openPalette();return;}
   if(e.key==='Escape'){closePalette();$('#modalBg').classList.remove('open');$('#provModalBg').classList.remove('open');$('#userModalBg').classList.remove('open');$('#mvConfirmBg').classList.remove('open');$('#fotosBg').classList.remove('open');$('#lightbox').classList.remove('open');$('#phoneBg').classList.remove('open');$('#helpBg').classList.remove('open');if(typeof Scan!=='undefined')Scan.cerrar();if($('#confirmBg').classList.contains('open'))$('#confirmNo').click();return;}
-  if(typing)return;
+  if(typing||overlayAbierto())return;
   if(e.key==='?'){e.preventDefault();openHelp();}
   else if(e.key==='/'){e.preventDefault();go('inventario');$('#q').focus();}
   else if(e.key==='n'){e.preventDefault();go('inventario');openCreate();}
